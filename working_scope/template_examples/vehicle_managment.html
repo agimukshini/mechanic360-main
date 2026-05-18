@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Records</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'workshop-blue': '#0077B6',
+                        'workshop-cyan': '#00B4D8',
+                        'workshop-charcoal': '#1B263B',
+                        'workshop-gray': '#F5F5F5'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        .qr-pattern {
+            background-image: radial-gradient(circle at 2px 2px, rgba(0,119,182,0.1) 1px, transparent 0);
+            background-size: 8px 8px;
+        }
+        .status-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="font-inter bg-workshop-gray">
+
+    <header id="header" class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div id="logo-section" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-workshop-blue rounded-lg flex items-center justify-center relative">
+                        <i class="fa-solid fa-gear text-white text-lg"></i>
+                        <div class="absolute top-1 right-1 w-2 h-2 qr-pattern rounded-sm"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-workshop-charcoal">Workshop360</h1>
+                        <p class="text-xs text-gray-500">Smart Maintenance. Real Mechanics.</p>
+                    </div>
+                </div>
+
+                <div id="header-actions" class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="text" placeholder="Search vehicles, work orders..." class="w-80 px-4 py-2 pl-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                        <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button class="p-2 text-gray-600 hover:text-workshop-blue transition-colors">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                    </button>
+                    <div class="w-8 h-8 bg-workshop-cyan rounded-full flex items-center justify-center">
+                        <span class="text-white font-medium text-sm">JD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="main-layout" class="flex">
+        <aside id="sidebar" class="w-64 bg-white shadow-sm h-screen sticky top-0">
+            <nav class="p-6">
+                <div class="space-y-2">
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <span>Work Orders</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 bg-workshop-blue bg-opacity-10 text-workshop-blue rounded-lg">
+                        <i class="fa-solid fa-car"></i>
+                        <span class="font-medium">Vehicles</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Inspections</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-tools"></i>
+                        <span>Parts & Inventory</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main id="main-content" class="flex-1 p-6">
+            <section id="vehicle-header" class="mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button class="text-gray-600 hover:text-workshop-blue transition-colors">
+                            <i class="fa-solid fa-arrow-left text-lg"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl font-bold text-workshop-charcoal">2019 Ford Transit</h2>
+                            <p class="text-gray-600">Registration: ABC123 • VIN: 1FTBW3XM8GKA12345</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fa-solid fa-qrcode mr-2"></i>Scan QR
+                        </button>
+                        <button class="px-4 py-2 bg-workshop-blue text-white rounded-lg hover:bg-opacity-90 transition-colors">
+                            <i class="fa-solid fa-plus mr-2"></i>New Service
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <div id="vehicle-info-grid" class="grid grid-cols-4 gap-6 mb-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-workshop-blue bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-tachometer-alt text-workshop-blue"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-600">Mileage</p>
+                            <p class="text-lg font-bold text-workshop-charcoal">142,580 km</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-calendar-check text-green-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-600">Last Service</p>
+                            <p class="text-lg font-bold text-workshop-charcoal">15 days ago</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-clipboard-list text-orange-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-600">Total Services</p>
+                            <p class="text-lg font-bold text-workshop-charcoal">28</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-workshop-cyan bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-wrench text-workshop-cyan"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-600">Parts Used</p>
+                            <p class="text-lg font-bold text-workshop-charcoal">156</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabs-section" class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div class="border-b border-gray-200">
+                    <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                        <button class="border-b-2 border-workshop-blue text-workshop-blue py-4 px-1 text-sm font-medium">
+                            Maintenance History
+                        </button>
+                        <button class="border-b-2 border-transparent text-gray-600 hover:text-workshop-blue py-4 px-1 text-sm font-medium">
+                            Inspections
+                        </button>
+                        <button class="border-b-2 border-transparent text-gray-600 hover:text-workshop-blue py-4 px-1 text-sm font-medium">
+                            Parts Used
+                        </button>
+                        <button class="border-b-2 border-transparent text-gray-600 hover:text-workshop-blue py-4 px-1 text-sm font-medium">
+                            Documents
+                        </button>
+                    </nav>
+                </div>
+
+                <div id="maintenance-history-content" class="p-6">
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-workshop-blue bg-gray-50 p-5 rounded-r-lg">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-start space-x-4">
+                                    <div class="w-12 h-12 bg-workshop-blue rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-oil-can text-white text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-workshop-charcoal text-lg">Oil & Filter Change</h4>
+                                        <p class="text-sm text-gray-600 mt-1">WO-2024-089 • Bay 3 • Mike Johnson</p>
+                                        <p class="text-xs text-gray-500 mt-2">December 15, 2024 • 142,350 km</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Completed</span>
+                            </div>
+                            <div class="ml-16 mt-4">
+                                <p class="text-sm text-gray-700 mb-3">Standard oil change with synthetic 5W-30. All filters replaced.</p>
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <p class="text-xs font-medium text-gray-700 mb-2">Parts Used:</p>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-600">Engine Oil 5W-30 (5L)</span>
+                                            <span class="text-workshop-charcoal font-medium">$45.00</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-600">Oil Filter - OEM</span>
+                                            <span class="text-workshop-charcoal font-medium">$18.50</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-600">Air Filter</span>
+                                            <span class="text-workshop-charcoal font-medium">$22.00</span>
+                                        </div>
+                                        <div class="border-t border-gray-200 pt-2 mt-2 flex items-center justify-between text-sm font-semibold">
+                                            <span class="text-gray-700">Total Cost</span>
+                                            <span class="text-workshop-blue">$85.50</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-l-4 border-orange-500 bg-gray-50 p-5 rounded-r-lg">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-start space-x-4">
+                                    <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-brake-warning text-white text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-workshop-charcoal text-lg">Brake Pad Replacement</h4>
+                                        <p class="text-sm text-gray-600 mt-1">WO-2024-067 • Bay 1 • Sarah Wilson</p>
+                                        <p class="text-xs text-gray-500 mt-2">November 28, 2024 • 141,890 km</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Completed</span>
+                            </div>
+                            <div class="ml-16 mt-4">
+                                <p class="text-sm text-gray-700 mb-3">Front brake pads worn to 2mm. Replaced with OEM parts. Rear pads at 5mm - acceptable.</p>
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <p class="text-xs font-medium text-gray-700 mb-2">Parts Used:</p>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-600">Front Brake Pads (Set)</span>
+                                            <span class="text-workshop-charcoal font-medium">$120.00</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-600">Brake Cleaner</span>
+                                            <span class="text-workshop-charcoal font-medium">$8.50</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-600">Labor (2.5 hrs)</span>
+                                            <span class="text-workshop-charcoal font-medium">$187.50</span>
+                                        </div>
+                                        <div class="border-t border-gray-200 pt-2 mt-2 flex items-center justify-between text-sm font-semibold">
+                                            <span class="text-gray-700">Total Cost</span>
+                                            <span class="text-workshop-blue">$316.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-l-4 border-workshop-cyan bg-gray-50 p-5 rounded-r-lg">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-start space-x-4">
+                                    <div class="w-12 h-12 bg-workshop-cyan rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-clipboard-check text-white text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-workshop-charcoal text-lg">Annual MOT Inspection</h4>
+                                        <p class="text-sm text-gray-600 mt-1">INS-2024-034 • Bay 2 • Tom Davis</p>
+                                        <p class="text-xs text-gray-500 mt-2">October 12, 2024 • 140,220 km</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Passed</span>
+                            </div>
+                            <div class="ml-16 mt-4">
+                                <p class="text-sm text-gray-700 mb-3">Full vehicle inspection completed. All systems operational. Minor advisories noted.</p>
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <p class="text-xs font-medium text-gray-700 mb-2">Inspection Results:</p>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fa-solid fa-check-circle text-green-600"></i>
+                                            <span class="text-sm text-gray-700">Brakes: Passed</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fa-solid fa-check-circle text-green-600"></i>
+                                            <span class="text-sm text-gray-700">Suspension: Passed</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fa-solid fa-check-circle text-green-600"></i>
+                                            <span class="text-sm text-gray-700">Emissions: Passed</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fa-solid fa-exclamation-triangle text-yellow-600"></i>
+                                            <span class="text-sm text-gray-700">Advisory: Tire tread at 4mm (monitor)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-l-4 border-gray-300 bg-gray-50 p-5 rounded-r-lg">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-start space-x-4">
+                                    <div class="w-12 h-12 bg-gray-400 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-battery-full text-white text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-workshop-charcoal text-lg">Battery Replacement</h4>
+                                        <p class="text-sm text-gray-600 mt-1">WO-2024-045 • Bay 4 • Mike Johnson</p>
+                                        <p class="text-xs text-gray-500 mt-2">September 5, 2024 • 138,450 km</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Completed</span>
+                            </div>
+                            <div class="ml-16 mt-4">
+                                <p class="text-sm text-gray-700 mb-3">Battery failed load test. Replaced with 800 CCA heavy-duty battery.</p>
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <p class="text-xs font-medium text-gray-700 mb-2">Parts Used:</p>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-600">Heavy Duty Battery 800 CCA</span>
+                                            <span class="text-workshop-charcoal font-medium">$185.00</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-600">Battery Terminal Cleaner</span>
+                                            <span class="text-workshop-charcoal font-medium">$6.50</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-600">Labor (0.5 hrs)</span>
+                                            <span class="text-workshop-charcoal font-medium">$37.50</span>
+                                        </div>
+                                        <div class="border-t border-gray-200 pt-2 mt-2 flex items-center justify-between text-sm font-semibold">
+                                            <span class="text-gray-700">Total Cost</span>
+                                            <span class="text-workshop-blue">$229.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 text-center">
+                        <button class="text-workshop-blue hover:text-workshop-cyan font-medium text-sm">
+                            Load More History <i class="fa-solid fa-chevron-down ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="summary-cards" class="grid grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-semibold text-workshop-charcoal mb-4">Cost Summary</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Last 30 Days</span>
+                            <span class="text-lg font-bold text-workshop-charcoal">$401.50</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Last 12 Months</span>
+                            <span class="text-lg font-bold text-workshop-charcoal">$3,245.00</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Lifetime Total</span>
+                            <span class="text-lg font-bold text-workshop-blue">$8,920.50</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-semibold text-workshop-charcoal mb-4">Next Service Due</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-calendar text-orange-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-workshop-charcoal">Tire Rotation</p>
+                                <p class="text-xs text-gray-600">Due in 2,500 km</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-clipboard-check text-red-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-workshop-charcoal">Safety Inspection</p>
+                                <p class="text-xs text-gray-600">Due in 15 days</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-semibold text-workshop-charcoal mb-4">Most Used Parts</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-700">Engine Oil 5W-30</span>
+                            <span class="text-sm font-semibold text-workshop-charcoal">12x</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-700">Oil Filter</span>
+                            <span class="text-sm font-semibold text-workshop-charcoal">12x</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-700">Brake Pads</span>
+                            <span class="text-sm font-semibold text-workshop-charcoal">4x</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="brand-badge" class="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-lg shadow-lg border border-gray-200 qr-pattern">
+        <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 bg-workshop-blue rounded flex items-center justify-center">
+                <i class="fa-solid fa-gear text-white text-xs"></i>
+            </div>
+            <span class="text-xs text-gray-600">Powered by Workshop360</span>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,563 @@
+{
+  "project": {
+    "key": "MECH360",
+    "name": "Mechanic360"
+  },
+  "epics": [
+    {
+      "key": "MECH-1",
+      "summary": "Project Setup & Infrastructure",
+      "description": "Initial project setup, infrastructure configuration, and development environment",
+      "status": "To Do",
+      "priority": "Highest",
+      "estimate": "2 weeks",
+      "assignee": "DevOps Lead",
+      "stories": [
+        {
+          "key": "MECH-2",
+          "summary": "Setup Development Environment",
+          "description": "Configure Docker development environment with Django backend and React frontend (hot reloading)",
+          "status": "To Do",
+          "priority": "Highest",
+          "estimate": "3 days",
+          "assignee": "DevOps Engineer",
+          "tasks": [
+            "Setup Docker Compose configuration",
+            "Configure Django backend development environment",
+            "Configure React development environment",
+            "Setup hot reloading for development"
+          ]
+        },
+        {
+          "key": "MECH-3",
+          "summary": "Database Setup & Multi-tenancy",
+          "description": "Configure PostgreSQL with schema-based multi-tenancy and RLS",
+          "status": "To Do",
+          "priority": "Highest",
+          "estimate": "4 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "Setup PostgreSQL in Docker",
+            "Configure schema-based multi-tenancy",
+            "Implement Row-Level Security policies",
+            "Create initial database migrations"
+          ]
+        },
+        {
+          "key": "MECH-4",
+          "summary": "Storage Configuration",
+          "description": "Setup MinIO for S3-compatible object storage",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "2 days",
+          "assignee": "DevOps Engineer",
+          "tasks": [
+            "Configure MinIO in Docker",
+            "Setup buckets and access policies",
+            "Integrate with backend services"
+          ]
+        },
+        {
+          "key": "MECH-5",
+          "summary": "CI/CD Pipeline Setup",
+          "description": "Configure GitHub Actions for CI/CD",
+          "status": "To Do",
+          "priority": "Medium",
+          "estimate": "3 days",
+          "assignee": "DevOps Lead",
+          "tasks": [
+            "Setup GitHub Actions workflows",
+            "Configure testing in CI pipeline",
+            "Setup staging deployment",
+            "Configure production deployment"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "MECH-6",
+      "summary": "Authentication & Authorization",
+      "description": "Implement authentication, authorization, and tenant management",
+      "status": "To Do",
+      "priority": "Highest",
+      "estimate": "3 weeks",
+      "assignee": "Backend Lead",
+      "stories": [
+        {
+          "key": "MECH-7",
+          "summary": "User Authentication System",
+          "description": "Implement JWT authentication with refresh tokens using Django REST Framework and SimpleJWT, plus basic user profile endpoint",
+          "status": "In Progress",
+          "priority": "Highest",
+          "estimate": "5 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "Implement JWT authentication",
+            "Configure refresh token mechanism",
+            "Implement password hashing and security",
+            "Create login/logout endpoints"
+          ]
+        },
+        {
+          "key": "MECH-8",
+          "summary": "Role-Based Access Control",
+          "description": "Implement RBAC using Django permissions, custom policies, and role-based API guards for Admin, Service Advisor, and Mechanic",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "4 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "Define role hierarchy",
+            "Implement Django permission and group configuration",
+            "Create API permission policies (DRF)",
+            "Add role assignment functionality"
+          ]
+        },
+        {
+          "key": "MECH-9",
+          "summary": "Tenant Management",
+          "description": "Implement tenant creation, configuration, and management (schema-based multi-tenancy, UUID IDs, no domain requirement, Superadmin CRUD, per-tenant user limits)",
+          "status": "In Progress",
+          "priority": "Highest",
+          "estimate": "6 days",
+          "assignee": "Full Stack Developer",
+          "tasks": [
+            "Create tenant registration flow",
+            "Implement tenant configuration UI",
+            "Setup tenant database schema creation",
+            "Implement tenant branding options"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "MECH-10",
+      "summary": "Core Data Models & API",
+      "description": "Implement core data models, Protocol Buffers schemas, and API endpoints",
+      "status": "To Do",
+      "priority": "High",
+      "estimate": "4 weeks",
+      "assignee": "Backend Lead",
+      "stories": [
+        {
+          "key": "MECH-11",
+          "summary": "Protocol Buffers Schema Definition",
+          "description": "Define Protocol Buffers schemas for core entities",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "4 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "Define Client schema",
+            "Define Vehicle schema",
+            "Define Service Visit schema",
+            "Define Inspection schema",
+            "Define Inventory Item schema",
+            "Setup TypeScript type generation"
+          ]
+        },
+        {
+          "key": "MECH-12",
+          "summary": "Client Management API",
+          "description": "Implement client management API endpoints (UUID primary keys, CRUD within tenant schema)",
+          "status": "In Progress",
+          "priority": "High",
+          "estimate": "5 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "Create client CRUD operations",
+            "Implement client search functionality",
+            "Add client history tracking",
+            "Implement GDPR compliance features"
+          ]
+        },
+        {
+          "key": "MECH-13",
+          "summary": "Vehicle Management API",
+          "description": "Implement vehicle management API endpoints (UUID primary keys, vehicles linked to clients, CRUD within tenant schema)",
+          "status": "In Progress",
+          "priority": "High",
+          "estimate": "6 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "Create vehicle CRUD operations",
+            "Implement VIN validation",
+            "Create QR code generation",
+            "Implement vehicle search functionality",
+            "Add vehicle history tracking"
+          ]
+        },
+        {
+          "key": "MECH-14",
+          "summary": "Service Visit API",
+          "description": "Implement service visit API endpoints",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "7 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "Create service visit CRUD operations",
+            "Implement service catalog management",
+            "Create visit workflow state machine",
+            "Implement service reporting"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "MECH-15",
+      "summary": "Frontend Core Components",
+      "description": "Implement core frontend components and layouts",
+      "status": "To Do",
+      "priority": "High",
+      "estimate": "4 weeks",
+      "assignee": "Frontend Lead",
+      "stories": [
+        {
+          "key": "MECH-16",
+          "summary": "UI Component Library",
+          "description": "Setup UI component library with Tailwind CSS",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "5 days",
+          "assignee": "Frontend Developer",
+          "tasks": [
+            "Configure Tailwind CSS",
+            "Create base component library",
+            "Implement responsive layouts",
+            "Create theme based on branding"
+          ]
+        },
+        {
+          "key": "MECH-17",
+          "summary": "Authentication UI",
+          "description": "Implement authentication UI components",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "4 days",
+          "assignee": "Frontend Developer",
+          "tasks": [
+            "Create login form",
+            "Implement registration flow",
+            "Add password reset functionality",
+            "Create authentication state management"
+          ]
+        },
+        {
+          "key": "MECH-18",
+          "summary": "Dashboard Layout",
+          "description": "Implement main dashboard layout and navigation",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "6 days",
+          "assignee": "Frontend Developer",
+          "tasks": [
+            "Create responsive dashboard layout",
+            "Implement navigation menu",
+            "Add user profile components",
+            "Create dashboard widgets"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "MECH-19",
+      "summary": "360° Inspection System",
+      "description": "Implement the 360° inspection system for vehicles",
+      "status": "To Do",
+      "priority": "High",
+      "estimate": "3 weeks",
+      "assignee": "Full Stack Lead",
+      "stories": [
+        {
+          "key": "MECH-20",
+          "summary": "Inspection Data Model",
+          "description": "Implement inspection data model and API",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "5 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "Create inspection schema",
+            "Implement inspection API endpoints",
+            "Add photo storage integration",
+            "Implement inspection history"
+          ]
+        },
+        {
+          "key": "MECH-21",
+          "summary": "Inspection UI",
+          "description": "Create mobile-friendly inspection UI",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "7 days",
+          "assignee": "Frontend Developer",
+          "tasks": [
+            "Create inspection form components",
+            "Implement photo capture functionality",
+            "Add offline support",
+            "Create inspection report generation"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "MECH-22",
+      "summary": "Inventory & Marketplace",
+      "description": "Implement inventory management and marketplace functionality",
+      "status": "To Do",
+      "priority": "Medium",
+      "estimate": "3 weeks",
+      "assignee": "Full Stack Lead",
+      "stories": [
+        {
+          "key": "MECH-23",
+          "summary": "Inventory Management",
+          "description": "Implement inventory management system",
+          "status": "To Do",
+          "priority": "Medium",
+          "estimate": "6 days",
+          "assignee": "Full Stack Developer",
+          "tasks": [
+            "Create inventory data model",
+            "Implement inventory CRUD operations",
+            "Add stock level tracking",
+            "Implement low stock alerts"
+          ]
+        },
+        {
+          "key": "MECH-24",
+          "summary": "Marketplace Implementation",
+          "description": "Create cross-tenant marketplace functionality",
+          "status": "To Do",
+          "priority": "Medium",
+          "estimate": "8 days",
+          "assignee": "Full Stack Developer",
+          "tasks": [
+            "Implement marketplace listings",
+            "Create search functionality",
+            "Add contact mechanisms",
+            "Implement privacy controls"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "MECH-25",
+      "summary": "Reporting & Analytics",
+      "description": "Implement reporting and analytics functionality",
+      "status": "To Do",
+      "priority": "Medium",
+      "estimate": "2 weeks",
+      "assignee": "Full Stack Lead",
+      "stories": [
+        {
+          "key": "MECH-26",
+          "summary": "Service Reports",
+          "description": "Implement service report generation",
+          "status": "To Do",
+          "priority": "Medium",
+          "estimate": "5 days",
+          "assignee": "Full Stack Developer",
+          "tasks": [
+            "Create PDF report templates",
+            "Implement report generation",
+            "Add branding customization",
+            "Create email delivery functionality"
+          ]
+        },
+        {
+          "key": "MECH-27",
+          "summary": "Analytics Dashboard",
+          "description": "Implement analytics dashboard",
+          "status": "To Do",
+          "priority": "Medium",
+          "estimate": "6 days",
+          "assignee": "Frontend Developer",
+          "tasks": [
+            "Create analytics data models",
+            "Implement data visualization components",
+            "Add filtering and date range selection",
+            "Create export functionality"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "MECH-28",
+      "summary": "Compliance & Security",
+      "description": "Implement GDPR compliance and ISO 27001 security controls",
+      "status": "To Do",
+      "priority": "High",
+      "estimate": "3 weeks",
+      "assignee": "Security Lead",
+      "stories": [
+        {
+          "key": "MECH-29",
+          "summary": "GDPR Compliance Features",
+          "description": "Implement GDPR compliance features",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "7 days",
+          "assignee": "Full Stack Developer",
+          "tasks": [
+            "Create consent management system",
+            "Implement data subject rights functionality",
+            "Add data retention policies",
+            "Create privacy policy generator"
+          ]
+        },
+        {
+          "key": "MECH-30",
+          "summary": "Security Controls",
+          "description": "Implement ISO 27001 security controls",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "8 days",
+          "assignee": "Security Engineer",
+          "tasks": [
+            "Implement access control mechanisms",
+            "Configure encryption for data at rest and in transit",
+            "Setup security monitoring",
+            "Create security incident response procedures"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "MECH-31",
+      "summary": "Testing & Quality Assurance",
+      "description": "Comprehensive testing and quality assurance",
+      "status": "To Do",
+      "priority": "High",
+      "estimate": "Ongoing",
+      "assignee": "QA Lead",
+      "stories": [
+        {
+          "key": "MECH-32",
+          "summary": "Unit Testing",
+          "description": "Implement unit tests for core functionality",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "Ongoing",
+          "assignee": "All Developers",
+          "tasks": [
+            "Create backend unit tests",
+            "Implement frontend component tests",
+            "Setup test coverage reporting",
+            "Integrate tests in CI pipeline"
+          ]
+        },
+        {
+          "key": "MECH-33",
+          "summary": "Integration Testing",
+          "description": "Implement integration tests",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "Ongoing",
+          "assignee": "QA Engineer",
+          "tasks": [
+            "Create API integration tests",
+            "Implement end-to-end tests",
+            "Test multi-tenant functionality",
+            "Verify security controls"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "MECH-34",
+      "summary": "Deployment & Production",
+      "description": "Production deployment and operations",
+      "status": "To Do",
+      "priority": "Medium",
+      "estimate": "2 weeks",
+      "assignee": "DevOps Lead",
+      "stories": [
+        {
+          "key": "MECH-35",
+          "summary": "Production Environment Setup",
+          "description": "Configure production environment",
+          "status": "To Do",
+          "priority": "Medium",
+          "estimate": "5 days",
+          "assignee": "DevOps Engineer",
+          "tasks": [
+            "Setup production Docker configuration",
+            "Configure database backups",
+            "Setup monitoring and alerting",
+            "Configure auto-scaling"
+          ]
+        },
+        {
+          "key": "MECH-36",
+          "summary": "Deployment Automation",
+          "description": "Automate deployment process",
+          "status": "To Do",
+          "priority": "Medium",
+          "estimate": "4 days",
+          "assignee": "DevOps Engineer",
+          "tasks": [
+            "Create deployment scripts",
+            "Implement blue-green deployment",
+            "Setup rollback procedures",
+            "Configure environment-specific settings"
+          ]
+        }
+      ]
+    }
+  ],
+  "timeline": {
+    "phases": [
+      {
+        "name": "Phase 1: Foundation",
+        "duration": "6 weeks",
+        "epics": ["MECH-1", "MECH-6", "MECH-10"],
+        "description": "Setup infrastructure, implement authentication, and create core data models",
+        "milestones": [
+          "Development environment ready",
+          "Multi-tenant database configured",
+          "Authentication system working",
+          "Core API endpoints implemented"
+        ]
+      },
+      {
+        "name": "Phase 2: Core Features",
+        "duration": "8 weeks",
+        "epics": ["MECH-15", "MECH-19", "MECH-22"],
+        "description": "Implement frontend components, 360° inspection system, and inventory management",
+        "milestones": [
+          "Frontend dashboard operational",
+          "Vehicle inspection system working",
+          "Inventory management system complete",
+          "Marketplace functionality implemented"
+        ]
+      },
+      {
+        "name": "Phase 3: Advanced Features",
+        "duration": "6 weeks",
+        "epics": ["MECH-25", "MECH-28"],
+        "description": "Implement reporting, analytics, and compliance features",
+        "milestones": [
+          "Service reports generation working",
+          "Analytics dashboard operational",
+          "GDPR compliance features implemented",
+          "Security controls in place"
+        ]
+      },
+      {
+        "name": "Phase 4: Testing & Deployment",
+        "duration": "4 weeks",
+        "epics": ["MECH-31", "MECH-34"],
+        "description": "Comprehensive testing and production deployment",
+        "milestones": [
+          "All tests passing",
+          "Production environment configured",
+          "Deployment automation complete",
+          "System ready for launch"
+        ]
+      }
+    ],
+    "totalDuration": "24 weeks (6 months)"
+  }
+}

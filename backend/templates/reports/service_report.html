@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ L.doc_title }} — {{ visit_ref }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm 11mm 12mm 11mm;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "DejaVu Sans", Helvetica, Arial, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.28;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .letterhead {
+            display: table;
+            width: 100%;
+            border-bottom: 2px solid #0077b6;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        .letterhead-left,
+        .letterhead-right {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .letterhead-right {
+            text-align: right;
+            width: 44%;
+        }
+
+        .workshop-name {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #0077b6;
+            margin: 0 0 2px 0;
+        }
+
+        .workshop-meta {
+            font-size: 7.5pt;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.25;
+        }
+
+        .doc-title {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 0 0 3px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .doc-meta {
+            font-size: 7.5pt;
+            color: #475569;
+            margin: 1px 0;
+        }
+
+        .doc-ref {
+            display: inline-block;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 8pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin-top: 3px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+            padding: 1px 7px;
+            border-radius: 999px;
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        h2.section-title {
+            font-size: 8.5pt;
+            font-weight: bold;
+            color: #0077b6;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 3px;
+            margin: 10px 0 5px 0;
+        }
+
+        table.compact-meta {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4px;
+            font-size: 8pt;
+        }
+
+        table.compact-meta td {
+            width: 25%;
+            vertical-align: top;
+            padding: 2px 6px 4px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 6.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 1px;
+        }
+
+        .field-value {
+            font-size: 9pt;
+            font-weight: bold;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .field-sub {
+            font-size: 7pt;
+            color: #64748b;
+            line-height: 1.2;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+            font-size: 8pt;
+        }
+
+        table.data-table thead th {
+            background: #0077b6;
+            color: #fff;
+            font-weight: bold;
+            text-align: left;
+            padding: 4px 6px;
+            font-size: 6.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        table.data-table tbody td {
+            padding: 3px 6px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        table.data-table tbody tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        table.data-table .num {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        table.data-table tfoot td {
+            font-weight: bold;
+            background: #f1f5f9;
+            border-top: 1px solid #cbd5e1;
+            padding: 4px 6px;
+            font-size: 7.5pt;
+        }
+
+        .inspection-section-row td {
+            background: #e0f2fe !important;
+            font-weight: bold;
+            color: #0369a1;
+            font-size: 7pt;
+            text-transform: uppercase;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 7pt;
+            font-weight: bold;
+        }
+
+        .pill.ok { background: #dcfce7; color: #166534; }
+        .pill.warn { background: #fef9c3; color: #854d0e; }
+        .pill.bad { background: #fee2e2; color: #991b1b; }
+        .pill.neutral { background: #f1f5f9; color: #475569; }
+
+        .totals-wrap {
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .totals-wrap table {
+            width: 48%;
+            margin-left: auto;
+            border-collapse: collapse;
+            border: 1px solid #1b263b;
+            font-size: 8pt;
+        }
+
+        .totals-wrap td {
+            padding: 3px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .totals-wrap tr:last-child td {
+            border-bottom: none;
+            background: #1b263b;
+            color: #fff;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+
+        .totals-wrap .label { color: #475569; }
+        .totals-wrap .amount { text-align: right; font-weight: bold; }
+
+        .notes-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 4px;
+            padding: 6px 8px;
+            font-size: 8pt;
+            color: #78350f;
+            white-space: pre-wrap;
+        }
+
+        .signatures {
+            display: table;
+            width: 100%;
+            margin-top: 14px;
+        }
+
+        .sig-col {
+            display: table-cell;
+            width: 48%;
+            vertical-align: bottom;
+        }
+
+        .sig-line {
+            border-top: 1px solid #94a3b8;
+            margin-top: 22px;
+            padding-top: 4px;
+            font-size: 7.5pt;
+            color: #64748b;
+        }
+
+        .footer-legal {
+            margin-top: 12px;
+            padding-top: 6px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 6.5pt;
+            color: #94a3b8;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .empty-hint {
+            color: #94a3b8;
+            font-style: italic;
+            padding: 4px 0;
+            font-size: 8pt;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="letterhead">
+        <div class="letterhead-left">
+            <p class="workshop-name">{{ workshop_name }}</p>
+            {% if workshop_address %}<p class="workshop-meta">{{ workshop_address|linebreaksbr }}</p>{% endif %}
+            {% if workshop_phone or workshop_email %}
+            <p class="workshop-meta">
+                {% if workshop_phone %}{{ L.tel_prefix }}: {{ workshop_phone }}{% endif %}
+                {% if workshop_phone and workshop_email %} · {% endif %}
+                {% if workshop_email %}{{ workshop_email }}{% endif %}
+            </p>
+            {% endif %}
+        </div>
+        <div class="letterhead-right">
+            <p class="doc-title">{{ L.doc_title }}</p>
+            <p class="doc-meta">{{ L.date_label }}: {{ visit.service_date|date:"d M Y, H:i" }} · {{ L.printed_label }}: {{ generated_at|date:"d M Y, H:i" }}</p>
+            <span class="doc-ref">{{ L.ref_label }}: {{ visit_ref }}</span>
+            <span class="status-badge">{{ L.status_completed }}</span>
+        </div>
+    </div>
+
+    <h2 class="section-title">{{ L.section_customer_vehicle }}</h2>
+    <table class="compact-meta">
+        <tr>
+            <td>
+                <span class="field-label">{{ L.label_customer }}</span>
+                <span class="field-value">{{ client_name }}</span>
+                {% if client.phone or client.email %}
+                <span class="field-sub">
+                    {% if client.phone %}{{ client.phone }}{% endif %}
+                    {% if client.phone and client.email %} · {% endif %}
+                    {% if client.email %}{{ client.email }}{% endif %}
+                </span>
+                {% endif %}
+            </td>
+            <td>
+                <span class="field-label">{{ L.label_vehicle }}</span>
+                <span class="field-value">{{ vehicle.make }} {{ vehicle.model }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %}</span>
+            </td>
+            <td>
+                <span class="field-label">{{ L.label_plate }}</span>
+                <span class="field-value">{{ vehicle.license_plate }}</span>
+                {% if vehicle.vin %}<span class="field-sub">{{ L.label_vin }}: {{ vehicle.vin }}</span>{% endif %}
+            </td>
+            <td>
+                <span class="field-label">{{ L.label_mileage }}</span>
+                <span class="field-value">{{ visit.mileage_km|floatformat:0 }} km</span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                {% if technician_name %}
+                <span class="field-label">{{ L.label_technician }}</span>
+                <span class="field-value">{{ technician_name }}</span>
+                {% endif %}
+            </td>
+            <td colspan="2"></td>
+        </tr>
+    </table>
+
+    {% if inspection_rows %}
+    <h2 class="section-title">{{ L.section_inspection }}</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 20%;">{{ L.col_section }}</th>
+                <th style="width: 40%;">{{ L.col_check }}</th>
+                <th style="width: 40%;">{{ L.col_result }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in inspection_rows %}
+            <tr>
+                <td>{{ row.section }}</td>
+                <td>{{ row.item }}</td>
+                <td><span class="pill {{ row.status_class }}">{{ row.value }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <h2 class="section-title">{{ L.section_work }}</h2>
+
+    {% if service_lines %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>{{ L.col_services }}</th>
+                <th class="num" style="width: 10%;">{{ L.col_qty }}</th>
+                <th class="num" style="width: 16%;">{{ L.col_unit }}</th>
+                <th class="num" style="width: 16%;">{{ L.col_total }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in service_lines %}
+            <tr>
+                <td>{{ line.description }}</td>
+                <td class="num">{{ line.quantity }}</td>
+                <td class="num">{{ currency_symbol }}{{ line.unit_price|floatformat:2 }}</td>
+                <td class="num">{{ currency_symbol }}{{ line.total_price|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="num">{{ L.subtotal_services }}</td>
+                <td class="num">{{ currency_symbol }}{{ service_total|floatformat:2 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+    {% endif %}
+
+    {% if material_lines %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>{{ L.col_parts }}</th>
+                <th class="num" style="width: 10%;">{{ L.col_qty }}</th>
+                <th class="num" style="width: 16%;">{{ L.col_unit }}</th>
+                <th class="num" style="width: 16%;">{{ L.col_total }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in material_lines %}
+            <tr>
+                <td>{% if line.inventory_item %}{{ line.inventory_item.name }}{% else %}{{ L.part_fallback }}{% endif %}</td>
+                <td class="num">{{ line.quantity }}</td>
+                <td class="num">{{ currency_symbol }}{{ line.unit_price|floatformat:2 }}</td>
+                <td class="num">{{ currency_symbol }}{{ line.total_price|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="num">{{ L.subtotal_parts }}</td>
+                <td class="num">{{ currency_symbol }}{{ material_total|floatformat:2 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+    {% endif %}
+
+    {% if labor_lines %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>{{ L.col_labor }}</th>
+                <th class="num" style="width: 10%;">{{ L.col_hours }}</th>
+                <th class="num" style="width: 16%;">{{ L.col_rate }}</th>
+                <th class="num" style="width: 16%;">{{ L.col_total }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in labor_lines %}
+            <tr>
+                <td>{{ line.description }}</td>
+                <td class="num">{{ line.hours }}</td>
+                <td class="num">{{ currency_symbol }}{{ line.hourly_rate|floatformat:2 }}</td>
+                <td class="num">{{ currency_symbol }}{{ line.total_price|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="num">{{ L.subtotal_labor }}</td>
+                <td class="num">{{ currency_symbol }}{{ labor_total|floatformat:2 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+    {% endif %}
+
+    {% if not service_lines and not material_lines and not labor_lines %}
+    <p class="empty-hint">{{ L.empty_lines }}</p>
+    {% endif %}
+
+    <div class="totals-wrap">
+        <table>
+            <tr>
+                <td class="label">{{ L.total_services }}</td>
+                <td class="amount">{{ currency_symbol }}{{ service_total|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td class="label">{{ L.total_parts }}</td>
+                <td class="amount">{{ currency_symbol }}{{ material_total|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td class="label">{{ L.total_labor }}</td>
+                <td class="amount">{{ currency_symbol }}{{ labor_total|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>{{ L.total_due }}</td>
+                <td class="amount">{{ currency_symbol }}{{ grand_total|floatformat:2 }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {% if visit.notes %}
+    <h2 class="section-title">{{ L.section_notes }}</h2>
+    <div class="notes-box">{{ visit.notes }}</div>
+    {% endif %}
+
+    <div class="signatures">
+        <div class="sig-col">
+            <div class="sig-line">{{ L.sig_customer }}{% if client_name %} — {{ client_name }}{% endif %}</div>
+        </div>
+        <div class="sig-col" style="padding-left: 4%;">
+            <div class="sig-line">
+                {{ L.sig_authorized }}{% if technician_name %} — {{ technician_name }}{% else %} — {{ workshop_name }}{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-legal">
+        {{ L.footer_legal }}
+        {{ L.footer_generated }} · {{ L.ref_label }} {{ visit_ref }}
+    </div>
+</body>
+</html>

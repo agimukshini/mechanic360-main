@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspections</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'workshop-blue': '#0077B6',
+                        'workshop-cyan': '#00B4D8',
+                        'workshop-charcoal': '#1B263B',
+                        'workshop-gray': '#F5F5F5'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        .qr-pattern {
+            background-image: radial-gradient(circle at 2px 2px, rgba(0,119,182,0.1) 1px, transparent 0);
+            background-size: 8px 8px;
+        }
+        .status-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .checklist-item {
+            transition: all 0.2s ease-in-out;
+        }
+        .checklist-item:hover {
+            background-color: #f8fafc;
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body class="font-inter bg-workshop-gray">
+
+    <!-- Header -->
+    <header id="header" class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div id="logo-section" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-workshop-blue rounded-lg flex items-center justify-center relative">
+                        <i class="fa-solid fa-gear text-white text-lg"></i>
+                        <div class="absolute top-1 right-1 w-2 h-2 qr-pattern rounded-sm"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-workshop-charcoal">Workshop360</h1>
+                        <p class="text-xs text-gray-500">Smart Maintenance. Real Mechanics.</p>
+                    </div>
+                </div>
+
+                <!-- Search & Actions -->
+                <div id="header-actions" class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="text" placeholder="Search vehicles, work orders..." class="w-80 px-4 py-2 pl-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                        <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button class="p-2 text-gray-600 hover:text-workshop-blue transition-colors">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                    </button>
+                    <div class="w-8 h-8 bg-workshop-cyan rounded-full flex items-center justify-center">
+                        <span class="text-white font-medium text-sm">JD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div id="main-layout" class="flex">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-white shadow-sm h-screen sticky top-0">
+            <nav class="p-6">
+                <div class="space-y-2">
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <span>Work Orders</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-car"></i>
+                        <span>Vehicles</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 bg-workshop-blue bg-opacity-10 text-workshop-blue rounded-lg">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span class="font-medium">Inspections</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-tools"></i>
+                        <span>Parts & Inventory</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 p-6">
+            <!-- Page Header -->
+            <section id="page-header" class="mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-workshop-charcoal">Vehicle Inspection</h2>
+                        <p class="text-gray-600">2019 Ford Transit - License: ABC123</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2 text-sm text-gray-600">
+                            <i class="fa-solid fa-calendar"></i>
+                            <span>Dec 1, 2024</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-sm text-gray-600">
+                            <i class="fa-solid fa-user"></i>
+                            <span>Inspector: Mike Johnson</span>
+                        </div>
+                        <button class="px-4 py-2 bg-workshop-blue text-white rounded-lg hover:bg-workshop-cyan transition-colors">
+                            <i class="fa-solid fa-save mr-2"></i>Save Progress
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inspection Overview -->
+            <section id="inspection-overview" class="mb-8">
+                <div class="grid grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Total Checks</p>
+                                <p class="text-3xl font-bold text-workshop-charcoal">45</p>
+                            </div>
+                            <div class="relative w-12 h-12">
+                                <svg class="w-12 h-12 progress-ring">
+                                    <circle cx="24" cy="24" r="20" stroke="#e5e7eb" stroke-width="4" fill="transparent"></circle>
+                                    <circle cx="24" cy="24" r="20" stroke="#0077B6" stroke-width="4" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="31.4"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-xs font-bold text-workshop-blue">75%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Completed</p>
+                                <p class="text-3xl font-bold text-green-600">34</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-check text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Issues Found</p>
+                                <p class="text-3xl font-bold text-red-600">3</p>
+                            </div>
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-exclamation-triangle text-red-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Remaining</p>
+                                <p class="text-3xl font-bold text-orange-600">11</p>
+                            </div>
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-clock text-orange-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inspection Sections -->
+            <div id="inspection-sections" class="grid grid-cols-2 gap-6">
+                <!-- Engine & Drivetrain -->
+                <section id="engine-section" class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-workshop-blue bg-opacity-10 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-engine text-workshop-blue"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-workshop-charcoal">Engine & Drivetrain</h3>
+                                    <p class="text-sm text-gray-600">8/10 completed</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span class="text-sm font-medium text-green-600">Good</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Oil Level & Condition</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Pass</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Coolant Level</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Pass</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-exclamation text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Air Filter Condition</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">Replace</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer hover:border-workshop-blue">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
+                                    <span class="text-gray-500">Belt Condition</span>
+                                </div>
+                                <button class="text-workshop-blue hover:text-workshop-cyan">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Brakes & Suspension -->
+                <section id="brakes-section" class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-car-brake text-orange-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-workshop-charcoal">Brakes & Suspension</h3>
+                                    <p class="text-sm text-gray-600">6/8 completed</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <span class="text-sm font-medium text-yellow-600">Attention</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Brake Fluid Level</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Pass</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-exclamation text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Front Brake Pads</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">Monitor</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Shock Absorbers</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Pass</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer hover:border-workshop-blue">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
+                                    <span class="text-gray-500">Rear Brake Pads</span>
+                                </div>
+                                <button class="text-workshop-blue hover:text-workshop-cyan">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Electrical System -->
+                <section id="electrical-section" class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-workshop-cyan bg-opacity-10 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-bolt text-workshop-cyan"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-workshop-charcoal">Electrical System</h3>
+                                    <p class="text-sm text-gray-600">5/6 completed</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span class="text-sm font-medium text-green-600">Good</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Battery Condition</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Pass</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Headlights</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Pass</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Indicators</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Pass</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer hover:border-workshop-blue">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
+                                    <span class="text-gray-500">Alternator Output</span>
+                                </div>
+                                <button class="text-workshop-blue hover:text-workshop-cyan">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Safety & Exterior -->
+                <section id="safety-section" class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-shield-halved text-red-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-workshop-charcoal">Safety & Exterior</h3>
+                                    <p class="text-sm text-gray-600">3/7 completed</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <span class="text-sm font-medium text-red-600">Issues</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Windscreen Wipers</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Pass</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-exclamation text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Tyre Tread Depth</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">Replace</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-xs"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Mirrors</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Pass</span>
+                            </div>
+                            <div class="checklist-item flex items-center justify-between p-3 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer hover:border-workshop-blue">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
+                                    <span class="text-gray-500">Seat Belts</span>
+                                </div>
+                                <button class="text-workshop-blue hover:text-workshop-cyan">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Action Buttons -->
+            <section id="action-buttons" class="mt-8 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                        <i class="fa-solid fa-camera mr-2"></i>Add Photo
+                    </button>
+                    <button class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                        <i class="fa-solid fa-comment mr-2"></i>Add Note
+                    </button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                        <i class="fa-solid fa-pause mr-2"></i>Save & Exit
+                    </button>
+                    <button class="px-6 py-3 bg-workshop-blue text-white rounded-lg hover:bg-workshop-cyan transition-colors">
+                        <i class="fa-solid fa-flag-checkered mr-2"></i>Complete Inspection
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Brand Badge -->
+    <div id="brand-badge" class="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-lg shadow-lg border border-gray-200 qr-pattern">
+        <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 bg-workshop-blue rounded flex items-center justify-center">
+                <i class="fa-solid fa-gear text-white text-xs"></i>
+            </div>
+            <span class="text-xs text-gray-600">Powered by Workshop360</span>
+        </div>
+    </div>
+
+</body>
+</html>

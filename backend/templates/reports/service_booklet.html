@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ L_booklet.title }} - {{ vehicle.license_plate }}</title>
+    <style>
+        body {
+            font-family: 'Helvetica', sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .cover {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 3px solid #0077B6;
+            margin-bottom: 30px;
+        }
+        .cover h1 {
+            color: #0077B6;
+            font-size: 24px;
+            margin: 0 0 8px 0;
+        }
+        .cover h2 {
+            color: #1B263B;
+            font-size: 18px;
+            margin: 0 0 12px 0;
+        }
+        .cover p {
+            color: #666;
+            margin: 5px 0;
+        }
+        .vehicle-details {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+        }
+        .vehicle-details h3 {
+            color: #0077B6;
+            margin-top: 0;
+        }
+        .vehicle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .vehicle-item label {
+            display: block;
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .vehicle-item span {
+            font-weight: bold;
+        }
+        .summary-box {
+            background: #1B263B;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 4px;
+            margin-bottom: 28px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .summary-box label {
+            display: block;
+            font-size: 9px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+        .summary-box span {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .visit-section {
+            margin-bottom: 28px;
+            page-break-inside: avoid;
+        }
+        .visit-header {
+            background: #0077B6;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px 4px 0 0;
+        }
+        .visit-header h3 {
+            margin: 0;
+            font-size: 15px;
+        }
+        .visit-header p {
+            margin: 3px 0 0 0;
+            font-size: 10px;
+            opacity: 0.9;
+        }
+        .visit-body {
+            border: 1px solid #ddd;
+            border-top: none;
+            padding: 15px;
+            border-radius: 0 0 4px 4px;
+        }
+        .visit-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .visit-info-item label {
+            display: block;
+            font-size: 9px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .visit-info-item span {
+            font-weight: bold;
+        }
+        h4.section-heading {
+            margin: 0 0 10px 0;
+            color: #0077B6;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 11px;
+        }
+        th, td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f5f5f5;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 9px;
+        }
+        .total-row td {
+            font-weight: bold;
+            background: #f0f9ff;
+        }
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .pill.ok { background: #dcfce7; color: #166534; }
+        .pill.warn { background: #fef9c3; color: #854d0e; }
+        .pill.bad { background: #fee2e2; color: #991b1b; }
+        .pill.neutral { background: #f1f5f9; color: #475569; }
+        .notes-box {
+            margin-top: 12px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+        }
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="cover">
+        <h1>{{ workshop_name }}</h1>
+        <h2>{{ L_booklet.title }}</h2>
+        <p>{{ L_booklet.subtitle }}</p>
+        {% if period_label %}<p><strong>{{ period_label }}</strong></p>{% endif %}
+        <p>{{ L_booklet.generated }}: {{ generated_at|date:"F d, Y H:i" }}</p>
+    </div>
+
+    <div class="vehicle-details">
+        <h3>{{ L_booklet.vehicle_info }}</h3>
+        <div class="vehicle-grid">
+            <div class="vehicle-item">
+                <label>{{ L_booklet.make_model }}</label>
+                <span>{{ vehicle.make }} {{ vehicle.model }}</span>
+            </div>
+            <div class="vehicle-item">
+                <label>{{ L_booklet.year }}</label>
+                <span>{{ vehicle.year }}</span>
+            </div>
+            <div class="vehicle-item">
+                <label>{{ L_booklet.plate }}</label>
+                <span>{{ vehicle.license_plate }}</span>
+            </div>
+            <div class="vehicle-item">
+                <label>{{ L_booklet.vin }}</label>
+                <span>{{ vehicle.vin }}</span>
+            </div>
+            <div class="vehicle-item">
+                <label>{{ L_booklet.odometer }}</label>
+                <span>{{ vehicle.odometer_km }} km</span>
+            </div>
+            <div class="vehicle-item">
+                <label>{{ L_booklet.owner }}</label>
+                <span>{{ client.name|default:client.company_name }}</span>
+            </div>
+        </div>
+    </div>
+
+    {% if visit_blocks %}
+    <div class="summary-box">
+        <div>
+            <label>{{ L_booklet.summary_visits }}</label>
+            <span>{{ visit_count }}</span>
+        </div>
+        <div>
+            <label>{{ L_booklet.summary_total }}</label>
+            <span>{{ currency_symbol }}{{ grand_total|floatformat:2 }}</span>
+        </div>
+    </div>
+
+    <h2 style="color: #1B263B; margin-bottom: 20px;">{{ L_booklet.service_history }}</h2>
+
+    {% for block in visit_blocks %}
+    {% with visit=block.visit %}
+    <div class="visit-section">
+        <div class="visit-header">
+            <h3>{{ L_booklet.visit }} #{{ visit.id|slice:":8"|upper }}</h3>
+            <p>{{ visit.service_date|date:"F d, Y" }} • {{ visit.mileage_km }} km</p>
+        </div>
+        <div class="visit-body">
+            <div class="visit-info">
+                <div class="visit-info-item">
+                    <label>{{ L_booklet.status }}</label>
+                    <span>{{ visit.get_status_display }}</span>
+                </div>
+                <div class="visit-info-item">
+                    <label>{{ L_booklet.hour_meter }}</label>
+                    <span>{{ visit.hour_meter }} hrs</span>
+                </div>
+                <div class="visit-info-item">
+                    <label>{{ L_booklet.performed_by }}</label>
+                    <span>{% if block.technician_name %}{{ block.technician_name }}{% else %}{{ L_booklet.na }}{% endif %}</span>
+                </div>
+            </div>
+
+            {% if block.inspection_rows %}
+            <h4 class="section-heading">{{ L_booklet.section_inspection }}</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 22%;">{{ L_booklet.col_section }}</th>
+                        <th style="width: 38%;">{{ L_booklet.col_check }}</th>
+                        <th style="width: 40%;">{{ L_booklet.col_result }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in block.inspection_rows %}
+                    <tr>
+                        <td>{{ row.section }}</td>
+                        <td>{{ row.item }}</td>
+                        <td><span class="pill {{ row.status_class }}">{{ row.value }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if block.service_lines %}
+            <h4 class="section-heading">{{ L_booklet.services_performed }}</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ L_booklet.description }}</th>
+                        <th>{{ L_booklet.qty }}</th>
+                        <th>{{ L_booklet.price }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in block.service_lines %}
+                    <tr>
+                        <td>{{ line.description }}</td>
+                        <td>{{ line.quantity }}</td>
+                        <td>{{ currency_symbol }}{{ line.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if block.material_lines %}
+            <h4 class="section-heading">{{ L_booklet.parts_used }}</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ L_booklet.item }}</th>
+                        <th>{{ L_booklet.qty }}</th>
+                        <th>{{ L_booklet.price }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in block.material_lines %}
+                    <tr>
+                        <td>{{ line.inventory_item.name|default:L.part_fallback }}</td>
+                        <td>{{ line.quantity }}</td>
+                        <td>{{ currency_symbol }}{{ line.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if block.labor_lines %}
+            <h4 class="section-heading">{{ L_booklet.labor }}</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ L_booklet.description }}</th>
+                        <th>{{ L_booklet.hours }}</th>
+                        <th>{{ L_booklet.price }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in block.labor_lines %}
+                    <tr>
+                        <td>{{ line.description }}</td>
+                        <td>{{ line.hours }}</td>
+                        <td>{{ currency_symbol }}{{ line.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            <table>
+                <tr class="total-row">
+                    <td colspan="2">{{ L_booklet.visit_total }}</td>
+                    <td>{{ currency_symbol }}{{ block.visit_total|floatformat:2 }}</td>
+                </tr>
+            </table>
+
+            {% if visit.notes %}
+            <div class="notes-box">
+                <strong>{{ L_booklet.notes }}:</strong> {{ visit.notes }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+    {% else %}
+    <p class="empty-state">{{ L_booklet.no_visits }}</p>
+    {% endif %}
+
+    <div class="footer">
+        <p><strong>{{ workshop_name }}</strong></p>
+        <p>{{ L_booklet.footer_legal }}</p>
+    </div>
+</body>
+</html>

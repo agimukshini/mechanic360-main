@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ L_sticker.title }}</title>
+    <style>
+        @page {
+            size: 38mm 25mm;
+            margin: 0;
+        }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 7px;
+            margin: 0;
+            padding: 2mm;
+            width: 38mm;
+            height: 25mm;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .sticker {
+            border: 1px solid #0077B6;
+            border-radius: 2px;
+            padding: 1.5mm;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 0.5px solid #0077B6;
+            padding-bottom: 1mm;
+            margin-bottom: 1mm;
+        }
+        .header-left {
+            flex: 1;
+        }
+        .header h1 {
+            color: #0077B6;
+            font-size: 8px;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1;
+        }
+        .header p {
+            margin: 0;
+            font-size: 5px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .vehicle-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-bottom: 1mm;
+        }
+        .vehicle-info .plate {
+            font-size: 11px;
+            font-weight: bold;
+            color: #1B263B;
+            line-height: 1;
+            margin-bottom: 0.5mm;
+        }
+        .vehicle-info .model {
+            font-size: 6px;
+            color: #333;
+            line-height: 1;
+        }
+        .service-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1mm;
+        }
+        .service-info .date, .service-info .mileage {
+            flex: 1;
+        }
+        .service-info label {
+            display: block;
+            font-size: 4.5px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            margin-bottom: 0.2mm;
+        }
+        .service-info span {
+            font-weight: bold;
+            font-size: 7px;
+            color: #1B263B;
+        }
+        .next-service {
+            background: #0077B6;
+            color: white;
+            text-align: center;
+            padding: 1mm;
+            border-radius: 1px;
+        }
+        .next-service label {
+            display: block;
+            font-size: 4.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            margin-bottom: 0.2mm;
+        }
+        .next-service span {
+            font-size: 8px;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            font-size: 4px;
+            color: #999;
+            margin-top: 0.5mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="sticker">
+        <div class="header">
+            <div class="header-left">
+                <h1>W360</h1>
+                <p>{{ L_sticker.service_complete }}</p>
+            </div>
+        </div>
+
+        <div class="vehicle-info">
+            <div class="plate">{{ vehicle.license_plate }}</div>
+            <div class="model">{{ vehicle.make }} {{ vehicle.model }}</div>
+        </div>
+
+        <div class="service-info">
+            <div class="date">
+                <label>{{ L_sticker.date }}</label>
+                <span>{{ visit.service_date|date:"d/m/Y" }}</span>
+            </div>
+            <div class="mileage">
+                <label>{{ L_sticker.mileage }}</label>
+                <span>{{ visit.mileage_km }}</span>
+            </div>
+        </div>
+
+        <div class="next-service">
+            <label>{{ L_sticker.next_service }}</label>
+            <span>{% if visit.next_service_date %}{{ visit.next_service_date|date:"d/m/Y" }}{% else %}{{ L_sticker.tbd }}{% endif %}</span>
+        </div>
+
+        <div class="footer">
+            Workshop360
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'workshop-blue': '#0077B6',
+                        'workshop-cyan': '#00B4D8',
+                        'workshop-charcoal': '#1B263B',
+                        'workshop-gray': '#F5F5F5'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        .qr-pattern {
+            background-image: radial-gradient(circle at 2px 2px, rgba(0,119,182,0.1) 1px, transparent 0);
+            background-size: 8px 8px;
+        }
+        .status-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="font-inter bg-workshop-gray">
+
+    <!-- Header -->
+    <header id="header" class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div id="logo-section" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-workshop-blue rounded-lg flex items-center justify-center relative">
+                        <i class="fa-solid fa-gear text-white text-lg"></i>
+                        <div class="absolute top-1 right-1 w-2 h-2 qr-pattern rounded-sm"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-workshop-charcoal">Workshop360</h1>
+                        <p class="text-xs text-gray-500">Smart Maintenance. Real Mechanics.</p>
+                    </div>
+                </div>
+
+                <!-- Search & Actions -->
+                <div id="header-actions" class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="text" placeholder="Search vehicles, work orders..." class="w-80 px-4 py-2 pl-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                        <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button class="p-2 text-gray-600 hover:text-workshop-blue transition-colors">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                    </button>
+                    <div class="w-8 h-8 bg-workshop-cyan rounded-full flex items-center justify-center">
+                        <span class="text-white font-medium text-sm">JD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div id="main-layout" class="flex">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-white shadow-sm h-screen sticky top-0">
+            <nav class="p-6">
+                <div class="space-y-2">
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 bg-workshop-blue bg-opacity-10 text-workshop-blue rounded-lg">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <span>Work Orders</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-car"></i>
+                        <span>Vehicles</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Inspections</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-tools"></i>
+                        <span>Parts & Inventory</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 p-6">
+            <!-- Stats Overview -->
+            <section id="stats-overview" class="mb-8">
+                <h2 class="text-2xl font-bold text-workshop-charcoal mb-6">Workshop Overview</h2>
+                <div class="grid grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Active Work Orders</p>
+                                <p class="text-3xl font-bold text-workshop-charcoal">23</p>
+                            </div>
+                            <div class="w-12 h-12 bg-workshop-blue bg-opacity-10 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-wrench text-workshop-blue text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Vehicles in Bay</p>
+                                <p class="text-3xl font-bold text-workshop-charcoal">8</p>
+                            </div>
+                            <div class="w-12 h-12 bg-workshop-cyan bg-opacity-10 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-car text-workshop-cyan text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Pending Inspections</p>
+                                <p class="text-3xl font-bold text-workshop-charcoal">12</p>
+                            </div>
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-clipboard-check text-orange-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Today's Revenue</p>
+                                <p class="text-3xl font-bold text-workshop-charcoal">$2,840</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-dollar-sign text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active Work Orders -->
+            <section id="active-work-orders" class="mb-8">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-workshop-charcoal">Active Work Orders</h3>
+                            <button class="text-workshop-blue hover:text-workshop-cyan transition-colors">
+                                <i class="fa-solid fa-plus mr-2"></i>New Work Order
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-3 h-3 bg-red-500 rounded-full status-dot"></div>
+                                    <div>
+                                        <p class="font-medium text-workshop-charcoal">WO-2024-001</p>
+                                        <p class="text-sm text-gray-600">2019 Ford Transit - ABC123</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-6">
+                                    <div class="text-right">
+                                        <p class="text-sm font-medium text-workshop-charcoal">Engine Service</p>
+                                        <p class="text-xs text-gray-500">Bay 3 - Mike Johnson</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">Critical</span>
+                                    <button class="text-workshop-blue hover:text-workshop-cyan">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-3 h-3 bg-yellow-500 rounded-full status-dot"></div>
+                                    <div>
+                                        <p class="font-medium text-workshop-charcoal">WO-2024-002</p>
+                                        <p class="text-sm text-gray-600">2021 Mercedes Sprinter - XYZ789</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-6">
+                                    <div class="text-right">
+                                        <p class="text-sm font-medium text-workshop-charcoal">Brake Inspection</p>
+                                        <p class="text-xs text-gray-500">Bay 1 - Sarah Wilson</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">In Progress</span>
+                                    <button class="text-workshop-blue hover:text-workshop-cyan">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full status-dot"></div>
+                                    <div>
+                                        <p class="font-medium text-workshop-charcoal">WO-2024-003</p>
+                                        <p class="text-sm text-gray-600">2020 Iveco Daily - DEF456</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-6">
+                                    <div class="text-right">
+                                        <p class="text-sm font-medium text-workshop-charcoal">Oil Change</p>
+                                        <p class="text-xs text-gray-500">Bay 2 - Tom Davis</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Scheduled</span>
+                                    <button class="text-workshop-blue hover:text-workshop-cyan">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Grid -->
+            <div id="bottom-grid" class="grid grid-cols-2 gap-6">
+                <!-- Vehicle Status -->
+                <section id="vehicle-status" class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <h3 class="text-lg font-semibold text-workshop-charcoal">Vehicle Status</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-workshop-blue bg-opacity-10 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-car text-workshop-blue text-sm"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">In Service</span>
+                                </div>
+                                <span class="font-semibold text-workshop-charcoal">8</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-clock text-yellow-600 text-sm"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Waiting</span>
+                                </div>
+                                <span class="font-semibold text-workshop-charcoal">5</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-green-600 text-sm"></i>
+                                    </div>
+                                    <span class="text-workshop-charcoal">Completed</span>
+                                </div>
+                                <span class="font-semibold text-workshop-charcoal">12</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Upcoming Inspections -->
+                <section id="upcoming-inspections" class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <h3 class="text-lg font-semibold text-workshop-charcoal">Upcoming Inspections</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-workshop-charcoal">ABC123 - Ford Transit</p>
+                                    <p class="text-sm text-gray-600">Annual MOT</p>
+                                </div>
+                                <span class="text-sm text-red-600 font-medium">Due Today</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-workshop-charcoal">XYZ789 - Mercedes Sprinter</p>
+                                    <p class="text-sm text-gray-600">Safety Check</p>
+                                </div>
+                                <span class="text-sm text-orange-600 font-medium">2 days</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-workshop-charcoal">DEF456 - Iveco Daily</p>
+                                    <p class="text-sm text-gray-600">Emissions Test</p>
+                                </div>
+                                <span class="text-sm text-gray-600 font-medium">1 week</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Brand Badge -->
+    <div id="brand-badge" class="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-lg shadow-lg border border-gray-200 qr-pattern">
+        <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 bg-workshop-blue rounded flex items-center justify-center">
+                <i class="fa-solid fa-gear text-white text-xs"></i>
+            </div>
+            <span class="text-xs text-gray-600">Powered by Workshop360</span>
+        </div>
+    </div>
+
+</body>
+</html>

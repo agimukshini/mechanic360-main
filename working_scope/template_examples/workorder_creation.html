@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Work Order</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'workshop-blue': '#0077B6',
+                        'workshop-cyan': '#00B4D8',
+                        'workshop-charcoal': '#1B263B',
+                        'workshop-gray': '#F5F5F5'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        .qr-pattern {
+            background-image: radial-gradient(circle at 2px 2px, rgba(0,119,182,0.1) 1px, transparent 0);
+            background-size: 8px 8px;
+        }
+    </style>
+</head>
+<body class="font-inter bg-workshop-gray">
+
+    <header id="header" class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div id="logo-section" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-workshop-blue rounded-lg flex items-center justify-center relative">
+                        <i class="fa-solid fa-gear text-white text-lg"></i>
+                        <div class="absolute top-1 right-1 w-2 h-2 qr-pattern rounded-sm"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-workshop-charcoal">Workshop360</h1>
+                        <p class="text-xs text-gray-500">Smart Maintenance. Real Mechanics.</p>
+                    </div>
+                </div>
+
+                <div id="header-actions" class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="text" placeholder="Search vehicles, work orders..." class="w-80 px-4 py-2 pl-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                        <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button class="p-2 text-gray-600 hover:text-workshop-blue transition-colors">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                    </button>
+                    <div class="w-8 h-8 bg-workshop-cyan rounded-full flex items-center justify-center">
+                        <span class="text-white font-medium text-sm">JD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="main-layout" class="flex">
+        <aside id="sidebar" class="w-64 bg-white shadow-sm h-screen sticky top-0">
+            <nav class="p-6">
+                <div class="space-y-2">
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 bg-workshop-blue bg-opacity-10 text-workshop-blue rounded-lg">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <span class="font-medium">Work Orders</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-car"></i>
+                        <span>Vehicles</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Inspections</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-tools"></i>
+                        <span>Parts & Inventory</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main id="main-content" class="flex-1 p-6">
+            <div id="page-header" class="mb-6 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-workshop-charcoal">Create New Work Order</h2>
+                    <p class="text-sm text-gray-600 mt-1">Log services, assign parts, and schedule maintenance</p>
+                </div>
+                <button class="px-4 py-2 text-gray-600 hover:text-workshop-charcoal border border-gray-300 rounded-lg transition-colors">
+                    <i class="fa-solid fa-times mr-2"></i>Cancel
+                </button>
+            </div>
+
+            <div id="form-container" class="grid grid-cols-3 gap-6">
+                <div class="col-span-2 space-y-6">
+                    <section id="vehicle-selection" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-workshop-charcoal mb-4 flex items-center">
+                            <i class="fa-solid fa-car text-workshop-blue mr-2"></i>
+                            Vehicle Information
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Vehicle</label>
+                                <div class="relative">
+                                    <select class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent appearance-none">
+                                        <option>Select vehicle...</option>
+                                        <option>2019 Ford Transit - ABC123</option>
+                                        <option>2021 Mercedes Sprinter - XYZ789</option>
+                                        <option>2020 Iveco Daily - DEF456</option>
+                                        <option>2022 Volkswagen Crafter - GHI789</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Current Mileage</label>
+                                <input type="text" placeholder="e.g., 45,230 km" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name</label>
+                                <input type="text" placeholder="Enter customer name" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Customer Phone</label>
+                                <input type="text" placeholder="+1 (555) 000-0000" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="work-details" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-workshop-charcoal mb-4 flex items-center">
+                            <i class="fa-solid fa-wrench text-workshop-blue mr-2"></i>
+                            Work Order Details
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+                                    <div class="relative">
+                                        <select class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent appearance-none">
+                                            <option>Select service type...</option>
+                                            <option>Engine Service</option>
+                                            <option>Brake Inspection</option>
+                                            <option>Oil Change</option>
+                                            <option>Tire Replacement</option>
+                                            <option>Transmission Service</option>
+                                            <option>Electrical Repair</option>
+                                            <option>General Maintenance</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                                    <div class="relative">
+                                        <select class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent appearance-none">
+                                            <option>Normal</option>
+                                            <option>High</option>
+                                            <option>Critical</option>
+                                            <option>Low</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Assigned Mechanic</label>
+                                    <div class="relative">
+                                        <select class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent appearance-none">
+                                            <option>Select mechanic...</option>
+                                            <option>Mike Johnson</option>
+                                            <option>Sarah Wilson</option>
+                                            <option>Tom Davis</option>
+                                            <option>Lisa Anderson</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Service Bay</label>
+                                    <div class="relative">
+                                        <select class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent appearance-none">
+                                            <option>Select bay...</option>
+                                            <option>Bay 1</option>
+                                            <option>Bay 2</option>
+                                            <option>Bay 3</option>
+                                            <option>Bay 4</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Scheduled Date</label>
+                                    <input type="date" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Estimated Duration</label>
+                                    <input type="text" placeholder="e.g., 2.5 hours" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Description / Notes</label>
+                                <textarea rows="4" placeholder="Enter detailed description of work to be performed..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent resize-none"></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="parts-section" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-workshop-charcoal flex items-center">
+                                <i class="fa-solid fa-box text-workshop-blue mr-2"></i>
+                                Parts & Materials
+                            </h3>
+                            <button class="px-4 py-2 bg-workshop-cyan text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm">
+                                <i class="fa-solid fa-plus mr-2"></i>Add Part
+                            </button>
+                        </div>
+                        <div id="parts-list" class="space-y-3">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4 flex-1">
+                                    <div class="w-10 h-10 bg-workshop-blue bg-opacity-10 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-oil-can text-workshop-blue"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="text" placeholder="Part name or SKU" class="w-full bg-transparent border-none focus:outline-none font-medium text-workshop-charcoal">
+                                        <input type="text" placeholder="Part number" class="w-full bg-transparent border-none focus:outline-none text-sm text-gray-600">
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="number" placeholder="Qty" class="w-20 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue text-center">
+                                        <input type="text" placeholder="$0.00" class="w-24 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue">
+                                    </div>
+                                </div>
+                                <button class="ml-4 text-red-500 hover:text-red-700">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="labor-section" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-workshop-charcoal flex items-center">
+                                <i class="fa-solid fa-user-clock text-workshop-blue mr-2"></i>
+                                Labor Charges
+                            </h3>
+                            <button class="px-4 py-2 bg-workshop-cyan text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm">
+                                <i class="fa-solid fa-plus mr-2"></i>Add Labor
+                            </button>
+                        </div>
+                        <div id="labor-list" class="space-y-3">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4 flex-1">
+                                    <div class="w-10 h-10 bg-workshop-blue bg-opacity-10 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-clock text-workshop-blue"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="text" placeholder="Labor description" class="w-full bg-transparent border-none focus:outline-none font-medium text-workshop-charcoal">
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="number" placeholder="Hours" class="w-20 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue text-center">
+                                        <input type="text" placeholder="$0.00/hr" class="w-28 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue">
+                                    </div>
+                                </div>
+                                <button class="ml-4 text-red-500 hover:text-red-700">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-span-1 space-y-6">
+                    <section id="cost-summary" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-6">
+                        <h3 class="text-lg font-semibold text-workshop-charcoal mb-4 flex items-center">
+                            <i class="fa-solid fa-calculator text-workshop-blue mr-2"></i>
+                            Cost Summary
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                                <span class="text-gray-600">Parts Total</span>
+                                <span class="font-semibold text-workshop-charcoal">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                                <span class="text-gray-600">Labor Total</span>
+                                <span class="font-semibold text-workshop-charcoal">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                                <span class="text-gray-600">Subtotal</span>
+                                <span class="font-semibold text-workshop-charcoal">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                                <span class="text-gray-600">Tax (10%)</span>
+                                <span class="font-semibold text-workshop-charcoal">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2">
+                                <span class="text-lg font-bold text-workshop-charcoal">Total</span>
+                                <span class="text-2xl font-bold text-workshop-blue">$0.00</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t border-gray-100 space-y-3">
+                            <button class="w-full px-4 py-3 bg-workshop-blue text-white rounded-lg hover:bg-opacity-90 transition-colors font-medium">
+                                <i class="fa-solid fa-check mr-2"></i>Create Work Order
+                            </button>
+                            <button class="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                                <i class="fa-solid fa-save mr-2"></i>Save as Draft
+                            </button>
+                        </div>
+                    </section>
+
+                    <section id="quick-actions" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-base font-semibold text-workshop-charcoal mb-4">Quick Actions</h3>
+                        <div class="space-y-2">
+                            <button class="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm">
+                                <i class="fa-solid fa-qrcode text-workshop-blue"></i>
+                                <span>Scan Vehicle QR</span>
+                            </button>
+                            <button class="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm">
+                                <i class="fa-solid fa-file-lines text-workshop-blue"></i>
+                                <span>Load Template</span>
+                            </button>
+                            <button class="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm">
+                                <i class="fa-solid fa-copy text-workshop-blue"></i>
+                                <span>Duplicate Previous</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <section id="attachments" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-base font-semibold text-workshop-charcoal mb-4">Attachments</h3>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-workshop-blue transition-colors cursor-pointer">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-600">Drop files or click to upload</p>
+                            <p class="text-xs text-gray-400 mt-1">Photos, PDFs, up to 10MB</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="brand-badge" class="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-lg shadow-lg border border-gray-200 qr-pattern">
+        <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 bg-workshop-blue rounded flex items-center justify-center">
+                <i class="fa-solid fa-gear text-white text-xs"></i>
+            </div>
+            <span class="text-xs text-gray-600">Powered by Workshop360</span>
+        </div>
+    </div>
+
+</body>
+</html>

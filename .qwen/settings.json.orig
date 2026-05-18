@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker-compose *)",
+      "Bash(findstr *)",
+      "Bash(npx *)",
+      "Bash(docker compose logs *)",
+      "Bash(timeout *)",
+      "Bash(docker compose restart *)",
+      "Bash(powershell *)"
+    ]
+  },
+  "$version": 3
+}

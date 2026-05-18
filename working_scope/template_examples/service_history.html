@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'workshop-blue': '#0077B6',
+                        'workshop-cyan': '#00B4D8',
+                        'workshop-charcoal': '#1B263B',
+                        'workshop-gray': '#F5F5F5'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        .qr-pattern {
+            background-image: radial-gradient(circle at 2px 2px, rgba(0,119,182,0.1) 1px, transparent 0);
+            background-size: 8px 8px;
+        }
+        .filter-active {
+            background-color: #0077B6;
+            color: white;
+        }
+    </style>
+</head>
+<body class="font-inter bg-workshop-gray">
+
+    <!-- Header -->
+    <header id="header" class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div id="logo-section" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-workshop-blue rounded-lg flex items-center justify-center relative">
+                        <i class="fa-solid fa-gear text-white text-lg"></i>
+                        <div class="absolute top-1 right-1 w-2 h-2 qr-pattern rounded-sm"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-workshop-charcoal">Workshop360</h1>
+                        <p class="text-xs text-gray-500">Smart Maintenance. Real Mechanics.</p>
+                    </div>
+                </div>
+
+                <!-- Search & Actions -->
+                <div id="header-actions" class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="text" placeholder="Search vehicles, work orders..." class="w-80 px-4 py-2 pl-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue focus:border-transparent">
+                        <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button class="p-2 text-gray-600 hover:text-workshop-blue transition-colors">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                    </button>
+                    <div class="w-8 h-8 bg-workshop-cyan rounded-full flex items-center justify-center">
+                        <span class="text-white font-medium text-sm">JD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div id="main-layout" class="flex">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-white shadow-sm h-screen sticky top-0">
+            <nav class="p-6">
+                <div class="space-y-2">
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <span>Work Orders</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-car"></i>
+                        <span>Vehicles</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 bg-workshop-blue bg-opacity-10 text-workshop-blue rounded-lg">
+                        <i class="fa-solid fa-history"></i>
+                        <span class="font-medium">Service History</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Inspections</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-tools"></i>
+                        <span>Parts & Inventory</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 p-6">
+            <!-- Page Header -->
+            <section id="page-header" class="mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-workshop-charcoal">Service History</h2>
+                        <p class="text-gray-600 mt-1">View past services performed on vehicles</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button class="px-4 py-2 bg-workshop-blue text-white rounded-lg hover:bg-workshop-cyan transition-colors">
+                            <i class="fa-solid fa-download mr-2"></i>Export Report
+                        </button>
+                        <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fa-solid fa-print mr-2"></i>Print
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filters Section -->
+            <section id="filters-section" class="mb-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-semibold text-workshop-charcoal mb-4">Filter Services</h3>
+                    <div class="grid grid-cols-4 gap-4">
+                        <!-- Date Range Filter -->
+                        <div id="date-filter">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                            <div class="flex space-x-2">
+                                <input type="date" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue">
+                                <input type="date" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue">
+                            </div>
+                        </div>
+
+                        <!-- Service Type Filter -->
+                        <div id="service-type-filter">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue">
+                                <option>All Services</option>
+                                <option>Oil Change</option>
+                                <option>Brake Service</option>
+                                <option>Engine Service</option>
+                                <option>Inspection</option>
+                                <option>Tire Service</option>
+                                <option>Electrical</option>
+                            </select>
+                        </div>
+
+                        <!-- Vehicle Filter -->
+                        <div id="vehicle-filter">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Vehicle</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue">
+                                <option>All Vehicles</option>
+                                <option>ABC123 - Ford Transit</option>
+                                <option>XYZ789 - Mercedes Sprinter</option>
+                                <option>DEF456 - Iveco Daily</option>
+                                <option>GHI789 - Volkswagen Crafter</option>
+                            </select>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div id="status-filter">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-workshop-blue">
+                                <option>All Statuses</option>
+                                <option>Completed</option>
+                                <option>Warranty</option>
+                                <option>Follow-up Required</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between mt-4">
+                        <div class="flex items-center space-x-2">
+                            <button class="px-3 py-1 bg-workshop-blue text-white text-sm rounded-full">Last 30 Days</button>
+                            <button class="px-3 py-1 border border-gray-300 text-gray-700 text-sm rounded-full hover:bg-gray-50">Last 3 Months</button>
+                            <button class="px-3 py-1 border border-gray-300 text-gray-700 text-sm rounded-full hover:bg-gray-50">This Year</button>
+                        </div>
+                        <button class="text-workshop-blue hover:text-workshop-cyan text-sm font-medium">
+                            <i class="fa-solid fa-filter-circle-xmark mr-1"></i>Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Service History Table -->
+            <section id="service-history-table" class="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-workshop-charcoal">Service Records</h3>
+                        <div class="flex items-center space-x-2 text-sm text-gray-600">
+                            <span>Showing 1-10 of 247 records</span>
+                            <div class="flex items-center space-x-1 ml-4">
+                                <button class="p-1 text-gray-400 hover:text-workshop-blue">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <span class="px-2 py-1 bg-workshop-blue text-white text-xs rounded">1</span>
+                                <span class="px-2 py-1 text-gray-600 text-xs">2</span>
+                                <span class="px-2 py-1 text-gray-600 text-xs">3</span>
+                                <button class="p-1 text-gray-400 hover:text-workshop-blue">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Technician</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mileage</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Dec 15, 2024</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-workshop-charcoal">ABC123</div>
+                                        <div class="text-sm text-gray-500">2019 Ford Transit</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <i class="fa-solid fa-oil-can text-workshop-blue mr-2"></i>
+                                        <span class="text-sm text-workshop-charcoal">Oil Change</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Mike Johnson</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">45,230 km</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-workshop-charcoal">$89.50</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button class="text-workshop-blue hover:text-workshop-cyan mr-3">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-workshop-blue">
+                                        <i class="fa-solid fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Dec 12, 2024</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-workshop-charcoal">XYZ789</div>
+                                        <div class="text-sm text-gray-500">2021 Mercedes Sprinter</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <i class="fa-solid fa-brake-warning text-red-500 mr-2"></i>
+                                        <span class="text-sm text-workshop-charcoal">Brake Service</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Sarah Wilson</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">32,450 km</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-workshop-charcoal">$340.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Warranty</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button class="text-workshop-blue hover:text-workshop-cyan mr-3">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-workshop-blue">
+                                        <i class="fa-solid fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Dec 10, 2024</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-workshop-charcoal">DEF456</div>
+                                        <div class="text-sm text-gray-500">2020 Iveco Daily</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <i class="fa-solid fa-clipboard-check text-workshop-cyan mr-2"></i>
+                                        <span class="text-sm text-workshop-charcoal">Annual Inspection</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Tom Davis</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">28,900 km</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-workshop-charcoal">$125.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button class="text-workshop-blue hover:text-workshop-cyan mr-3">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-workshop-blue">
+                                        <i class="fa-solid fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Dec 8, 2024</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-workshop-charcoal">GHI789</div>
+                                        <div class="text-sm text-gray-500">2022 Volkswagen Crafter</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <i class="fa-solid fa-tire text-gray-600 mr-2"></i>
+                                        <span class="text-sm text-workshop-charcoal">Tire Rotation</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Lisa Chen</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">15,600 km</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-workshop-charcoal">$65.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">Follow-up</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button class="text-workshop-blue hover:text-workshop-cyan mr-3">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-workshop-blue">
+                                        <i class="fa-solid fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Dec 5, 2024</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-workshop-charcoal">ABC123</div>
+                                        <div class="text-sm text-gray-500">2019 Ford Transit</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <i class="fa-solid fa-engine text-workshop-blue mr-2"></i>
+                                        <span class="text-sm text-workshop-charcoal">Engine Diagnostic</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">Mike Johnson</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-workshop-charcoal">44,890 km</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-workshop-charcoal">$180.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button class="text-workshop-blue hover:text-workshop-cyan mr-3">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-workshop-blue">
+                                        <i class="fa-solid fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Summary Cards -->
+            <section id="summary-cards" class="mt-6 grid grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Total Services (30 days)</p>
+                            <p class="text-2xl font-bold text-workshop-charcoal">24</p>
+                        </div>
+                        <div class="w-12 h-12 bg-workshop-blue bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-wrench text-workshop-blue text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Total Revenue</p>
+                            <p class="text-2xl font-bold text-workshop-charcoal">$5,240</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-dollar-sign text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Avg Service Time</p>
+                            <p class="text-2xl font-bold text-workshop-charcoal">2.5h</p>
+                        </div>
+                        <div class="w-12 h-12 bg-workshop-cyan bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-clock text-workshop-cyan text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Brand Badge -->
+    <div id="brand-badge" class="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-lg shadow-lg border border-gray-200 qr-pattern">
+        <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 bg-workshop-blue rounded flex items-center justify-center">
+                <i class="fa-solid fa-gear text-white text-xs"></i>
+            </div>
+            <span class="text-xs text-gray-600">Powered by Workshop360</span>
+        </div>
+    </div>
+
+</body>
+</html>
