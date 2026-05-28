@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux'
 import { inspectionsApi, visitsApi } from '@/api'
 import { ArrowLeft, Loader2, CheckCircle, XCircle, AlertTriangle, Edit2 } from 'lucide-react'
 import type { RootState } from '@/store'
-import { canManageWorkshopData, normalizeRole } from '@/lib/roles'
+import { canLogVisitWork, canManageWorkshopData, normalizeRole } from '@/lib/roles'
 
 function formatValue(value: unknown): { label: string; tone: string } {
   if (value === true || value === 'pass') {
@@ -33,7 +33,7 @@ export default function InspectionDetail() {
   const { t } = useTranslation()
   const { id } = useParams()
   const user = useSelector((state: RootState) => state.auth.user)
-  const canManage = canManageWorkshopData(normalizeRole(user?.role))
+  const canManage = canLogVisitWork(normalizeRole(user?.role))
 
   const { data: inspectionRes, isLoading } = useQuery({
     queryKey: ['inspection', id],

@@ -7,8 +7,10 @@ import { vehiclesApi, visitsApi, inspectionsApi, api } from '@/api'
 import { useToast } from '@/components/ui/Toast'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import VehiclePhoto from '@/components/vehicles/VehiclePhoto'
+import VehicleOwnerQrPanel from '@/components/vehicles/VehicleOwnerQrPanel'
 import { unwrapList, getApiErrorMessage, resolveMediaUrl } from '@/lib/utils'
-import { canManageWorkshopData, normalizeRole } from '@/lib/roles'
+import { formatHourMeter, formatOdometer, type OdometerUnit } from '@/lib/odometer'
+import { canManageVehicles, canManageWorkshopData, normalizeRole } from '@/lib/roles'
 import type { RootState } from '@/store'
 import { printQrCode } from '@/lib/printQr'
 import {
@@ -52,6 +54,7 @@ export default function VehicleDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const user = useSelector((state: RootState) => state.auth.user)
+  const canManageVehiclesData = canManageVehicles(normalizeRole(user?.role))
   const canManage = canManageWorkshopData(normalizeRole(user?.role))
   const [activeTab, setActiveTab] = useState('overview')
   const [confirmAction, setConfirmAction] = useState<VehicleConfirmAction>(null)
@@ -190,19 +193,22 @@ export default function VehicleDetail() {
   const vehicle = vehicleData?.data
   if (!vehicle) return null
 
+  const odometerUnit = (vehicle.odometer_unit === 'mi' ? 'mi' : 'km') as OdometerUnit
+  const odometerLabel = formatOdometer(vehicle.odometer_km, odometerUnit)
+  const hourMeterLabel = formatHourMeter(vehicle.hour_meter)
+
   const visits = visitsData?.data?.results || visitsData?.data || []
 
   const handlePrintQR = async () => {
     try {
-      const response = await api.get(`/vehicles/${id}/qr_code/`)
-      const qrCodeData = response.data.qr_code
+      const response = await vehiclesApi.ownerClaimQr(id!)
       printQrCode({
-        qrCodeData,
-        title: 'Vehicle QR Code',
+        qrCodeData: response.data.qr_code,
+        title: 'Owner claim QR',
         lines: [
-          `Vehicle: ${vehicle.make} ${vehicle.model}`,
-          `License Plate: ${vehicle.license_plate}`,
-          'Scan to look up vehicle',
+          `${vehicle.make} ${vehicle.model}`,
+          `Plate: ${vehicle.license_plate}`,
+          'Owner scans to add vehicle to their app',
         ],
       })
     } catch (error) {
@@ -211,27 +217,35 @@ export default function VehicleDetail() {
   }
 
   const handlePrintSticker = async () => {
-    // Find the most recent visit to generate a sticker from
-    const recentVisit = visits.find((v: any) =>
-      v.status === 'in_progress' || v.status === 'completed'
-    )
-    if (!recentVisit) {
-      showToast('No visits found for this vehicle. Complete a service visit first.', 'info')
-      return
-    }
+    if (!id) return
     try {
-      const response = await api.get(`/visits/reports/door-sticker/${recentVisit.id}/`, {
-        responseType: 'blob',
-      })
+      // Permanent vehicle door sticker: workshop branding + QR + plate.
+      // Independent of any service visit — generated from the vehicle itself.
+      const response = await vehiclesApi.doorStickerPdf(id, 'attachment')
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      link.setAttribute('download', `door-sticker-${vehicle?.license_plate}.pdf`)
+      const plate = (vehicle?.license_plate || 'vehicle').replace(/\s+/g, '')
+      link.setAttribute('download', `door-sticker-${plate}.pdf`)
       document.body.appendChild(link)
       link.click()
       link.remove()
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       showToast(getApiErrorMessage(error, 'Failed to generate door sticker'), 'error')
+    }
+  }
+
+  const handlePreviewSticker = async () => {
+    if (!id) return
+    try {
+      const response = await vehiclesApi.doorStickerPdf(id, 'inline')
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+      window.open(url, '_blank', 'noopener')
+      // Revoke after a delay to give the new tab time to load.
+      setTimeout(() => window.URL.revokeObjectURL(url), 30_000)
+    } catch (error) {
+      showToast(getApiErrorMessage(error, 'Failed to open door sticker'), 'error')
     }
   }
 
@@ -272,9 +286,9 @@ export default function VehicleDetail() {
       </div>
 
       {/* Hero Card */}
-      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-blue-900 rounded-xl p-4 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-blue-900 rounded-xl p-4 text-white overflow-hidden">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3 min-w-0">
             {vehicle.photo ? (
               <VehiclePhoto
                 src={vehicle.photo}
@@ -286,49 +300,59 @@ export default function VehicleDetail() {
                 <Car className="w-7 h-7 text-white" />
               </div>
             )}
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold">{vehicle.make} {vehicle.model}</h2>
-                <span className="px-2 py-0.5 bg-white/20 rounded text-[10px] font-medium">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl font-bold truncate max-w-full">{vehicle.make} {vehicle.model}</h2>
+                <span className="px-2 py-0.5 bg-white/20 rounded text-[10px] font-medium whitespace-nowrap">
                   {vehicle.license_plate}
                 </span>
                 {vehicle.is_active === false && (
-                  <span className="px-2 py-0.5 bg-amber-500/30 border border-amber-400/50 rounded text-[10px] font-medium text-amber-100">
+                  <span className="px-2 py-0.5 bg-amber-500/30 border border-amber-400/50 rounded text-[10px] font-medium text-amber-100 whitespace-nowrap">
                     {t('vehicles.archived')}
                   </span>
                 )}
                 {visits.some((v: any) => v.status === 'in_progress') && (
-                  <span className="px-2 py-0.5 bg-blue-500/30 border border-blue-400/50 rounded text-[10px] font-medium text-blue-100">
+                  <span className="px-2 py-0.5 bg-blue-500/30 border border-blue-400/50 rounded text-[10px] font-medium text-blue-100 whitespace-nowrap">
                     In Service
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-3 mt-1 text-xs text-gray-300">
-                <span className="flex items-center gap-1">
-                  <Gauge className="w-3.5 h-3.5" />
-                  VIN: {vehicle.vin?.substring(0, 12)}...
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-300">
+                <span className="flex items-center gap-1 min-w-0">
+                  <Gauge className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">VIN: {vehicle.vin?.substring(0, 12)}…</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
                   Year: {vehicle.year}
                 </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {vehicle.odometer_km?.toLocaleString() || 0} km
-                </span>
+                {vehicle.odometer_km != null && (
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                    {odometerLabel}
+                  </span>
+                )}
+                {vehicle.hour_meter != null && (
+                  <span className="flex items-center gap-1">
+                    <Gauge className="w-3.5 h-3.5 shrink-0" />
+                    {hourMeterLabel}
+                  </span>
+                )}
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 justify-end">
+          <div className="flex flex-wrap gap-2 lg:justify-end shrink-0">
+            {canManageVehiclesData && (
+              <Link
+                to={`/vehicles/${id}/edit`}
+                className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors flex items-center gap-1.5 text-sm"
+              >
+                <Edit2 className="w-4 h-4" />
+                {t('common.edit')}
+              </Link>
+            )}
             {canManage && (
               <>
-                <Link
-                  to={`/vehicles/${id}/edit`}
-                  className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors flex items-center gap-1.5 text-sm"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  {t('common.edit')}
-                </Link>
                 {vehicle.is_active !== false ? (
                   <button
                     type="button"
@@ -363,9 +387,9 @@ export default function VehicleDetail() {
               className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors flex items-center gap-1.5 text-sm"
             >
               <QrCode className="w-4 h-4" />
-              Show QR
+              Show owner QR
             </button>
-            {vehicle.is_active !== false && (
+            {vehicle.is_active !== false && canManage && (
               <Link
                 to={`/visits/new?vehicleId=${id}`}
                 className="px-3 py-2 bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-lg transition-colors flex items-center gap-1.5 text-sm shadow-lg shadow-blue-500/30"
@@ -451,17 +475,27 @@ export default function VehicleDetail() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-semibold text-gray-900">Vehicle Specifications</h3>
+              {canManageVehiclesData && (
               <Link to={`/vehicles/${id}/edit`} className="text-brand-primary hover:text-brand-primary-dark text-xs font-medium flex items-center gap-1">
                 <Edit2 className="w-3.5 h-3.5" />
                 Edit
               </Link>
+              )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: 'Engine', value: vehicle.engine_type || 'N/A' },
                 { label: 'Fuel Type', value: vehicle.fuel_type || 'N/A' },
-                { label: 'Odometer', value: `${vehicle.odometer_km?.toLocaleString() || 0} km` },
-                { label: 'Hour Meter', value: `${vehicle.hour_meter?.toLocaleString() || 0} hrs` },
+                { label: t('vehicles.odometer'), value: odometerLabel },
+                { label: t('vehicles.hourMeter'), value: hourMeterLabel },
+                {
+                  label: t('vehicles.assignedMechanic'),
+                  value: vehicle.assigned_mechanic
+                    ? [vehicle.assigned_mechanic.first_name, vehicle.assigned_mechanic.last_name]
+                        .filter(Boolean)
+                        .join(' ') || vehicle.assigned_mechanic.username
+                    : t('vehicles.unassignedMechanic'),
+                },
               ].map((spec) => (
                 <div key={spec.label}>
                   <p className="text-xs text-gray-500">{spec.label}</p>
@@ -470,6 +504,23 @@ export default function VehicleDetail() {
               ))}
             </div>
           </div>
+
+          {vehicle.description?.trim() && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">{t('vehicles.description')}</h3>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{vehicle.description}</p>
+            </div>
+          )}
+
+          <VehicleOwnerQrPanel
+            vehicleId={id!}
+            licensePlate={vehicle.license_plate}
+            make={vehicle.make}
+            model={vehicle.model}
+            vin={vehicle.vin}
+            globalCurrentOwner={vehicle.global_current_owner}
+            registrationHistory={vehicle.registration_history}
+          />
 
           {/* Recent Visits */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
@@ -745,6 +796,11 @@ export default function VehicleDetail() {
           {/* Owner Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h3 className="text-base font-semibold text-gray-900 mb-3">Owner Information</h3>
+            {!vehicle.owner ? (
+              <p className="text-sm text-gray-500">
+                No workshop client linked yet. Assign an owner from the vehicle edit form or use the owner QR below after verifying paperwork.
+              </p>
+            ) : (
             <div className="space-y-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -796,11 +852,12 @@ export default function VehicleDetail() {
                 </div>
               </div>
 
-              <Link to={`/clients/${vehicle.owner?.id}`} className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm">
+              <Link to={`/clients/${vehicle.owner.id}`} className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm">
                 <User className="w-3.5 h-3.5" />
                 View Client Profile
               </Link>
             </div>
+            )}
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
@@ -846,13 +903,15 @@ export default function VehicleDetail() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h3 className="text-base font-semibold text-gray-900 mb-3">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => navigate(`/visits/new?vehicleId=${id}`)}
-                className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center gap-1.5"
-              >
-                <FileText className="w-4 h-4 text-gray-600" />
-                <span className="text-[11px] font-medium text-gray-700">New Visit</span>
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => navigate(`/visits/new?vehicleId=${id}`)}
+                  className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center gap-1.5"
+                >
+                  <FileText className="w-4 h-4 text-gray-600" />
+                  <span className="text-[11px] font-medium text-gray-700">New Visit</span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   const openVisit = visits.find(
@@ -871,10 +930,19 @@ export default function VehicleDetail() {
               </button>
               <button
                 onClick={handlePrintSticker}
+                title="Download printable vehicle door sticker (PDF)"
                 className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center gap-1.5"
               >
                 <Printer className="w-4 h-4 text-gray-600" />
-                <span className="text-[11px] font-medium text-gray-700">Print Sticker</span>
+                <span className="text-[11px] font-medium text-gray-700">Door Sticker</span>
+              </button>
+              <button
+                onClick={handlePreviewSticker}
+                title="Preview vehicle door sticker in a new tab"
+                className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center gap-1.5"
+              >
+                <QrCode className="w-4 h-4 text-gray-600" />
+                <span className="text-[11px] font-medium text-gray-700">Preview QR</span>
               </button>
               <button
                 type="button"

@@ -1,0 +1,16 @@
+# Local development — Vite dev server on :5173
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: /api/v1
+      VITE_PROXY_TARGET: http://backend:8000

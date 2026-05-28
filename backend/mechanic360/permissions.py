@@ -10,7 +10,21 @@ from rest_framework.views import APIView
 
 User = get_user_model()
 
-STAFF_ROLES = frozenset({User.Role.ADMIN, User.Role.SERVICE_ADVISOR})
+STAFF_ROLES = frozenset({User.Role.ADMIN})
+
+
+class IsOwnerUser(permissions.BasePermission):
+    """Require an authenticated vehicle owner account (no workshop tenant)."""
+
+    message = "This endpoint is for vehicle owner accounts only."
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        user = request.user
+        return bool(
+            user
+            and user.is_authenticated
+            and getattr(user, "role", None) == User.Role.OWNER
+        )
 
 
 class IsTenantUser(permissions.BasePermission):
@@ -41,7 +55,7 @@ class IsTenantAdmin(permissions.BasePermission):
 
 
 class IsAdvisorOrAdmin(permissions.BasePermission):
-    """Admin or service advisor — catalog, inventory, deletes, analytics."""
+    """Workshop admin — catalog, inventory, deletes, analytics."""
 
     def has_permission(self, request: Request, view: APIView) -> bool:
         user = request.user
@@ -51,7 +65,7 @@ class IsAdvisorOrAdmin(permissions.BasePermission):
 
 
 class IsAdvisorOrAdminOrReadOnly(permissions.BasePermission):
-    """Mechanics may read; advisors/admins may write."""
+    """Mechanics may read; admins may write."""
 
     def has_permission(self, request: Request, view: APIView) -> bool:
         if not request.user or not request.user.is_authenticated:
@@ -59,3 +73,13 @@ class IsAdvisorOrAdminOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return getattr(request.user, "role", None) in STAFF_ROLES
+
+
+class IsPlatformSuperuser(permissions.BasePermission):
+    """Platform superuser (Django is_superuser)."""
+
+    message = "Platform superuser access required."
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        user = request.user
+        return bool(user and user.is_authenticated and user.is_superuser)

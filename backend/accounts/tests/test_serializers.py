@@ -12,10 +12,6 @@ User = get_user_model()
 
 
 class RegisterSerializerTests(SimpleTestCase):
-    def test_role_choices_exclude_admin(self):
+    def test_role_field_defaults_to_mechanic(self):
         serializer = RegisterSerializer()
-        role_field = serializer.fields["role"]
-        choice_values = [c[0] for c in role_field.choices]
-        self.assertIn(User.Role.MECHANIC, choice_values)
-        self.assertIn(User.Role.SERVICE_ADVISOR, choice_values)
-        self.assertNotIn(User.Role.ADMIN, choice_values)
+        self.assertEqual(serializer.fields["role"].default, User.Role.MECHANIC)

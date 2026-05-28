@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Car, ChevronRight, LayoutGrid, List, Table2 } from 'lucide-react'
 import VehiclePhoto from '@/components/vehicles/VehiclePhoto'
+import { formatOdometer, type OdometerUnit } from '@/lib/odometer'
 
 export type VehicleRow = {
   id: string
@@ -9,7 +10,8 @@ export type VehicleRow = {
   year?: number
   license_plate?: string
   vin?: string
-  odometer_km?: number
+  odometer_km?: number | null
+  odometer_unit?: OdometerUnit
   photo?: string | null
   last_service_date?: string | null
   service_due_soon?: boolean
@@ -26,6 +28,13 @@ export function vehicleInService(vehicle: VehicleRow) {
 
 function ownerLabel(vehicle: VehicleRow) {
   return vehicle.owner?.name || vehicle.owner?.company || '—'
+}
+
+function odometerLabel(vehicle: VehicleRow) {
+  return formatOdometer(
+    vehicle.odometer_km,
+    vehicle.odometer_unit === 'mi' ? 'mi' : 'km',
+  )
 }
 
 function lastServiceLabel(vehicle: VehicleRow) {
@@ -199,7 +208,7 @@ export function VehiclesListView({ vehicles }: { vehicles: VehicleRow[] }) {
             <div>
               <p className="text-xs text-secondary">Odometer</p>
               <p className="text-sm font-medium text-primary">
-                {vehicle.odometer_km != null ? `${vehicle.odometer_km.toLocaleString()} km` : '—'}
+                {odometerLabel(vehicle)}
               </p>
             </div>
           </div>
@@ -239,7 +248,7 @@ export function VehiclesTableView({ vehicles }: { vehicles: VehicleRow[] }) {
                 <td className="px-4 py-3 text-sm text-secondary">{vehicle.license_plate}</td>
                 <td className="px-4 py-3 text-sm text-secondary hidden md:table-cell">{ownerLabel(vehicle)}</td>
                 <td className="px-4 py-3 text-sm text-secondary hidden lg:table-cell">
-                  {vehicle.odometer_km != null ? `${vehicle.odometer_km.toLocaleString()} km` : '—'}
+                  {odometerLabel(vehicle)}
                 </td>
                 <td className="px-4 py-3 text-sm text-secondary hidden sm:table-cell">{lastServiceLabel(vehicle)}</td>
                 <td className="px-4 py-3">

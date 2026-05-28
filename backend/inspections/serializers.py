@@ -9,6 +9,9 @@ from __future__ import annotations
 from rest_framework import serializers
 
 from vehicles.models import Inspection, Vehicle, ServiceVisit
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class InspectionSerializer(serializers.ModelSerializer):
@@ -71,10 +74,18 @@ class CreateInspectionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"visit_id": "This visit already has an inspection. Edit the existing one."}
             )
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if user and getattr(user, "role", None) == User.Role.MECHANIC:
+            validated_data["performed_by"] = user
         return Inspection.objects.create(visit=visit, **validated_data)
 
     def update(self, instance, validated_data):
         validated_data.pop("visit_id", None)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if user and getattr(user, "role", None) == User.Role.MECHANIC:
+            validated_data.setdefault("performed_by", user)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()

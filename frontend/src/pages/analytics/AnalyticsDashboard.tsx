@@ -61,7 +61,10 @@ export default function AnalyticsDashboard() {
             Overview of workshop performance and metrics
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <a href="/analytics/mechanics" className="btn btn-outline">
+            Mechanic KPIs
+          </a>
           {(['day', 'week', 'month'] as const).map((p) => (
             <button
               key={p}

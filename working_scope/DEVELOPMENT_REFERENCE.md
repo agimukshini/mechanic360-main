@@ -37,6 +37,18 @@ Services: `db`, `redis`, `backend`, `celery`, `celery-beat`, `frontend`.
 
 Stock deduct on material lines (backend serializers). Frontend must not set `current_stock` directly. Audit ledger is future work.
 
+## User profile, team & mechanic KPIs
+
+Full scope: **`working_scope/USER_PROFILE_MECHANICS_AND_AUDIT.md`**.
+
+| Topic | Status |
+|-------|--------|
+| Settings password/profile PATCH | Implemented — see `accounts/migrations/0005_*`, `SettingsSerializer`, `SettingsPage` |
+| Login audit (success/fail) | Implemented — `/auth/login-audit/`, `/auth/admin/login-audit/`, UI at `/settings/login-log` and `/admin/security/logins` |
+| Tenant staff CRUD API | `/api/v1/auth/tenant/users/` exists; no frontend Team page |
+| Mechanic work attribution | `Inspection.performed_by`, `Visit.created_by`; service/labor lines unassigned |
+| Mechanic KPI dashboard | Not implemented |
+
 ## Forbidden
 
 Bypass tenant isolation; store uploads in DB; hardcode secrets; skip mandatory inspection; weaken auth; replace stack; delete migrations casually.

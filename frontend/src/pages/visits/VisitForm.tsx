@@ -13,6 +13,8 @@ import { PageTabs, SegmentTabs } from '@/components/ui/PageTabs'
 import VisitStatusBadge from '@/components/ui/VisitStatusBadge'
 import { WorkLineList, type WorkLineRow } from '@/components/visits/WorkLineList'
 import { formatEuro, MULTIPLY } from '@/lib/money'
+import { userDisplayName } from '@/lib/userDisplay'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
   Car,
@@ -398,14 +400,26 @@ function VisitEditor({
   setNotes: (s: string) => void
   inspectionComplete: boolean
   isEditable: boolean
-  serviceLines: { id: string; description: string; quantity: number; total_price: string | number }[]
+  serviceLines: {
+    id: string
+    description: string
+    quantity: number
+    total_price: string | number
+    performed_by?: { first_name?: string; last_name?: string; username?: string }
+  }[]
   materialLines: {
     id: string
     inventory_item_detail?: { name: string }
     quantity: number
     total_price: string | number
   }[]
-  laborLines: { id: string; description: string; hours: number; total_price: string | number }[]
+  laborLines: {
+    id: string
+    description: string
+    hours: number
+    total_price: string | number
+    performed_by?: { first_name?: string; last_name?: string; username?: string }
+  }[]
   grandTotal: number
   showServiceForm: boolean
   setShowServiceForm: (v: boolean) => void
@@ -419,6 +433,7 @@ function VisitEditor({
   saveMutation: { mutate: () => void; isPending: boolean }
   finishMutation: { mutate: () => void; isPending: boolean }
 }) {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState<'details' | 'work' | 'inspection'>('work')
   const [workSegment, setWorkSegment] = useState<'services' | 'parts' | 'labor'>('services')
@@ -427,6 +442,9 @@ function VisitEditor({
     id: l.id,
     label: l.description,
     sub: `${l.quantity} ${MULTIPLY} ${formatEuro((l as { unit_price?: string | number }).unit_price)}`,
+    meta: l.performed_by
+      ? `${t('visits.performedBy')}: ${userDisplayName(l.performed_by)}`
+      : undefined,
     total: l.total_price,
   }))
 
@@ -441,6 +459,9 @@ function VisitEditor({
     id: l.id,
     label: l.description,
     sub: `${l.hours}h ${MULTIPLY} ${formatEuro((l as { hourly_rate?: string | number }).hourly_rate)}/hr`,
+    meta: l.performed_by
+      ? `${t('visits.performedBy')}: ${userDisplayName(l.performed_by)}`
+      : undefined,
     total: l.total_price,
   }))
 
@@ -574,11 +595,6 @@ function VisitEditor({
 
       {activeTab === 'inspection' && (
       <div className="card p-6 space-y-3">
-        {!inspectionComplete && isEditable && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            A 360° inspection is required before you can finish this visit.
-          </div>
-        )}
         {isEditable ? (
           <Link
             to={`/visits/${visitId}/inspection/new`}
@@ -595,7 +611,9 @@ function VisitEditor({
                   360{'\u00b0'} inspection
                 </p>
                 <p className="text-sm text-secondary mt-0.5">
-                  {inspectionComplete ? 'Checklist completed' : 'Required — open checklist'}
+                  {inspectionComplete
+                    ? 'Checklist completed'
+                    : 'Optional — open checklist to add one'}
                 </p>
               </div>
             </div>
@@ -610,7 +628,7 @@ function VisitEditor({
       )}
 
       {isEditable && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur-sm px-4 py-3 md:pl-64">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur-sm px-4 py-3 lg:pl-[216px]">
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="text-sm text-secondary sm:pl-1">
               Total <span className="font-bold text-gray-900 text-lg ml-1">{formatEuro(grandTotal)}</span>
@@ -626,14 +644,7 @@ function VisitEditor({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  if (!inspectionComplete) {
-                    showToast('Complete the 360° inspection before finishing this visit.', 'info')
-                    setActiveTab('inspection')
-                    return
-                  }
-                  finishMutation.mutate()
-                }}
+                onClick={() => finishMutation.mutate()}
                 disabled={finishMutation.isPending || mileage <= 0}
                 className="btn btn-primary flex-1 sm:flex-none"
               >

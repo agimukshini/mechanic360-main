@@ -1,0 +1,7 @@
+# QNAP media mount — use after: sudo ./scripts/qnap/mount.sh
+#   docker compose -f docker-compose.yml -f docker-compose.qnap.yml up -d backend
+
+services:
+  backend:
+    volumes:
+      - /mnt/qnap/mechanic:/app/media

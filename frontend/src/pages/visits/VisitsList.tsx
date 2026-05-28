@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { visitsApi } from '@/api'
+import { visitsApi, authApi } from '@/api'
 import { Plus, Search, Loader2, Calendar } from 'lucide-react'
 import { useState } from 'react'
 import PageHeader from '@/components/ui/PageHeader'
 import VisitStatusBadge from '@/components/ui/VisitStatusBadge'
 import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
+import { canManageWorkshopData, normalizeRole } from '@/lib/roles'
+import type { RootState } from '@/store'
 
 type VisitRow = {
   id: string
@@ -19,14 +22,28 @@ type VisitRow = {
 
 export default function VisitsList() {
   const { t } = useTranslation()
+  const { user } = useSelector((state: RootState) => state.auth)
+  const canFilterByMechanic = canManageWorkshopData(normalizeRole(user?.role))
   const [search, setSearch] = useState('')
+  const [mechanicFilter, setMechanicFilter] = useState('')
+
+  const { data: mechanicsData } = useQuery({
+    queryKey: ['tenant-mechanics'],
+    queryFn: () => authApi.listMechanics(),
+    enabled: canFilterByMechanic,
+  })
 
   const { data, isLoading } = useQuery({
-    queryKey: ['visits', search],
-    queryFn: () => visitsApi.list({ search }),
+    queryKey: ['visits', search, mechanicFilter],
+    queryFn: () =>
+      visitsApi.list({
+        search,
+        ...(mechanicFilter ? { mechanic: mechanicFilter } : {}),
+      }),
   })
 
   const visits: VisitRow[] = data?.data?.results || data?.data || []
+  const mechanics = mechanicsData?.data || []
 
   return (
     <div className="space-y-6">
@@ -34,22 +51,40 @@ export default function VisitsList() {
         title={t('visits.listTitle')}
         description={t('visits.listDescription')}
         action={
-          <Link to="/visits/new" className="btn btn-primary">
-            <Plus className="w-4 h-4 mr-2" />
-            {t('visits.new')}
-          </Link>
+          canFilterByMechanic ? (
+            <Link to="/visits/new" className="btn btn-primary">
+              <Plus className="w-4 h-4 mr-2" />
+              {t('visits.new')}
+            </Link>
+          ) : undefined
         }
       />
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/60" />
-        <input
-          type="search"
-          placeholder={t('visits.searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input pl-10"
-        />
+      <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/60" />
+          <input
+            type="search"
+            placeholder={t('visits.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input pl-10 w-full"
+          />
+        </div>
+        {canFilterByMechanic && (
+          <select
+            value={mechanicFilter}
+            onChange={(e) => setMechanicFilter(e.target.value)}
+            className="input w-full sm:w-56"
+          >
+            <option value="">{t('visits.allMechanics')}</option>
+            {mechanics.map((mechanic: { id: string; first_name?: string; last_name?: string; username: string }) => (
+              <option key={mechanic.id} value={mechanic.id}>
+                {[mechanic.first_name, mechanic.last_name].filter(Boolean).join(' ') || mechanic.username}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {isLoading ? (
@@ -57,7 +92,7 @@ export default function VisitsList() {
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
         </div>
       ) : visits.length === 0 ? (
-        <div className="card p-12 text-center text-secondary">No visits found</div>
+        <div className="card p-12 text-center text-secondary">{t('visits.empty')}</div>
       ) : (
         <>
           <div className="md:hidden space-y-3">

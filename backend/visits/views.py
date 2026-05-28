@@ -7,10 +7,12 @@ parts of the scope from a backend perspective.
 from __future__ import annotations
 
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from django.contrib.auth import get_user_model
 from vehicles.models import ServiceVisit
 from .services import complete_in_progress_visit, finish_service_visit
 from .models import (
@@ -20,8 +22,15 @@ from .models import (
     VisitServiceLine,
     PreventiveMaintenancePlan,
 )
-from mechanic360.mixins import AdvisorWriteMixin, DestroyRequiresAdvisorMixin
-from mechanic360.permissions import IsTenantUser
+from mechanic360.mixins import (
+    AdvisorWriteMixin,
+    AdvisorWriteTenantReadMixin,
+    DestroyRequiresAdvisorMixin,
+    MechanicOwnWorkLineMixin,
+    MechanicReadOnlyMixin,
+    VisitAdvisorActionsMixin,
+)
+from mechanic360.permissions import IsAdvisorOrAdmin, IsTenantUser
 
 from .serializers import (
     ServiceVisitSerializer,
@@ -32,13 +41,15 @@ from .serializers import (
     PreventiveMaintenancePlanSerializer,
 )
 
+User = get_user_model()
+
 
 def _validation_error_response(exc: ValidationError) -> Response:
     message = exc.messages[0] if getattr(exc, "messages", None) else str(exc)
     return Response({"error": message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ServiceVisitViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
+class ServiceVisitViewSet(DestroyRequiresAdvisorMixin, VisitAdvisorActionsMixin, viewsets.ModelViewSet):
     """
     Full CRUD over service visits for the current tenant.
 
@@ -50,7 +61,12 @@ class ServiceVisitViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
     """
 
     queryset = (
-        ServiceVisit.objects.select_related("vehicle", "client")
+        ServiceVisit.objects.select_related(
+            "vehicle",
+            "vehicle__assigned_mechanic",
+            "client",
+            "created_by",
+        )
         .prefetch_related("service_lines", "material_lines", "labor_lines")
         .all()
     )
@@ -63,11 +79,22 @@ class ServiceVisitViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
     ordering = ["-service_date"]
 
     def get_queryset(self):
-        """Filter visits by vehicle if vehicle_id param is provided."""
+        """Filter visits by vehicle or mechanic when requested."""
         queryset = super().get_queryset()
+        user = self.request.user
+        if getattr(user, "role", None) == User.Role.MECHANIC:
+            queryset = queryset.exclude(status=ServiceVisit.Status.CANCELLED)
         vehicle_id = self.request.query_params.get("vehicle")
         if vehicle_id:
             queryset = queryset.filter(vehicle_id=vehicle_id)
+        mechanic_id = self.request.query_params.get("mechanic")
+        if mechanic_id and getattr(user, "role", None) != User.Role.MECHANIC:
+            queryset = queryset.filter(
+                Q(service_lines__performed_by_id=mechanic_id)
+                | Q(labor_lines__performed_by_id=mechanic_id)
+                | Q(created_by_id=mechanic_id)
+                | Q(inspection__performed_by_id=mechanic_id)
+            ).distinct()
         return queryset
 
     @action(detail=True, methods=["post"], url_path="start")
@@ -155,7 +182,7 @@ class ServiceCatalogViewSet(AdvisorWriteMixin, viewsets.ModelViewSet):
     ordering = ["name"]
 
 
-class VisitServiceLineViewSet(viewsets.ModelViewSet):
+class VisitServiceLineViewSet(MechanicOwnWorkLineMixin, viewsets.ModelViewSet):
     """
     CRUD for service line items on visits (what services were performed).
     """
@@ -164,14 +191,14 @@ class VisitServiceLineViewSet(viewsets.ModelViewSet):
     permission_classes = [IsTenantUser]
 
     def get_queryset(self):
-        queryset = VisitServiceLine.objects.select_related("visit").all()
+        queryset = VisitServiceLine.objects.select_related("visit", "performed_by").all()
         visit_id = self.request.query_params.get("visit")
         if visit_id:
             queryset = queryset.filter(visit_id=visit_id)
         return queryset
 
 
-class VisitMaterialLineViewSet(viewsets.ModelViewSet):
+class VisitMaterialLineViewSet(AdvisorWriteTenantReadMixin, viewsets.ModelViewSet):
     """
     CRUD for material/part lines on visits (what parts were used).
     """
@@ -187,7 +214,7 @@ class VisitMaterialLineViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class VisitLaborLineViewSet(viewsets.ModelViewSet):
+class VisitLaborLineViewSet(MechanicOwnWorkLineMixin, viewsets.ModelViewSet):
     """
     CRUD for labor lines on visits (labor description, hours, rate).
     """
@@ -196,7 +223,7 @@ class VisitLaborLineViewSet(viewsets.ModelViewSet):
     permission_classes = [IsTenantUser]
 
     def get_queryset(self):
-        queryset = VisitLaborLine.objects.select_related("visit").all()
+        queryset = VisitLaborLine.objects.select_related("visit", "performed_by").all()
         visit_id = self.request.query_params.get("visit")
         if visit_id:
             queryset = queryset.filter(visit_id=visit_id)

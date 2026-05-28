@@ -29,7 +29,21 @@ class Vehicle(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    owner = models.ForeignKey(Client, related_name="vehicles", on_delete=models.PROTECT)
+    global_vehicle_id = models.UUIDField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Link to the platform-wide GlobalVehicle record (public schema).",
+    )
+
+    owner = models.ForeignKey(
+        Client,
+        related_name="vehicles",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Workshop client record. Optional until linked after paperwork check.",
+    )
     vin = models.CharField(max_length=64, unique=True)
     license_plate = models.CharField(max_length=32)
     make = models.CharField(max_length=64)
@@ -37,15 +51,37 @@ class Vehicle(models.Model):
     year = models.PositiveIntegerField()
     engine_type = models.CharField(max_length=64, blank=True)
     fuel_type = models.CharField(max_length=32, blank=True)
+    description = models.TextField(
+        blank=True,
+        help_text="Workshop notes about this vehicle (condition, modifications, etc.).",
+    )
 
-    # Latest readings (history stored in a separate model if needed)
-    odometer_km = models.PositiveIntegerField(default=0)
-    hour_meter = models.PositiveIntegerField(default=0)
+    # Latest readings (optional — road vehicles use mileage, equipment may use hours)
+    class OdometerUnit(models.TextChoices):
+        KM = "km", "Kilometers"
+        MI = "mi", "Miles"
+
+    odometer_km = models.PositiveIntegerField(null=True, blank=True)
+    odometer_unit = models.CharField(
+        max_length=2,
+        choices=OdometerUnit.choices,
+        default=OdometerUnit.KM,
+    )
+    hour_meter = models.PositiveIntegerField(null=True, blank=True)
 
     photo = models.ImageField(upload_to="vehicle_photos/", blank=True, null=True)
     is_active = models.BooleanField(
         default=True,
         help_text="Inactive vehicles are archived and hidden from default lists.",
+    )
+
+    assigned_mechanic = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="assigned_vehicles",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Primary workshop mechanic responsible for this vehicle.",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -77,7 +113,13 @@ class ServiceVisit(models.Model):
         CANCELLED = "cancelled", "Cancelled"
 
     vehicle = models.ForeignKey(Vehicle, related_name="visits", on_delete=models.PROTECT)
-    client = models.ForeignKey(Client, related_name="visits", on_delete=models.PROTECT)
+    client = models.ForeignKey(
+        Client,
+        related_name="visits",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
     status = models.CharField(max_length=32, choices=Status.choices, default=Status.DRAFT)
     mileage_km = models.PositiveIntegerField(default=0)
     hour_meter = models.PositiveIntegerField(default=0)

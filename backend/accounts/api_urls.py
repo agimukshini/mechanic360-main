@@ -13,8 +13,22 @@ from __future__ import annotations
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from .auth_views import LogoutView, ThrottledTokenObtainPairView, ThrottledTokenRefreshView
+from .login_audit_views import SuperadminLoginAuditListView, TenantLoginAuditListView
+from .invite_views import (
+    StaffInviteAcceptView,
+    StaffInvitePreviewView,
+    TenantStaffInviteListCreateView,
+)
 from .pin_auth import ThrottledPinTokenObtainView
-from .views import MeView, RegisterView, TenantUserViewSet, SettingsView, NotificationListView, NotificationMarkReadView
+from .views import (
+    MeView,
+    RegisterView,
+    TenantMechanicsListView,
+    TenantUserViewSet,
+    SettingsView,
+    NotificationListView,
+    NotificationMarkReadView,
+)
 
 router = DefaultRouter()
 # Tenant-scoped user management for workshop admins
@@ -31,6 +45,20 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="auth_register"),
     path("me/", MeView.as_view(), name="auth_me"),
     path("settings/", SettingsView.as_view(), name="auth_settings"),
+    path("tenant/mechanics/", TenantMechanicsListView.as_view(), name="auth_tenant_mechanics"),
+    path("tenant/invites/", TenantStaffInviteListCreateView.as_view(), name="auth_tenant_invites"),
+    path(
+        "staff-invite/<uuid:token_id>/preview/",
+        StaffInvitePreviewView.as_view(),
+        name="auth_staff_invite_preview",
+    ),
+    path(
+        "staff-invite/<uuid:token_id>/accept/",
+        StaffInviteAcceptView.as_view(),
+        name="auth_staff_invite_accept",
+    ),
+    path("login-audit/", TenantLoginAuditListView.as_view(), name="auth_login_audit"),
+    path("admin/login-audit/", SuperadminLoginAuditListView.as_view(), name="auth_admin_login_audit"),
 
     # Notifications
     path("notifications/", NotificationListView.as_view(), name="notifications-list"),

@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logoutUser } from '@/store/authSlice'
 import type { RootState, AppDispatch } from '@/store'
-import { canViewAnalytics, normalizeRole } from '@/lib/roles'
+import { canViewAnalytics, canViewMechanicKpis, isMechanic, mechanicNavigationIds, normalizeRole } from '@/lib/roles'
 import { useTranslation } from 'react-i18next'
 import {
   Wrench,
@@ -28,7 +28,7 @@ type NavItem = {
 }
 
 const baseNavigation: NavItem[] = [
-  { id: 'dashboard', href: '/', icon: LayoutGrid },
+  { id: 'dashboard', href: '/dashboard', icon: LayoutGrid },
   { id: 'vehicles', href: '/vehicles', icon: Car },
   { id: 'visits', href: '/visits', icon: ClipboardList },
   { id: 'services', href: '/services', icon: Package },
@@ -61,7 +61,7 @@ function SidebarContent({
   const handleLogout = async () => {
     onNavigate?.()
     await dispatch(logoutUser())
-    navigate('/login')
+    navigate('/')
   }
 
   return (
@@ -139,10 +139,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   const user = useSelector((state: RootState) => state.auth.user)
   const role = normalizeRole(user?.role)
   const location = useLocation()
+  const allowedIds = isMechanic(role) ? new Set(mechanicNavigationIds()) : null
 
-  const navigation = baseNavigation.filter(
-    (item) => !item.requiresAnalytics || canViewAnalytics(role),
-  )
+  const navigation = [
+    ...baseNavigation.filter((item) => {
+      if (allowedIds && !allowedIds.has(item.id)) return false
+      return !item.requiresAnalytics || canViewAnalytics(role)
+    }),
+    ...(canViewMechanicKpis(role)
+      ? [{ id: 'mechanics', href: '/analytics/mechanics', icon: Users }]
+      : []),
+  ].filter((item) => !allowedIds || allowedIds.has(item.id))
 
   const pathRef = useRef(location.pathname)
   useEffect(() => {

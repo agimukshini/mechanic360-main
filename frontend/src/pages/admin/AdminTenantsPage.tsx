@@ -1,0 +1,140 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
+import { tenantsApi } from '@/api'
+
+interface TenantRow {
+  id: string
+  name: string
+  schema_name: string
+  subscription_plan: string
+  is_active: boolean
+  contact_email: string
+  contact_phone: string
+  stats: {
+    users: number
+    clients: number
+    vehicles: number
+    visits: number
+    global_vehicles_registered: number
+  }
+}
+
+export default function AdminTenantsPage() {
+  const queryClient = useQueryClient()
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['admin-dashboard'],
+    queryFn: () => tenantsApi.getDashboard(),
+  })
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      tenantsApi.update(id, { is_active }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-tenant'] })
+    },
+  })
+
+  const tenants = (data?.data?.tenants ?? []) as TenantRow[]
+
+  if (isLoading) {
+    return (
+      <div className="card p-12 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-workshop-blue" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="card p-8 text-red-700">Failed to load tenants.</div>
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-workshop-charcoal">Tenants</h2>
+        <p className="text-workshop-charcoal/60 mt-1">Manage workshops and activation status</p>
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-workshop-charcoal/5">
+              <tr>
+                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                  Workshop
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                  Contact
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                  Usage
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                  Status
+                </th>
+                <th className="text-right px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-workshop-charcoal/10">
+              {tenants.map((tenant) => (
+                <tr key={tenant.id}>
+                  <td className="px-6 py-4">
+                    <Link
+                      to={`/admin/tenants/${tenant.id}`}
+                      className="font-medium text-workshop-charcoal hover:text-workshop-blue"
+                    >
+                      {tenant.name}
+                    </Link>
+                    <div className="text-xs text-workshop-charcoal/50">
+                      {tenant.schema_name} · {tenant.subscription_plan}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-workshop-charcoal/70">
+                    {tenant.contact_email || '—'}
+                    {tenant.contact_phone && (
+                      <div className="text-xs">{tenant.contact_phone}</div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-workshop-charcoal/70">
+                    {tenant.stats.users} users · {tenant.stats.clients} clients ·{' '}
+                    {tenant.stats.vehicles} vehicles · {tenant.stats.visits} visits
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                        tenant.is_active
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {tenant.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      type="button"
+                      className="btn btn-secondary text-sm"
+                      disabled={toggleMutation.isPending}
+                      onClick={() =>
+                        toggleMutation.mutate({
+                          id: tenant.id,
+                          is_active: !tenant.is_active,
+                        })
+                      }
+                    >
+                      {tenant.is_active ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}

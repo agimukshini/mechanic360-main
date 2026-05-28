@@ -9,14 +9,14 @@ from __future__ import annotations
 
 from rest_framework import viewsets, filters
 
-from mechanic360.mixins import DestroyRequiresAdvisorMixin
+from mechanic360.mixins import DestroyRequiresAdvisorMixin, MechanicReadOnlyMixin
 from mechanic360.permissions import IsTenantUser
 
 from .models import Client
 from .serializers import ClientSerializer
 
 
-class ClientViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
+class ClientViewSet(DestroyRequiresAdvisorMixin, MechanicReadOnlyMixin, viewsets.ModelViewSet):
     """
     Full CRUD over clients for the current tenant.
     """

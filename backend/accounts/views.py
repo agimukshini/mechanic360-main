@@ -14,7 +14,7 @@ from rest_framework import generics, permissions, viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from mechanic360.permissions import IsTenantAdmin
+from mechanic360.permissions import IsTenantAdmin, IsAdvisorOrAdmin
 
 from .serializers import (
     RegisterSerializer,
@@ -71,6 +71,7 @@ class MeView(APIView):
             currency = request.user.tenant.currency or "EUR"
         return Response({
             **serializer.data,
+            "is_superuser": request.user.is_superuser,
             "tenant_name": tenant_name,
             "language": language,
             "currency": currency,
@@ -88,18 +89,27 @@ class SettingsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        serializer = SettingsSerializer(request.user)
+        serializer = SettingsSerializer(request.user, context={"request": request})
         return Response(serializer.data)
 
     def patch(self, request, *args, **kwargs):
-        serializer = SettingsSerializer(request.user, data=request.data, partial=True)
+        serializer = SettingsSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+            context={"request": request},
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
-        serializer = SettingsSerializer(request.user, data=request.data)
+        serializer = SettingsSerializer(
+            request.user,
+            data=request.data,
+            context={"request": request},
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -123,7 +133,14 @@ class TenantUserViewSet(viewsets.ModelViewSet):
         Restrict users to the current tenant only.
         """
         user = self.request.user
-        return User.objects.filter(tenant=user.tenant)
+        return User.objects.filter(tenant=user.tenant).exclude(role=User.Role.OWNER)
+
+    def perform_destroy(self, instance):
+        if instance.id == self.request.user.id:
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError("You cannot delete your own account.")
+        super().perform_destroy(instance)
 
     def perform_create(self, serializer):
         """
@@ -142,6 +159,20 @@ class TenantUserViewSet(viewsets.ModelViewSet):
             )
 
         serializer.save(tenant=tenant)
+
+
+class TenantMechanicsListView(APIView):
+    """Active mechanics in the current workshop (for vehicle assignment)."""
+
+    permission_classes = [IsAdvisorOrAdmin]
+
+    def get(self, request, *args, **kwargs):
+        mechanics = User.objects.filter(
+            tenant=request.user.tenant,
+            role=User.Role.MECHANIC,
+            is_active=True,
+        ).order_by("first_name", "last_name", "username")
+        return Response(UserSerializer(mechanics, many=True).data)
 
 
 class NotificationListView(generics.ListAPIView):

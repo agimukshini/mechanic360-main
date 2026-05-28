@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { login, loginWithPin, clearError } from '@/store/authSlice'
 import type { RootState, AppDispatch } from '@/store'
 import { setWorkshopLanguage } from '@/lib/i18n'
+import { isOwnerRole, normalizeRole } from '@/lib/roles'
 import { Wrench, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle, Cloud, Hash } from 'lucide-react'
 
 type LoginMode = 'password' | 'pin'
@@ -19,7 +20,15 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const { isLoading, error } = useSelector((state: RootState) => state.auth)
+  const { isLoading, error, isAuthenticated, user, sessionChecked } = useSelector(
+    (state: RootState) => state.auth,
+  )
+
+  const appHome = user?.is_superuser
+    ? '/admin'
+    : isOwnerRole(normalizeRole(user?.role))
+      ? '/owner/vehicles'
+      : '/dashboard'
 
   useEffect(() => {
     void setWorkshopLanguage('sq')
@@ -47,7 +56,13 @@ export default function LoginPage() {
 
     const fulfilled = loginMode === 'password' ? login.fulfilled : loginWithPin.fulfilled
     if (fulfilled.match(result)) {
-      navigate('/')
+      const payload = result.payload as { role?: string; is_superuser?: boolean }
+      const role = normalizeRole(payload?.role)
+      if (payload?.is_superuser) {
+        navigate('/admin')
+      } else {
+        navigate(isOwnerRole(role) ? '/owner/vehicles' : '/dashboard')
+      }
     }
   }
 
@@ -100,6 +115,28 @@ export default function LoginPage() {
       {/* Right Panel - Login Form */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md">
+          <Link
+            to="/"
+            className="inline-flex text-sm text-gray-500 hover:text-brand-primary mb-4 transition-colors"
+          >
+            ← {t('common.back')} — Workshop360
+          </Link>
+          {sessionChecked && isAuthenticated && (
+            <div className="mb-4 p-4 rounded-xl bg-blue-50 border border-blue-100 text-sm text-gray-700">
+              <p className="font-medium">{t('landing.signedInWelcome', { username: user?.username })}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link to="/" className="btn btn-secondary text-sm py-1.5">
+                  {t('common.back')}
+                </Link>
+                <Link to={appHome} className="btn btn-primary text-sm py-1.5">
+                  {t('landing.goToDashboard')}
+                </Link>
+                <Link to="/register" className="text-sm text-brand-primary font-semibold self-center px-2">
+                  {t('landing.applyTitle')}
+                </Link>
+              </div>
+            </div>
+          )}
           <div className="bg-white rounded-3xl shadow-xl p-8 lg:p-10">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900">{t('auth.welcomeBack')}</h2>
@@ -284,13 +321,12 @@ export default function LoginPage() {
               {t('auth.registerWorkshop')}
             </Link>
           </p>
-
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-            <p className="text-xs text-gray-600 text-center">
-              <span className="font-semibold text-brand-primary">{t('auth.demoCredentials')}:</span>{' '}
-              {t('auth.demoHint')}
-            </p>
-          </div>
+          <p className="text-center mt-3 text-sm text-gray-600">
+            Vehicle owner?{' '}
+            <Link to="/owner/register" className="text-brand-primary font-semibold hover:underline">
+              Create owner account
+            </Link>
+          </p>
         </div>
       </div>
     </div>

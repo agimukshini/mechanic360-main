@@ -5,6 +5,7 @@ export type WorkLineRow = {
   id: string
   label: string
   sub: string
+  meta?: string
   total: string | number
 }
 
@@ -13,9 +14,16 @@ type WorkLineListProps = {
   lines: WorkLineRow[]
   isEditable: boolean
   onDelete: (id: string) => void
+  canDeleteLine?: (id: string) => boolean
 }
 
-export function WorkLineList({ empty, lines, isEditable, onDelete }: WorkLineListProps) {
+export function WorkLineList({
+  empty,
+  lines,
+  isEditable,
+  onDelete,
+  canDeleteLine,
+}: WorkLineListProps) {
   if (lines.length === 0) {
     return (
       <p className="text-base text-secondary text-center py-10 border border-dashed border-gray-200 rounded-lg">
@@ -34,12 +42,13 @@ export function WorkLineList({ empty, lines, isEditable, onDelete }: WorkLineLis
           <div className="min-w-0 flex-1">
             <p className="font-medium text-base text-gray-900">{line.label}</p>
             <p className="text-sm text-secondary mt-0.5">{line.sub}</p>
+            {line.meta && <p className="text-xs text-gray-500 mt-1">{line.meta}</p>}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-base font-semibold text-gray-900 tabular-nums whitespace-nowrap">
               {formatEuro(line.total)}
             </span>
-            {isEditable && (
+            {isEditable && (!canDeleteLine || canDeleteLine(line.id)) && (
               <button
                 type="button"
                 onClick={() => onDelete(line.id)}

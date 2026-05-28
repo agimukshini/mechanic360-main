@@ -281,6 +281,7 @@
                 <thead>
                     <tr>
                         <th>{{ L_booklet.description }}</th>
+                        {% if block.show_line_technicians %}<th>{{ L_booklet.line_mechanic }}</th>{% endif %}
                         <th>{{ L_booklet.qty }}</th>
                         <th>{{ L_booklet.price }}</th>
                     </tr>
@@ -289,6 +290,9 @@
                     {% for line in block.service_lines %}
                     <tr>
                         <td>{{ line.description }}</td>
+                        {% if block.show_line_technicians %}
+                        <td>{% if line.performed_by %}{% firstof line.performed_by.get_full_name line.performed_by.username %}{% else %}{{ L_booklet.na }}{% endif %}</td>
+                        {% endif %}
                         <td>{{ line.quantity }}</td>
                         <td>{{ currency_symbol }}{{ line.total_price }}</td>
                     </tr>
@@ -325,6 +329,7 @@
                 <thead>
                     <tr>
                         <th>{{ L_booklet.description }}</th>
+                        {% if block.show_line_technicians %}<th>{{ L_booklet.line_mechanic }}</th>{% endif %}
                         <th>{{ L_booklet.hours }}</th>
                         <th>{{ L_booklet.price }}</th>
                     </tr>
@@ -333,6 +338,9 @@
                     {% for line in block.labor_lines %}
                     <tr>
                         <td>{{ line.description }}</td>
+                        {% if block.show_line_technicians %}
+                        <td>{% if line.performed_by %}{% firstof line.performed_by.get_full_name line.performed_by.username %}{% else %}{{ L_booklet.na }}{% endif %}</td>
+                        {% endif %}
                         <td>{{ line.hours }}</td>
                         <td>{{ currency_symbol }}{{ line.total_price }}</td>
                     </tr>

@@ -24,7 +24,9 @@ from .report_utils import (
     flatten_inspection_rows,
     mechanic_display_name,
     tenant_language_from_request,
+    vehicle_global_owner,
     visit_customer_client,
+    visit_has_line_attribution,
     workshop_context_from_request,
 )
 
@@ -56,9 +58,12 @@ def generate_service_report(request, visit_id: str):
             status=400,
         )
 
-    service_lines = VisitServiceLine.objects.filter(visit=visit).select_related("catalog_item")
+    service_lines = VisitServiceLine.objects.filter(visit=visit).select_related(
+        "catalog_item",
+        "performed_by",
+    )
     material_lines = VisitMaterialLine.objects.filter(visit=visit).select_related("inventory_item")
-    labor_lines = VisitLaborLine.objects.filter(visit=visit)
+    labor_lines = VisitLaborLine.objects.filter(visit=visit).select_related("performed_by")
     inspection = getattr(visit, "inspection", None)
     report_client = visit_customer_client(visit)
     customer_name = client_display_name(report_client)
@@ -90,6 +95,7 @@ def generate_service_report(request, visit_id: str):
         "technician_name": mechanic_display_name(
             visit, inspection, customer_name=customer_name
         ),
+        "show_line_technicians": visit_has_line_attribution(visit),
         **workshop,
     }
 
@@ -175,8 +181,9 @@ def generate_service_booklet(request, vehicle_id: str):
         )
         .prefetch_related(
             "service_lines__catalog_item",
+            "service_lines__performed_by",
             "material_lines__inventory_item",
-            "labor_lines",
+            "labor_lines__performed_by",
         )
         .order_by("-service_date")
     )
@@ -202,11 +209,24 @@ def generate_service_booklet(request, vehicle_id: str):
     else:
         filename = f"vehicle-history-{plate_slug}.pdf"
 
+    # Resolve booklet "owner" card via local owner first, then global registry.
+    booklet_client = vehicle.owner
+    if booklet_client is None:
+        global_owner = vehicle_global_owner(vehicle)
+        if global_owner is not None:
+            from .report_utils import _GlobalOwnerClient
+
+            booklet_client = _GlobalOwnerClient(
+                name=getattr(global_owner, "name", "") or "",
+                phone=getattr(global_owner, "phone", "") or "",
+                email=getattr(global_owner, "email", "") or "",
+            )
+
     html_content = render_to_string(
         "reports/service_booklet.html",
         {
             "vehicle": vehicle,
-            "client": vehicle.owner,
+            "client": booklet_client,
             "visit_blocks": visit_blocks,
             "visit_count": visit_count,
             "grand_total": grand_total,

@@ -6,6 +6,7 @@ export interface User {
   username: string
   email: string
   role: string
+  is_superuser?: boolean
   tenant?: string | null
   tenant_name?: string | null
   language?: string

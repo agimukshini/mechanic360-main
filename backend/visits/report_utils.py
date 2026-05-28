@@ -80,15 +80,90 @@ def user_display_name(user) -> str:
     return full or (user.username or "")
 
 
+def line_performer_name(line) -> str:
+    """Display name for a service or labor line's assigned mechanic."""
+    return user_display_name(getattr(line, "performed_by", None))
+
+
+def visit_has_line_attribution(visit) -> bool:
+    for line in visit.service_lines.all():
+        if getattr(line, "performed_by_id", None):
+            return True
+    for line in visit.labor_lines.all():
+        if getattr(line, "performed_by_id", None):
+            return True
+    return False
+
+
 def _normalize_person_name(name: str) -> str:
     return " ".join((name or "").split()).casefold()
 
 
+class _GlobalOwnerClient:
+    """
+    Thin adapter so the report template can treat a `GlobalOwner` row from the
+    public schema the same as a tenant-local `Client`. Exposes the fields the
+    template references (`name`, `company_name`, `phone`, `email`, `type`).
+    """
+
+    type = "individual"
+    company_name = ""
+
+    def __init__(self, name: str, phone: str = "", email: str = "") -> None:
+        self.name = name or ""
+        self.phone = phone or ""
+        self.email = email or ""
+
+
+def vehicle_global_owner(vehicle):
+    """
+    Resolve the active owner of a vehicle via the global registry (public
+    schema). Returns `None` when the vehicle is not linked, has no global
+    record, or has no active ownership.
+    """
+    if vehicle is None or not getattr(vehicle, "global_vehicle_id", None):
+        return None
+    # Imported lazily so this module stays importable without django apps
+    # ready during e.g. management command introspection.
+    from vehicles.global_sync import get_global_vehicle
+
+    try:
+        global_vehicle = get_global_vehicle(vehicle)
+    except Exception:  # pragma: no cover — defensive against schema/tenant errors
+        return None
+    if global_vehicle is None:
+        return None
+    return getattr(global_vehicle, "current_owner", None)
+
+
 def visit_customer_client(visit):
-    """Vehicle owner is the canonical customer on printed reports."""
+    """
+    Vehicle owner is the canonical customer on printed reports.
+
+    Falls back in this order:
+      1. Tenant-local `Vehicle.owner` (a `clients.Client`).
+      2. Tenant-local `ServiceVisit.client`.
+      3. Global registry — the active `GlobalOwner` linked to this VIN.
+
+    The third path is what makes the report show the actual owner when a shop
+    has only claimed the vehicle in the global registry (the modern flow)
+    without also creating a redundant local client record.
+    """
     vehicle = getattr(visit, "vehicle", None)
     owner = getattr(vehicle, "owner", None) if vehicle else None
-    return owner or visit.client
+    if owner is not None:
+        return owner
+    if visit.client is not None:
+        return visit.client
+
+    global_owner = vehicle_global_owner(vehicle)
+    if global_owner is None:
+        return None
+    return _GlobalOwnerClient(
+        name=getattr(global_owner, "name", "") or "",
+        phone=getattr(global_owner, "phone", "") or "",
+        email=getattr(global_owner, "email", "") or "",
+    )
 
 
 def visit_mechanic_user(visit, inspection=None):
@@ -99,6 +174,12 @@ def visit_mechanic_user(visit, inspection=None):
         performed_by = getattr(inspection, "performed_by", None)
         if performed_by is not None:
             return performed_by
+    for line in visit.service_lines.all():
+        if getattr(line, "performed_by_id", None):
+            return line.performed_by
+    for line in visit.labor_lines.all():
+        if getattr(line, "performed_by_id", None):
+            return line.performed_by
     return visit.created_by
 
 
@@ -185,6 +266,7 @@ def build_booklet_visit_blocks(visits) -> tuple[list[dict], float]:
 
         inspection = getattr(visit, "inspection", None)
         customer_name = client_display_name(visit_customer_client(visit))
+        show_line_technicians = visit_has_line_attribution(visit)
 
         blocks.append(
             {
@@ -197,6 +279,7 @@ def build_booklet_visit_blocks(visits) -> tuple[list[dict], float]:
                 "labor_total": labor_total,
                 "visit_total": visit_total,
                 "inspection_rows": flatten_inspection_rows(inspection),
+                "show_line_technicians": show_line_technicians,
                 "technician_name": mechanic_display_name(
                     visit, inspection, customer_name=customer_name
                 ),

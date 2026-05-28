@@ -36,7 +36,12 @@ class TenantUserMiddleware:
             return self.get_response(request)
 
         # Public endpoints that should stay in public schema
-        public_paths = ["/api/v1/auth/", "/api/v1/tenants/"]
+        public_paths = [
+            "/api/v1/auth/",
+            "/api/v1/tenants/",
+            "/api/v1/global-vehicles/",
+            "/api/v1/owner/",
+        ]
         if any(request.path.startswith(p) for p in public_paths):
             return self.get_response(request)
 

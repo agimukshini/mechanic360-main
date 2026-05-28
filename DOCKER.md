@@ -62,12 +62,7 @@ curl http://localhost:8001/api/v1/auth/me/ \
 
 **File storage (dev):** uploads go to Docker volume `media_data` → `/app/media`. Production uses a **QNAP NAS** share on the LAN — see [working_scope/ARCHITECTURE.md](working_scope/ARCHITECTURE.md).
 
-### Pre-configured Tenants
-
-| Tenant | Schema | Domain | Description |
-|--------|--------|--------|-------------|
-| Public | public | localhost | Default public tenant |
-| Demo Workshop | demo | demo.localhost | Demo tenant with sample data |
+Workshop tenants are created through the onboarding flow (`/register` → superuser approval). No demo tenant is seeded automatically.
 
 ## Common Commands
 

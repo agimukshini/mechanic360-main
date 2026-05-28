@@ -39,6 +39,12 @@ Tenant visibility in **Marketplace**:
 
 _No vehicle or client data is shared._
 
+### Staff onboarding, profile & mechanic KPIs
+
+Workshop admins add mechanics and service advisors to their tenant (invite/create accounts, deactivate when needed). Each mechanic’s work is attributed at visit, inspection, and service-line level for reports and KPI dashboards. User profile, password/PIN change, and login success/failure audit are specified in **[USER_PROFILE_MECHANICS_AND_AUDIT.md](USER_PROFILE_MECHANICS_AND_AUDIT.md)**.
+
+**Current gaps (2026-05):** Settings password change and notification/theme preferences need fixes; login audit and team UI not built; KPI analytics partial (inspection `performed_by` only).
+
 ---
 
 ## 3. Client Registry
@@ -205,6 +211,7 @@ Printable formats:
 - Revenue and service breakdown (future phase)
 - Parts consumption statistics
 - Preventive maintenance forecasting list
+- **Per-mechanic KPIs** — visits completed, labor hours, vehicles serviced, revenue attributed (see [USER_PROFILE_MECHANICS_AND_AUDIT.md](USER_PROFILE_MECHANICS_AND_AUDIT.md))
 - Export to PDF / Excel
 
 ---
@@ -212,6 +219,8 @@ Printable formats:
 ## 15. Security & Architecture
 - Single PostgreSQL with **schema-based multi-tenancy** (`django-tenants`); RLS optional later
 - JWT authentication (httpOnly cookies)
+- **Login audit log** — record successful and failed sign-in attempts (username, IP, outcome); tenant admin and superuser views (see [USER_PROFILE_MECHANICS_AND_AUDIT.md](USER_PROFILE_MECHANICS_AND_AUDIT.md))
+- **User profile & password change** — reliable settings API and Settings UI (fix in progress)
 - **File storage**: QNAP NAS on the LAN — Django `MEDIA_ROOT` bind-mounted to a QNAP shared folder (NFS/SMB)
 - Backend: **Django 5+** with Django REST Framework (Python)
 - Frontend: React with TypeScript (mobile-first PWA)

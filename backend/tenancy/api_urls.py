@@ -2,26 +2,34 @@
 URL configuration for tenant-related API endpoints.
 
 Exposes:
-- POST /api/v1/tenants/register/         -> public registration (tenant + admin)
-- /api/v1/tenants/admin/tenants/[...]    -> Superadmin CRUD over WorkshopTenant
+- POST /api/v1/tenants/register/                      -> public onboarding application
+- /api/v1/tenants/admin/onboarding-applications/[...] -> Superadmin review queue
+- /api/v1/tenants/admin/tenants/[...]                 -> Superadmin CRUD over WorkshopTenant
 """
 from __future__ import annotations
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import TenantRegisterView, WorkshopTenantAdminViewSet
+from .views import (
+    SuperadminDashboardView,
+    SuperadminGlobalRegistryView,
+    TenantOnboardingApplicationViewSet,
+    TenantRegisterView,
+    WorkshopTenantAdminViewSet,
+)
 
 router = DefaultRouter()
+router.register(
+    r"admin/onboarding-applications",
+    TenantOnboardingApplicationViewSet,
+    basename="admin-onboarding-applications",
+)
 router.register(r"admin/tenants", WorkshopTenantAdminViewSet, basename="admin-tenants")
 
 urlpatterns = [
-    # Public registration
     path("register/", TenantRegisterView.as_view(), name="tenant_register"),
-
-    # Superadmin tenant management
+    path("admin/dashboard/", SuperadminDashboardView.as_view(), name="admin-dashboard"),
+    path("admin/global/", SuperadminGlobalRegistryView.as_view(), name="admin-global"),
     path("", include(router.urls)),
 ]
-
-
-

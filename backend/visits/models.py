@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import uuid
 
+from django.conf import settings
 from django.db import models
 
 
@@ -24,6 +25,8 @@ class ServiceCatalogItem(models.Model):
 
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    name_sq = models.CharField(max_length=255, blank=True, default="")
+    description_sq = models.TextField(blank=True, default="")
 
     # Optional defaults for planning and pricing
     default_duration_hours = models.DecimalField(
@@ -81,6 +84,15 @@ class VisitServiceLine(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="service_lines_performed",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Mechanic who performed this service line.",
+    )
+
     class Meta:
         ordering = ["id"]
 
@@ -136,6 +148,15 @@ class VisitLaborLine(models.Model):
     hours = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="labor_lines_performed",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Mechanic who performed this labor line.",
+    )
 
     class Meta:
         ordering = ["id"]

@@ -1,10 +1,11 @@
 """
 Custom user model and roles for Mechanic360.
 
-Roles match the working scope:
-- Admin
-- Service Advisor
+Workshop staff roles:
+- Admin (shop owner / manager)
 - Mechanic / Technician
+
+Vehicle owners use the separate `owner` role.
 
 Primary keys use UUIDs instead of auto-incrementing integers to ensure global
 uniqueness and avoid exposing sequence counts.
@@ -30,8 +31,8 @@ class User(AbstractUser):
 
     class Role(models.TextChoices):
         ADMIN = "admin", "Admin"
-        SERVICE_ADVISOR = "service_advisor", "Service Advisor"
         MECHANIC = "mechanic", "Mechanic / Technician"
+        OWNER = "owner", "Vehicle Owner"
 
     role = models.CharField(
         max_length=32,
@@ -59,6 +60,22 @@ class User(AbstractUser):
         help_text="Hashed numeric PIN for quick sign-in at the workshop.",
     )
 
+    phone = models.CharField(max_length=32, blank=True, default="")
+
+    class Theme(models.TextChoices):
+        LIGHT = "light", "Light"
+        DARK = "dark", "Dark"
+        SYSTEM = "system", "System"
+
+    theme = models.CharField(
+        max_length=16,
+        choices=Theme.choices,
+        default=Theme.LIGHT,
+    )
+    email_notifications = models.BooleanField(default=True)
+    sms_notifications = models.BooleanField(default=False)
+    whatsapp_notifications = models.BooleanField(default=False)
+
     def is_admin(self) -> bool:
         """Convenience helper for checking if the user is a tenant admin."""
         return self.role == self.Role.ADMIN
@@ -76,5 +93,9 @@ class User(AbstractUser):
         from django.contrib.auth.hashers import check_password
 
         return bool(self.quick_pin) and check_password(raw_pin, self.quick_pin)
+
+
+from .login_audit_models import LoginAuditEvent  # noqa: E402, F401
+from .invite_models import StaffInviteToken  # noqa: E402, F401
 
 

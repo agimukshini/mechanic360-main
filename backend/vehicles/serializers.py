@@ -9,11 +9,18 @@ Note: ClientSerializer is imported from clients.serializers.
 """
 from __future__ import annotations
 
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from accounts.serializers import UserSerializer
 from clients.models import Client
 from clients.serializers import ClientSerializer
+from global_vehicles.serializers import GlobalOwnerSerializer, VehicleOwnershipSerializer
+
+from .global_sync import get_global_vehicle, sync_vehicle_to_global
 from .models import Vehicle, VehicleDocument
+
+User = get_user_model()
 
 
 class VehicleSerializer(serializers.ModelSerializer):
@@ -26,9 +33,162 @@ class VehicleSerializer(serializers.ModelSerializer):
       `is_active` as False. We only apply `is_active` when the client sends it.
     """
 
-    owner_id = serializers.UUIDField(write_only=True)
+    owner_id = serializers.CharField(
+        write_only=True,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+    )
     owner = ClientSerializer(read_only=True)
+    assigned_mechanic = UserSerializer(read_only=True)
+    assigned_mechanic_id = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
+    )
     is_active = serializers.BooleanField(required=False, default=True)
+    odometer_km = serializers.IntegerField(required=False, allow_null=True, min_value=0)
+    odometer_unit = serializers.ChoiceField(
+        choices=[("km", "km"), ("mi", "mi")],
+        required=False,
+        default="km",
+    )
+    hour_meter = serializers.IntegerField(required=False, allow_null=True, min_value=0)
+    global_vehicle_id = serializers.UUIDField(read_only=True)
+    global_current_owner = GlobalOwnerSerializer(read_only=True)
+    registration_history = VehicleOwnershipSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Vehicle
+        fields = [
+            "id",
+            "global_vehicle_id",
+            "global_current_owner",
+            "registration_history",
+            "owner",
+            "owner_id",
+            "assigned_mechanic",
+            "assigned_mechanic_id",
+            "vin",
+            "license_plate",
+            "make",
+            "model",
+            "year",
+            "engine_type",
+            "fuel_type",
+            "description",
+            "odometer_km",
+            "odometer_unit",
+            "hour_meter",
+            "photo",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "global_vehicle_id",
+            "global_current_owner",
+            "registration_history",
+            "owner",
+            "assigned_mechanic",
+            "created_at",
+            "updated_at",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._mechanic_queryset = User.objects.none()
+        request = self.context.get("request")
+        tenant_id = getattr(getattr(request, "user", None), "tenant_id", None)
+        if tenant_id:
+            self._mechanic_queryset = User.objects.filter(
+                tenant_id=tenant_id,
+                role=User.Role.MECHANIC,
+                is_active=True,
+            )
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        owner_raw = attrs.get("owner_id", serializers.empty)
+        if owner_raw is serializers.empty and self.instance is not None:
+            pass
+        elif owner_raw is serializers.empty and self.instance is None:
+            attrs["owner_id"] = None
+        elif owner_raw in (None, ""):
+            attrs["owner_id"] = None
+        elif owner_raw is not serializers.empty:
+            from uuid import UUID
+
+            try:
+                attrs["owner_id"] = str(UUID(str(owner_raw)))
+            except (ValueError, TypeError, AttributeError) as exc:
+                raise serializers.ValidationError({"owner_id": "Invalid owner id."}) from exc
+        mechanic_raw = attrs.pop("assigned_mechanic_id", serializers.empty)
+        if mechanic_raw is not serializers.empty:
+            from mechanic360.permissions import STAFF_ROLES
+
+            if mechanic_raw in ("", None):
+                attrs["assigned_mechanic"] = None
+            else:
+                if user and getattr(user, "role", None) not in STAFF_ROLES:
+                    raise serializers.ValidationError(
+                        {
+                            "assigned_mechanic_id": (
+                                "Only workshop admins can assign mechanics."
+                            )
+                        }
+                    )
+                try:
+                    mechanic = self._mechanic_queryset.get(pk=mechanic_raw)
+                except (User.DoesNotExist, ValueError, TypeError):
+                    raise serializers.ValidationError(
+                        {"assigned_mechanic_id": "Invalid mechanic for this workshop."}
+                    ) from None
+                attrs["assigned_mechanic"] = mechanic
+
+        request_data = getattr(request, "data", None) if request else None
+        if request_data is not None:
+            for field in ("odometer_km", "hour_meter"):
+                if field in request_data:
+                    raw = request_data.get(field)
+                    if raw in (None, ""):
+                        attrs[field] = None
+                    else:
+                        try:
+                            attrs[field] = max(0, int(raw))
+                        except (ValueError, TypeError) as exc:
+                            raise serializers.ValidationError(
+                                {field: "Must be a non-negative number."},
+                            ) from exc
+
+        unit = attrs.get("odometer_unit")
+        if unit and unit not in {Vehicle.OdometerUnit.KM, Vehicle.OdometerUnit.MI}:
+            raise serializers.ValidationError({"odometer_unit": "Unit must be km or mi."})
+
+        return attrs
+
+    def _attach_global_profile(self, data: dict, instance: Vehicle) -> dict:
+        global_vehicle = get_global_vehicle(instance)
+        if not global_vehicle:
+            data["global_current_owner"] = None
+            data["registration_history"] = []
+            return data
+
+        data["global_vehicle_id"] = str(global_vehicle.id)
+        owner = global_vehicle.current_owner
+        data["global_current_owner"] = (
+            GlobalOwnerSerializer(owner).data if owner else None
+        )
+        ownerships = global_vehicle.ownerships.select_related("owner").order_by(
+            "-effective_from",
+        )
+        data["registration_history"] = VehicleOwnershipSerializer(
+            ownerships,
+            many=True,
+        ).data
+        return data
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -41,29 +201,7 @@ class VehicleSerializer(serializers.ModelSerializer):
                 data["photo"] = url
         else:
             data["photo"] = None
-        return data
-
-    class Meta:
-        model = Vehicle
-        fields = [
-            "id",
-            "owner",
-            "owner_id",
-            "vin",
-            "license_plate",
-            "make",
-            "model",
-            "year",
-            "engine_type",
-            "fuel_type",
-            "odometer_km",
-            "hour_meter",
-            "photo",
-            "is_active",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "owner", "created_at", "updated_at"]
+        return self._attach_global_profile(data, instance)
 
     def _is_active_sent(self) -> bool:
         request = self.context.get("request")
@@ -86,26 +224,39 @@ class VehicleSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Create a new vehicle linked to the specified client (owner).
-        """
-        self._apply_is_active_default(validated_data)
-        owner_id = validated_data.pop("owner_id")
-        owner = Client.objects.get(id=owner_id)
-        return Vehicle.objects.create(owner=owner, **validated_data)
-
-    def update(self, instance, validated_data):
-        """
-        Allow updating core vehicle fields and optionally reassigning owner.
+        Create a workshop vehicle and register it in the global registry.
         """
         self._apply_is_active_default(validated_data)
         owner_id = validated_data.pop("owner_id", None)
-        if owner_id is not None:
-            instance.owner = Client.objects.get(id=owner_id)
+        owner = Client.objects.get(id=owner_id) if owner_id else None
+        vehicle = Vehicle.objects.create(owner=owner, **validated_data)
+
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        tenant = getattr(user, "tenant", None) if user else None
+        sync_vehicle_to_global(vehicle=vehicle, user=user, tenant=tenant)
+        vehicle.refresh_from_db()
+        return vehicle
+
+    def update(self, instance, validated_data):
+        """
+        Update workshop vehicle fields and keep the global registry in sync.
+        """
+        self._apply_is_active_default(validated_data)
+        owner_id = validated_data.pop("owner_id", serializers.empty)
+        if owner_id is not serializers.empty:
+            instance.owner = Client.objects.get(id=owner_id) if owner_id else None
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
         instance.save()
+
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        tenant = getattr(user, "tenant", None) if user else None
+        sync_vehicle_to_global(vehicle=instance, user=user, tenant=tenant)
+        instance.refresh_from_db()
         return instance
 
 

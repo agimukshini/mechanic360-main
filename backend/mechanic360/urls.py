@@ -31,6 +31,8 @@ urlpatterns = [
     path("api/v1/auth/", include("accounts.api_urls")),
     path("api/v1/tenants/", include("tenancy.api_urls")),
     path("api/v1/marketplace/", include("marketplace.api_urls")),
+    path("api/v1/global-vehicles/", include("global_vehicles.api_urls")),
+    path("api/v1/owner/", include("global_vehicles.owner_api_urls")),
     path("api/v1/clients/", include("clients.api_urls")),
     path("api/v1/vehicles/", include("vehicles.api_urls")),
     path("api/v1/visits/", include("visits.api_urls")),
@@ -41,6 +43,8 @@ urlpatterns = [
 # Tenant schema URLs (same as public for now)
 tenant_urlpatterns = [
     path("api/v1/auth/", include("accounts.api_urls")),
+    path("api/v1/global-vehicles/", include("global_vehicles.api_urls")),
+    path("api/v1/owner/", include("global_vehicles.owner_api_urls")),
     path("api/v1/clients/", include("clients.api_urls")),
     path("api/v1/vehicles/", include("vehicles.api_urls")),
     path("api/v1/visits/", include("visits.api_urls")),

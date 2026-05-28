@@ -14,6 +14,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from mechanic360.throttling import AuthAnonRateThrottle
 
 from .cookie_auth import set_auth_cookies
+from .login_audit import classify_pin_failure, is_inactive_tenant_message, record_login_attempt
+from .login_audit_models import LoginAuditEvent
 
 User = get_user_model()
 
@@ -37,6 +39,13 @@ class PinLoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise AuthenticationFailed("Invalid username or PIN.", code="authorization")
 
+        tenant = getattr(user, "tenant", None)
+        if tenant is not None and not tenant.is_active:
+            raise AuthenticationFailed(
+                "This workshop account is not active. Contact platform support.",
+                code="inactive_tenant",
+            )
+
         if not user.has_quick_pin or not user.check_quick_pin(attrs["pin"]):
             raise AuthenticationFailed("Invalid username or PIN.", code="authorization")
 
@@ -51,9 +60,36 @@ class ThrottledPinTokenObtainView(APIView):
     throttle_classes = [AuthAnonRateThrottle]
 
     def post(self, request, *args, **kwargs):
+        username = str(request.data.get("username", "")).strip() if request.data else ""
         serializer = PinLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except AuthenticationFailed as exc:
+            user = User.objects.filter(username=username).first()
+            detail = exc.detail if hasattr(exc, "detail") else str(exc)
+            if is_inactive_tenant_message(detail):
+                outcome = LoginAuditEvent.Outcome.FAILED_TENANT_INACTIVE
+            else:
+                outcome = classify_pin_failure(username)
+            record_login_attempt(
+                request,
+                username_attempted=username,
+                outcome=outcome,
+                auth_method=LoginAuditEvent.AuthMethod.PIN,
+                user=user,
+            )
+            raise
+
         user = serializer.validated_data["user"]
+        record_login_attempt(
+            request,
+            username_attempted=username or user.username,
+            outcome=LoginAuditEvent.Outcome.SUCCESS,
+            auth_method=LoginAuditEvent.AuthMethod.PIN,
+            user=user,
+        )
+
         refresh = RefreshToken.for_user(user)
         access = str(refresh.access_token)
         response = Response(

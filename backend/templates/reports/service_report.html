@@ -306,7 +306,7 @@
         <tr>
             <td>
                 <span class="field-label">{{ L.label_customer }}</span>
-                <span class="field-value">{{ client_name }}</span>
+                <span class="field-value">{% if client_name %}{{ client_name }}{% else %}—{% endif %}</span>
                 {% if client.phone or client.email %}
                 <span class="field-sub">
                     {% if client.phone %}{{ client.phone }}{% endif %}
@@ -336,7 +336,12 @@
                 <span class="field-value">{{ technician_name }}</span>
                 {% endif %}
             </td>
-            <td colspan="2"></td>
+            <td colspan="2">
+                {% if vehicle.description %}
+                <span class="field-label">{{ L.label_vehicle_notes|default:"Notes" }}</span>
+                <span class="field-sub" style="font-weight: normal; color: #334155;">{{ vehicle.description|linebreaksbr }}</span>
+                {% endif %}
+            </td>
         </tr>
     </table>
 
@@ -369,6 +374,7 @@
         <thead>
             <tr>
                 <th>{{ L.col_services }}</th>
+                {% if show_line_technicians %}<th style="width: 18%;">{{ L.col_technician }}</th>{% endif %}
                 <th class="num" style="width: 10%;">{{ L.col_qty }}</th>
                 <th class="num" style="width: 16%;">{{ L.col_unit }}</th>
                 <th class="num" style="width: 16%;">{{ L.col_total }}</th>
@@ -378,6 +384,9 @@
             {% for line in service_lines %}
             <tr>
                 <td>{{ line.description }}</td>
+                {% if show_line_technicians %}
+                <td>{% if line.performed_by %}{% firstof line.performed_by.get_full_name line.performed_by.username %}{% else %}{{ L.na }}{% endif %}</td>
+                {% endif %}
                 <td class="num">{{ line.quantity }}</td>
                 <td class="num">{{ currency_symbol }}{{ line.unit_price|floatformat:2 }}</td>
                 <td class="num">{{ currency_symbol }}{{ line.total_price|floatformat:2 }}</td>
@@ -386,7 +395,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" class="num">{{ L.subtotal_services }}</td>
+                <td colspan="{% if show_line_technicians %}4{% else %}3{% endif %}" class="num">{{ L.subtotal_services }}</td>
                 <td class="num">{{ currency_symbol }}{{ service_total|floatformat:2 }}</td>
             </tr>
         </tfoot>
@@ -427,6 +436,7 @@
         <thead>
             <tr>
                 <th>{{ L.col_labor }}</th>
+                {% if show_line_technicians %}<th style="width: 18%;">{{ L.col_technician }}</th>{% endif %}
                 <th class="num" style="width: 10%;">{{ L.col_hours }}</th>
                 <th class="num" style="width: 16%;">{{ L.col_rate }}</th>
                 <th class="num" style="width: 16%;">{{ L.col_total }}</th>
@@ -436,6 +446,9 @@
             {% for line in labor_lines %}
             <tr>
                 <td>{{ line.description }}</td>
+                {% if show_line_technicians %}
+                <td>{% if line.performed_by %}{% firstof line.performed_by.get_full_name line.performed_by.username %}{% else %}{{ L.na }}{% endif %}</td>
+                {% endif %}
                 <td class="num">{{ line.hours }}</td>
                 <td class="num">{{ currency_symbol }}{{ line.hourly_rate|floatformat:2 }}</td>
                 <td class="num">{{ currency_symbol }}{{ line.total_price|floatformat:2 }}</td>
@@ -444,7 +457,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" class="num">{{ L.subtotal_labor }}</td>
+                <td colspan="{% if show_line_technicians %}4{% else %}3{% endif %}" class="num">{{ L.subtotal_labor }}</td>
                 <td class="num">{{ currency_symbol }}{{ labor_total|floatformat:2 }}</td>
             </tr>
         </tfoot>

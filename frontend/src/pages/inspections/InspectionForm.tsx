@@ -189,28 +189,35 @@ export default function InspectionForm() {
   }
 
   const handlePhotoUpload = async (section: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
 
-    if (!file.type.startsWith('image/')) {
-      showToast('Please select an image file', 'info')
-      return
+    const accepted: string[] = []
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select an image file', 'info')
+        continue
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        showToast(`File too large (${file.name}). Max 10MB.`, 'error')
+        continue
+      }
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      accepted.push(dataUrl)
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('File too large. Max 10MB', 'error')
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const result = reader.result as string
-      setSectionPhotos((prev) => ({
-        ...prev,
-        [section]: [...(prev[section] || []), result],
-      }))
-    }
-    reader.readAsDataURL(file)
+    if (accepted.length === 0) return
+    setSectionPhotos((prev) => ({
+      ...prev,
+      [section]: [...(prev[section] || []), ...accepted],
+    }))
+    // Reset the input so the same file can be selected again later.
+    e.target.value = ''
   }
 
   const removePhoto = (section: string, index: number) => {
@@ -280,12 +287,14 @@ export default function InspectionForm() {
                 <input
                   type="file"
                   accept="image/*"
+                  capture="environment"
+                  multiple
                   onChange={(e) => handlePhotoUpload(section.name, e)}
                   className="hidden"
                 />
                 <span className="btn btn-outline btn-sm flex items-center gap-2">
                   <Camera className="w-4 h-4" />
-                  Add Photo
+                  {t('inspections.addPhoto')}
                 </span>
               </label>
             </div>

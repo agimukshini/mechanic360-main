@@ -6,6 +6,9 @@ import QRScanner from '@/components/QRScanner'
 import { Plus, Search, QrCode, Loader2, Car } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useApiToast } from '@/hooks/useApiToast'
+import { useSelector } from 'react-redux'
+import { canManageVehicles, canManageWorkshopData, normalizeRole } from '@/lib/roles'
+import type { RootState } from '@/store'
 import {
   type VehicleRow,
   type ViewMode,
@@ -31,6 +34,8 @@ function readStoredView(): ViewMode {
 }
 
 export default function VehiclesList() {
+  const { user } = useSelector((state: RootState) => state.auth)
+  const canManage = canManageVehicles(normalizeRole(user?.role))
   const { t } = useTranslation()
   const { showError, showToast } = useApiToast()
   const [search, setSearch] = useState('')
@@ -202,10 +207,12 @@ export default function VehiclesList() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <ViewModeToggle viewMode={viewMode} onChange={setViewMode} />
-          <Link to="/vehicles/new" className="btn btn-primary text-sm py-2">
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
-            Add Vehicle
-          </Link>
+          {canManage && (
+            <Link to="/vehicles/new" className="btn btn-primary text-sm py-2">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
+              Add Vehicle
+            </Link>
+          )}
         </div>
       </div>
 
@@ -232,10 +239,12 @@ export default function VehiclesList() {
             <Car className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <h3 className="text-base font-bold text-gray-900 mb-1">No vehicles found</h3>
             <p className="text-secondary mb-4 text-sm">Get started by adding your first vehicle</p>
-            <Link to="/vehicles/new" className="btn btn-primary text-sm">
-              <Plus className="w-3.5 h-3.5 mr-1.5" />
-              Add Vehicle
-            </Link>
+            {canManage && (
+              <Link to="/vehicles/new" className="btn btn-primary text-sm">
+                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                Add Vehicle
+              </Link>
+            )}
           </div>
         )}
       </div>

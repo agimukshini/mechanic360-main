@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 
 from vehicles.models import ServiceVisit
 
-from .completion import apply_visit_completion_effects, assert_visit_has_inspection
+from .completion import apply_visit_completion_effects
 
 
 def finish_service_visit(
@@ -20,7 +20,10 @@ def finish_service_visit(
     """
     Validate workflow rules and mark a visit completed.
 
-    Raises ValidationError when the mandatory 360° inspection is missing or empty.
+    The 360° inspection is *optional* — a workshop may finish a visit without
+    one (e.g. a quick oil change). If an inspection was filled in, it will be
+    included in the printed report; otherwise the inspection section is
+    suppressed entirely.
     """
     if visit.status == ServiceVisit.Status.CANCELLED:
         raise ValidationError(f"Cannot finish visit in '{visit.status}' status.")
@@ -48,8 +51,6 @@ def finish_service_visit(
     if notes is not None:
         visit.notes = notes
 
-    assert_visit_has_inspection(visit)
-
     visit.status = ServiceVisit.Status.COMPLETED
     visit.save(
         update_fields=["status", "mileage_km", "hour_meter", "notes", "updated_at"],
@@ -59,12 +60,11 @@ def finish_service_visit(
 
 
 def complete_in_progress_visit(visit: ServiceVisit) -> ServiceVisit:
-    """Transition in_progress → completed with inspection validation."""
+    """Transition in_progress → completed. Inspection is optional."""
     if visit.status != ServiceVisit.Status.IN_PROGRESS:
         raise ValidationError(
             f"Cannot complete visit in '{visit.status}' status. Must be in progress."
         )
-    assert_visit_has_inspection(visit)
     visit.status = ServiceVisit.Status.COMPLETED
     visit.save(update_fields=["status", "updated_at"])
     apply_visit_completion_effects(visit)

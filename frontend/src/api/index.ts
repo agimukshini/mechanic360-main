@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { isPublicPath } from '@/lib/publicPaths'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
@@ -26,7 +27,16 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    const requestUrl = originalRequest?.url ?? ''
+    const isAuthRequest =
+      requestUrl.includes('/auth/token/refresh/') || requestUrl.includes('/auth/token/')
+
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isAuthRequest
+    ) {
       originalRequest._retry = true
 
       try {
@@ -36,8 +46,9 @@ api.interceptors.response.use(
         await axios.post(refreshUrl, {}, { withCredentials: true })
         return api(originalRequest)
       } catch {
-        if (!window.location.pathname.startsWith('/login')) {
-          window.location.href = '/login'
+        const path = window.location.pathname
+        if (!isPublicPath(path)) {
+          window.location.href = '/'
         }
         return Promise.reject(error)
       }
@@ -58,6 +69,10 @@ export const authApi = {
   getMe: () => api.get('/auth/me/'),
   getSettings: () => api.get('/auth/settings/'),
   updateSettings: (data: object) => api.patch('/auth/settings/', data),
+  getLoginAudit: (params?: Record<string, string>) =>
+    api.get('/auth/login-audit/', { params }),
+  getAdminLoginAudit: (params?: Record<string, string>) =>
+    api.get('/auth/admin/login-audit/', { params }),
   changePassword: (currentPassword: string, newPassword: string, confirmPassword: string) =>
     api.patch('/auth/settings/', {
       current_password: currentPassword,
@@ -66,6 +81,17 @@ export const authApi = {
     }),
   register: (data: { username: string; email: string; password: string; role: string }) =>
     api.post('/auth/register/', data),
+  listTenantUsers: () => api.get('/auth/tenant/users/'),
+  getTenantUser: (id: string) => api.get(`/auth/tenant/users/${id}/`),
+  createTenantUser: (data: object) => api.post('/auth/tenant/users/', data),
+  updateTenantUser: (id: string, data: object) => api.patch(`/auth/tenant/users/${id}/`, data),
+  deleteTenantUser: (id: string) => api.delete(`/auth/tenant/users/${id}/`),
+  listMechanics: () => api.get('/auth/tenant/mechanics/'),
+  listStaffInvites: () => api.get('/auth/tenant/invites/'),
+  createStaffInvite: (data: object) => api.post('/auth/tenant/invites/', data),
+  staffInvitePreview: (tokenId: string) => api.get(`/auth/staff-invite/${tokenId}/preview/`),
+  acceptStaffInvite: (tokenId: string, data: object) =>
+    api.post(`/auth/staff-invite/${tokenId}/accept/`, data),
 }
 
 // Tenants API
@@ -75,8 +101,19 @@ export const tenantsApi = {
     admin_username: string
     admin_email: string
     admin_password: string
+    address?: string
+    contact_email?: string
+    contact_phone?: string
     website?: string
   }) => api.post('/tenants/register/', data),
+  listOnboardingApplications: (params?: { status?: string }) =>
+    api.get('/tenants/admin/onboarding-applications/', { params }),
+  approveOnboardingApplication: (id: string) =>
+    api.post(`/tenants/admin/onboarding-applications/${id}/approve/`),
+  rejectOnboardingApplication: (id: string, reason?: string) =>
+    api.post(`/tenants/admin/onboarding-applications/${id}/reject/`, { reason: reason ?? '' }),
+  getDashboard: () => api.get('/tenants/admin/dashboard/'),
+  getGlobalRegistry: () => api.get('/tenants/admin/global/'),
   list: () => api.get('/tenants/admin/tenants/'),
   get: (id: string) => api.get(`/tenants/admin/tenants/${id}/`),
   update: (id: string, data: object) => api.patch(`/tenants/admin/tenants/${id}/`, data),
@@ -93,6 +130,40 @@ export const clientsApi = {
   delete: (id: string) => api.delete(`/clients/${id}/`),
 }
 
+// Clients API
+export const ownerApi = {
+  register: (data: {
+    username: string
+    email: string
+    password: string
+    first_name?: string
+    last_name?: string
+    phone?: string
+  }) => api.post('/owner/register/', data),
+  listVehicles: () => api.get('/owner/vehicles/'),
+  getVehicle: (id: string) => api.get(`/owner/vehicles/${id}/`),
+  claimPreview: (token: string) =>
+    api.get('/owner/vehicles/claim/preview/', { params: { token } }),
+  claim: (token: string) => api.post('/owner/vehicles/claim/', { token }),
+  /** Completed visits aggregated across every workshop that touched the car. */
+  serviceHistory: (id: string) => api.get(`/owner/vehicles/${id}/service-history/`),
+  /** Printable A6 door-jamb sticker (vehicle + QR + last/next service). */
+  doorStickerPdf: (id: string, disposition: 'inline' | 'attachment' = 'attachment') =>
+    api.get(`/owner/vehicles/${id}/door-sticker/`, {
+      params: { disposition },
+      responseType: 'blob',
+    }),
+  /** A4 service-history PDF aggregating visits from every workshop. */
+  serviceBookletPdf: (
+    id: string,
+    disposition: 'inline' | 'attachment' = 'attachment',
+  ) =>
+    api.get(`/owner/vehicles/${id}/service-booklet/`, {
+      params: { disposition },
+      responseType: 'blob',
+    }),
+}
+
 // Vehicles API
 export const vehiclesApi = {
   list: (params?: object) => api.get('/vehicles/', { params }),
@@ -102,6 +173,24 @@ export const vehiclesApi = {
   patch: (id: string, data: object) => api.patch(`/vehicles/${id}/`, data),
   delete: (id: string) => api.delete(`/vehicles/${id}/`),
   lookup: (code: string) => api.get('/vehicles/lookup/', { params: { code } }),
+  ownerClaimQr: (id: string, notes?: string) =>
+    api.post(`/vehicles/${id}/owner_claim_qr/`, { notes: notes ?? '' }),
+  transferQr: (id: string, documentsVerified: boolean, newLicensePlate: string, notes?: string) =>
+    api.post(`/vehicles/${id}/transfer_qr/`, {
+      documents_verified: documentsVerified,
+      new_license_plate: newLicensePlate,
+      notes: notes ?? '',
+    }),
+  updateRegistration: (id: string, licensePlate: string) =>
+    api.patch(`/vehicles/${id}/registration/`, { license_plate: licensePlate }),
+  /** Permanent vehicle lookup QR (PNG data URL + extras). */
+  qrCode: (id: string) => api.get(`/vehicles/${id}/qr_code/`),
+  /** Printable A6 door-sticker PDF (workshop branding + QR + plate). */
+  doorStickerPdf: (id: string, disposition: 'inline' | 'attachment' = 'attachment') =>
+    api.get(`/vehicles/${id}/door-sticker/`, {
+      params: { disposition },
+      responseType: 'blob',
+    }),
   documents: {
     list: (vehicleId: string) =>
       api.get('/vehicles/documents/', { params: { vehicle: vehicleId } }),
@@ -159,6 +248,10 @@ export const visitsApi = {
     revenueBreakdown: () => api.get('/visits/analytics/revenue/'),
     partsConsumption: () => api.get('/visits/analytics/parts-consumption/'),
     maintenanceForecast: () => api.get('/visits/analytics/maintenance-forecast/'),
+    mechanicsSummary: (params?: { days?: number }) =>
+      api.get('/visits/analytics/mechanics/', { params }),
+    mechanicDetail: (userId: string, params?: { days?: number }) =>
+      api.get(`/visits/analytics/mechanics/${userId}/`, { params }),
   },
 }
 

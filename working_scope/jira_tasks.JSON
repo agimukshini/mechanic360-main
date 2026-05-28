@@ -505,6 +505,76 @@
           ]
         }
       ]
+    },
+    {
+      "key": "MECH-37",
+      "summary": "User Profile, Login Audit & Mechanic KPIs",
+      "description": "Fix settings/profile/password, login audit log, workshop team invites, work attribution, per-mechanic analytics. See working_scope/USER_PROFILE_MECHANICS_AND_AUDIT.md",
+      "status": "To Do",
+      "priority": "High",
+      "estimate": "3 weeks",
+      "assignee": "Full Stack Developer",
+      "stories": [
+        {
+          "key": "MECH-38",
+          "summary": "Fix user profile and password change",
+          "description": "Settings API persistence, frontend error handling, user preferences model, admin-only workshop fields",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "4 days",
+          "assignee": "Full Stack Developer",
+          "tasks": [
+            "Persist theme and notification preferences",
+            "Fix SettingsPage error mapping and i18n",
+            "Split profile vs workshop settings by role",
+            "Add backend tests for password and PIN change"
+          ]
+        },
+        {
+          "key": "MECH-39",
+          "summary": "Login audit log",
+          "description": "Record successful and failed logins; tenant admin and superuser views",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "4 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "LoginAuditEvent model and auth hooks",
+            "Tenant and superuser read APIs",
+            "Retention cleanup task",
+            "Security log UI pages"
+          ]
+        },
+        {
+          "key": "MECH-40",
+          "summary": "Workshop team management UI",
+          "description": "Frontend for inviting/adding mechanics via tenant user API",
+          "status": "To Do",
+          "priority": "High",
+          "estimate": "3 days",
+          "assignee": "Frontend Developer",
+          "tasks": [
+            "Team list and create mechanic/advisor forms",
+            "Deactivate user flow",
+            "i18n for team management"
+          ]
+        },
+        {
+          "key": "MECH-41",
+          "summary": "Mechanic work attribution and KPIs",
+          "description": "Assign mechanics to service/labor lines; analytics dashboard per mechanic",
+          "status": "To Do",
+          "priority": "Medium",
+          "estimate": "5 days",
+          "assignee": "Full Stack Developer",
+          "tasks": [
+            "performed_by on VisitServiceLine and VisitLaborLine",
+            "Analytics API for mechanic KPIs",
+            "Mechanics analytics dashboard UI",
+            "Update visit reports with line-level mechanic"
+          ]
+        }
+      ]
     }
   ],
   "timeline": {

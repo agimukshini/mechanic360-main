@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { tenantsApi } from '@/api'
 import { Cog, Loader2 } from 'lucide-react'
 
 export default function TenantRegisterPage() {
   const [formData, setFormData] = useState({
     workshop_name: '',
+    address: '',
+    contact_email: '',
+    contact_phone: '',
     admin_username: '',
     admin_email: '',
     admin_password: '',
@@ -14,7 +17,6 @@ export default function TenantRegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +28,6 @@ export default function TenantRegisterPage() {
       const response = await tenantsApi.register(formData)
       console.log('Registration successful:', response.data)
       setSuccess(true)
-      setTimeout(() => navigate('/login'), 2000)
     } catch (err: any) {
       console.error('Registration error:', err.response?.data)
       const responseData = err.response?.data
@@ -57,11 +58,14 @@ export default function TenantRegisterPage() {
       <div className="max-w-lg w-full">
         {/* Logo */}
         <div className="text-center mb-8">
+          <Link to="/register" className="inline-flex text-sm text-workshop-charcoal/60 hover:text-workshop-blue mb-4">
+            ← Back
+          </Link>
           <div className="inline-flex items-center justify-center w-16 h-16 bg-workshop-blue rounded-xl mb-4">
             <Cog className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-workshop-charcoal">Workshop360</h1>
-          <p className="text-workshop-charcoal/60 mt-1">Register your workshop</p>
+          <p className="text-workshop-charcoal/60 mt-1">Apply to join Workshop360</p>
         </div>
 
         {/* Registration Form */}
@@ -73,12 +77,21 @@ export default function TenantRegisterPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-lg font-semibold text-workshop-charcoal mb-2">Workshop Registered!</h2>
-              <p className="text-workshop-charcoal/60">Redirecting to login...</p>
+              <h2 className="text-lg font-semibold text-workshop-charcoal mb-2">Application submitted</h2>
+              <p className="text-workshop-charcoal/60 mb-6">
+                Your workshop application is pending review by a platform administrator.
+                You will be able to sign in once it is approved.
+              </p>
+              <Link to="/" className="btn btn-secondary inline-flex mr-3">
+                Back to home
+              </Link>
+              <Link to="/login" className="btn btn-primary inline-flex">
+                Sign in
+              </Link>
             </div>
           ) : (
             <>
-              <h2 className="text-lg font-semibold text-workshop-charcoal mb-6">Create your workshop</h2>
+              <h2 className="text-lg font-semibold text-workshop-charcoal mb-6">Apply for your workshop</h2>
 
               {error && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -114,7 +127,47 @@ export default function TenantRegisterPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-                    Admin Username *
+                    Workshop address
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="input"
+                    placeholder="123 Main Street"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                      Contact email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.contact_email}
+                      onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                      className="input"
+                      placeholder="info@myworkshop.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                      Contact phone
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.contact_phone}
+                      onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                      className="input"
+                      placeholder="+355 69 123 4567"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                    Admin username *
                   </label>
                   <input
                     type="text"
@@ -164,10 +217,10 @@ export default function TenantRegisterPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating workshop...
+                      Creating application...
                     </>
                   ) : (
-                    'Create Workshop'
+                    'Submit application'
                   )}
                 </button>
               </form>

@@ -49,7 +49,15 @@ else:
 if not DEBUG and SECRET_KEY in ("CHANGE_ME_IN_PRODUCTION", "dev-only-insecure-key-do-not-use-in-production"):
     raise ImproperlyConfigured("Set a strong DJANGO_SECRET_KEY for production.")
 
-ALLOWED_HOSTS: list[str] = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS: list[str] = [
+    h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()
+]
+
+_csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "").strip()
+if _csrf_origins:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_origins.split(",") if o.strip()]
+elif not DEBUG:
+    CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if h and h not in ("localhost", "127.0.0.1", "backend")]
 
 
 # -----------------------------------------------------------------------------
@@ -169,6 +177,7 @@ SHARED_APPS = [
     "tenancy",
     "accounts",
     "marketplace",
+    "global_vehicles",
     "django_celery_beat",
 ]
 
@@ -280,6 +289,13 @@ _media_root = os.getenv("MEDIA_ROOT", "").strip()
 if _media_root:
     MEDIA_ROOT = Path(_media_root)
 
+# Allow up to 25 MB uploads (vehicle photos, inspection images, documents).
+# Must stay below the nginx `client_max_body_size` (see frontend/nginx.conf) and
+# any reverse proxy in front (Nginx Proxy Manager — see REVERSE_PROXY.md).
+_max_upload_mb = int(os.getenv("MAX_UPLOAD_MB", "25"))
+DATA_UPLOAD_MAX_MEMORY_SIZE = _max_upload_mb * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = _max_upload_mb * 1024 * 1024
+
 # --- S3 / django-storages (disabled — files go to QNAP via MEDIA_ROOT mount) ---
 # USE_S3_STORAGE = os.getenv("USE_S3_STORAGE", "0") == "1"
 # if USE_S3_STORAGE:
@@ -298,6 +314,23 @@ if _media_root:
 
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
+CELERY_BEAT_SCHEDULE = {
+    "check-preventive-maintenance-daily": {
+        "task": "visits.celery_tasks.check_maintenance_due",
+        "schedule": 86400.0,
+    },
+    "purge-login-audit-events-daily": {
+        "task": "accounts.celery_tasks.purge_old_login_audit_events",
+        "schedule": 86400.0,
+    },
+}
+
+# Login audit retention (days) — see USER_PROFILE_MECHANICS_AND_AUDIT.md Phase B
+LOGIN_AUDIT_RETENTION_DAYS = int(os.getenv("LOGIN_AUDIT_RETENTION_DAYS", "90"))
+
+# Absolute URLs for one-time staff invite links (e.g. https://mechanic360.example.com)
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "").strip()
 
 
 # -----------------------------------------------------------------------------

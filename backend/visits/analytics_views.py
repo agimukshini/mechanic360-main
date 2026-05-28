@@ -21,8 +21,9 @@ from vehicles.models import ServiceVisit, Vehicle
 from visits.models import VisitServiceLine, VisitMaterialLine, VisitLaborLine, PreventiveMaintenancePlan
 from inventory.models import InventoryItem
 
+from mechanic360.permissions import IsAdvisorOrAdmin, IsTenantUser
 
-from mechanic360.permissions import IsAdvisorOrAdmin
+from .mechanic_analytics import mechanic_detail, mechanics_summary
 
 
 @api_view(['GET'])
@@ -202,3 +203,15 @@ def maintenance_forecast(request):
     forecast.sort(key=lambda x: (0 if 'Overdue' in x['next_due'] else 1, x['next_due']))
 
     return Response(forecast)
+
+
+@api_view(["GET"])
+@permission_classes([IsTenantUser])
+def mechanics_analytics_summary(request):
+    return mechanics_summary(request)
+
+
+@api_view(["GET"])
+@permission_classes([IsTenantUser])
+def mechanics_analytics_detail(request, user_id: str):
+    return mechanic_detail(request, user_id)

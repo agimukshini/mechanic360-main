@@ -11,7 +11,9 @@ import { useTranslation } from 'react-i18next'
 
 type ServiceFormValues = {
   name: string
+  name_sq: string
   description?: string
+  description_sq?: string
   default_duration_hours: number
   default_price: number
   is_active: boolean
@@ -29,7 +31,9 @@ export default function ServiceCatalogForm() {
     () =>
       z.object({
         name: z.string().min(1, t('services.nameRequired')),
+        name_sq: z.string().optional(),
         description: z.string().optional(),
+        description_sq: z.string().optional(),
         default_duration_hours: z.coerce.number().min(0).max(24),
         default_price: z.coerce.number().min(0),
         is_active: z.boolean().default(true),
@@ -52,7 +56,9 @@ export default function ServiceCatalogForm() {
     resolver: zodResolver(serviceSchema),
     defaultValues: {
       name: '',
+      name_sq: '',
       description: '',
+      description_sq: '',
       default_duration_hours: 1.0,
       default_price: 0,
       is_active: true,
@@ -61,12 +67,15 @@ export default function ServiceCatalogForm() {
 
   useEffect(() => {
     if (isEdit && serviceData?.data) {
+      const item = serviceData.data
       reset({
-        name: serviceData.data.name,
-        description: serviceData.data.description || '',
-        default_duration_hours: Number(serviceData.data.default_duration_hours),
-        default_price: Number(serviceData.data.default_price),
-        is_active: serviceData.data.is_active,
+        name: item.name_en || item.name,
+        name_sq: item.name_sq || '',
+        description: item.description_en || item.description || '',
+        description_sq: item.description_sq || '',
+        default_duration_hours: Number(item.default_duration_hours),
+        default_price: Number(item.default_price),
+        is_active: item.is_active,
       })
     }
   }, [serviceData, isEdit, reset])
@@ -125,24 +134,43 @@ export default function ServiceCatalogForm() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="card p-6 space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-            {t('services.nameLabel')} *
-          </label>
-          <input {...register('name')} className="input" placeholder={t('services.namePlaceholder')} />
-          {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+              {t('services.nameEnLabel')} *
+            </label>
+            <input {...register('name')} className="input" placeholder={t('services.nameEnPlaceholder')} />
+            {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+              {t('services.nameSqLabel')}
+            </label>
+            <input {...register('name_sq')} className="input" placeholder={t('services.nameSqPlaceholder')} />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-            {t('services.descriptionLabel')}
-          </label>
-          <textarea
-            {...register('description')}
-            className="input min-h-[100px]"
-            placeholder={t('services.descriptionPlaceholder')}
-          />
-          {errors.description && <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+              {t('services.descriptionEnLabel')}
+            </label>
+            <textarea
+              {...register('description')}
+              className="input min-h-[100px]"
+              placeholder={t('services.descriptionEnPlaceholder')}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+              {t('services.descriptionSqLabel')}
+            </label>
+            <textarea
+              {...register('description_sq')}
+              className="input min-h-[100px]"
+              placeholder={t('services.descriptionSqPlaceholder')}
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ L.title }} — {{ vehicle.make }} {{ vehicle.model }}</title>
+    <style>
+        /*
+          Vertical door-jamb sticker (40 × 100 mm) — like an OEM oil-change
+          reminder. Contents:
+            • QR (vehicle lookup, payload = tenant vehicle id)
+            • Last service (date + km)
+            • Next service (date + km)
+            • Vehicle make/model + VIN identifier
+            • Mechanic360 platform tag
+
+          No workshop branding — see the view docstring for why.
+        */
+        @page {
+            size: 40mm 100mm;
+            margin: 0;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: "DejaVu Sans", Helvetica, Arial, sans-serif;
+            color: #0f172a;
+        }
+
+        .sticker {
+            width: 40mm;
+            height: 100mm;
+            border: 1px solid #1b263b;
+            border-radius: 2mm;
+            padding: 2.5mm 2mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: #ffffff;
+        }
+
+        .qr-box {
+            background: #ffffff;
+            padding: 0.3mm;
+            margin: 0 0 1.5mm 0;
+        }
+
+        .qr-box img {
+            width: 28mm;
+            height: 28mm;
+            display: block;
+        }
+
+        .scan-label {
+            font-size: 5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: #475569;
+            margin: 0 0 2mm 0;
+            line-height: 1;
+        }
+
+        .service-block {
+            width: 100%;
+            padding: 1.5mm 1.2mm;
+            border-radius: 1.5mm;
+            margin: 0 0 1.8mm 0;
+            text-align: left;
+        }
+
+        .service-block.last {
+            background: #f1f5f9;
+            border: 0.3pt solid #cbd5e1;
+            color: #0f172a;
+        }
+
+        .service-block.next {
+            background: #0077b6;
+            color: #ffffff;
+        }
+
+        .service-block .heading {
+            font-size: 4.5pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin: 0 0 1mm 0;
+            line-height: 1;
+            opacity: 0.85;
+        }
+
+        .service-block .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 0 0 0.6mm 0;
+            line-height: 1;
+        }
+
+        .service-block .row:last-child { margin-bottom: 0; }
+
+        .service-block .row .label {
+            font-size: 5.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.75;
+        }
+
+        .service-block .row .value {
+            font-size: 8pt;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .service-block.next .row .value {
+            font-size: 9pt;
+        }
+
+        .vehicle-id {
+            margin-top: auto;
+            padding-top: 1.2mm;
+            border-top: 0.3pt solid #e2e8f0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .vehicle-id .plate-label,
+        .vehicle-id .vin-label {
+            font-size: 4.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #94a3b8;
+            margin: 0 0 0.4mm 0;
+            line-height: 1;
+        }
+
+        .vehicle-id .plate {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #0f172a;
+            letter-spacing: 0.04em;
+            margin: 0 0 1.4mm 0;
+            line-height: 1;
+        }
+
+        .vehicle-id .vin {
+            font-family: "DejaVu Sans Mono", "Courier New", monospace;
+            font-size: 6pt;
+            color: #0f172a;
+            letter-spacing: 0.01em;
+            word-break: break-all;
+            line-height: 1.15;
+            margin: 0;
+        }
+
+        .footer {
+            margin-top: 1.2mm;
+            font-size: 4pt;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            line-height: 1;
+        }
+
+        .em-dash { opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="sticker">
+        <div class="qr-box">
+            <img src="{{ qr_data_url }}" alt="Vehicle QR">
+        </div>
+        <p class="scan-label">{{ L.scan_label }}</p>
+
+        <div class="service-block last">
+            <p class="heading">{{ L.last_service }}</p>
+            <div class="row">
+                <span class="label">{{ L.date_label }}</span>
+                <span class="value">
+                    {% if last_service_date %}{{ last_service_date|date:"d M Y" }}{% else %}<span class="em-dash">—</span>{% endif %}
+                </span>
+            </div>
+            <div class="row">
+                <span class="label">{{ L.km_label }}</span>
+                <span class="value">
+                    {% if last_service_km %}{{ last_service_km }} km{% else %}<span class="em-dash">—</span>{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="service-block next">
+            <p class="heading">{{ L.next_service }}</p>
+            <div class="row">
+                <span class="label">{{ L.date_label }}</span>
+                <span class="value">
+                    {% if next_service_date %}{{ next_service_date|date:"d M Y" }}{% else %}—{% endif %}
+                </span>
+            </div>
+            <div class="row">
+                <span class="label">{{ L.km_label }}</span>
+                <span class="value">
+                    {% if next_service_km %}{{ next_service_km }} km{% else %}—{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="vehicle-id">
+            {% if vehicle.license_plate %}
+            <p class="plate-label">{{ L.plate_label }}</p>
+            <p class="plate">{{ vehicle.license_plate }}</p>
+            {% endif %}
+            {% if vehicle.vin %}
+            <p class="vin-label">{{ L.vin_label }}</p>
+            <p class="vin">{{ vehicle.vin }}</p>
+            {% endif %}
+        </div>
+
+        <div class="footer">{{ L.platform_tag }}</div>
+    </div>
+</body>
+</html>

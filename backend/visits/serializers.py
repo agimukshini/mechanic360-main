@@ -18,9 +18,12 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 from inventory.models import InventoryItem
+from accounts.serializers import UserSerializer
 from vehicles.models import Vehicle, ServiceVisit
 from clients.serializers import ClientSerializer
 from .completion import baseline_mileage_km_for_vehicle
+from .catalog_i18n import catalog_language_from_request
+from .attribution import apply_performed_by_to_validated_data
 from .models import (
     ServiceCatalogItem,
     VisitLaborLine,
@@ -105,13 +108,51 @@ class ServiceVisitSerializer(serializers.ModelSerializer):
 
     def get_vehicle(self, obj: ServiceVisit) -> dict:
         v = obj.vehicle
-        return {
+        data = {
             "id": str(v.id),
             "license_plate": v.license_plate,
             "make": v.make,
             "model": v.model,
             "vin": v.vin,
+            "description": getattr(v, "description", "") or "",
         }
+        # Expose the *current* owner. We resolve in three layers:
+        #   1. Tenant-local Vehicle.owner (clients.Client)
+        #   2. Global registry — active GlobalOwner linked to this VIN
+        # The global fallback is what makes the modern flow work, where a shop
+        # has registered the vehicle and the owner only in the public schema
+        # (no per-tenant Client mirror).
+        owner = getattr(v, "owner", None)
+        if owner is not None:
+            data["owner"] = {
+                "id": str(owner.id),
+                "name": getattr(owner, "name", "") or "",
+                "company_name": getattr(owner, "company_name", "") or "",
+                "phone": getattr(owner, "phone", "") or "",
+                "email": getattr(owner, "email", "") or "",
+                "source": "local",
+            }
+        else:
+            data["owner"] = None
+            try:
+                from visits.report_utils import vehicle_global_owner
+
+                global_owner = vehicle_global_owner(v)
+            except Exception:  # pragma: no cover — defensive
+                global_owner = None
+            if global_owner is not None:
+                data["owner"] = {
+                    "id": str(global_owner.id),
+                    "name": getattr(global_owner, "name", "") or "",
+                    "company_name": "",
+                    "phone": getattr(global_owner, "phone", "") or "",
+                    "email": getattr(global_owner, "email", "") or "",
+                    "source": "global",
+                }
+        mechanic = getattr(v, "assigned_mechanic", None)
+        if mechanic is not None:
+            data["assigned_mechanic"] = UserSerializer(mechanic).data
+        return data
 
     def create(self, validated_data):
         """
@@ -125,8 +166,10 @@ class ServiceVisitSerializer(serializers.ModelSerializer):
         if client_id:
             from clients.models import Client
             client = Client.objects.get(id=client_id)
+        elif vehicle.owner_id:
+            client = vehicle.owner
         else:
-            client = vehicle.owner  # Client is the vehicle owner
+            client = None
 
         validated_data["vehicle"] = vehicle
         validated_data["client"] = client
@@ -165,6 +208,8 @@ class ServiceCatalogItemSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "name_sq",
+            "description_sq",
             "default_duration_hours",
             "default_price",
             "is_active",
@@ -172,6 +217,21 @@ class ServiceCatalogItemSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if self._language() == "sq":
+            if instance.name_sq:
+                data["name"] = instance.name_sq
+            if instance.description_sq:
+                data["description"] = instance.description_sq
+        data["name_en"] = instance.name
+        data["description_en"] = instance.description
+        return data
+
+    def _language(self) -> str:
+        request = self.context.get("request")
+        return catalog_language_from_request(request)
 
 
 class ServiceVisitSummarySerializer(serializers.ModelSerializer):
@@ -203,6 +263,8 @@ class ServiceVisitSummarySerializer(serializers.ModelSerializer):
 class VisitServiceLineSerializer(serializers.ModelSerializer):
     visit = ServiceVisitSummarySerializer(read_only=True)
     visit_id = serializers.UUIDField(write_only=True)
+    performed_by = UserSerializer(read_only=True)
+    performed_by_id = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = VisitServiceLine
@@ -215,8 +277,10 @@ class VisitServiceLineSerializer(serializers.ModelSerializer):
             "quantity",
             "unit_price",
             "total_price",
+            "performed_by",
+            "performed_by_id",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "performed_by"]
 
     def create(self, validated_data):
         visit_id = validated_data.pop("visit_id")
@@ -226,7 +290,16 @@ class VisitServiceLineSerializer(serializers.ModelSerializer):
             catalog_item = validated_data.get("catalog_item")
             if catalog_item is not None:
                 validated_data["description"] = catalog_item.name
+        apply_performed_by_to_validated_data(self, validated_data)
         return VisitServiceLine.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("visit_id", None)
+        apply_performed_by_to_validated_data(self, validated_data)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class VisitMaterialLineSerializer(serializers.ModelSerializer):
@@ -301,6 +374,8 @@ class VisitMaterialLineSerializer(serializers.ModelSerializer):
 class VisitLaborLineSerializer(serializers.ModelSerializer):
     visit = ServiceVisitSummarySerializer(read_only=True)
     visit_id = serializers.UUIDField(write_only=True)
+    performed_by = UserSerializer(read_only=True)
+    performed_by_id = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = VisitLaborLine
@@ -312,14 +387,25 @@ class VisitLaborLineSerializer(serializers.ModelSerializer):
             "hours",
             "hourly_rate",
             "total_price",
+            "performed_by",
+            "performed_by_id",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "performed_by"]
 
     def create(self, validated_data):
         visit_id = validated_data.pop("visit_id")
         visit = ServiceVisit.objects.get(id=visit_id)
         validated_data["visit"] = visit
+        apply_performed_by_to_validated_data(self, validated_data)
         return VisitLaborLine.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("visit_id", None)
+        apply_performed_by_to_validated_data(self, validated_data)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class PreventiveMaintenancePlanSerializer(serializers.ModelSerializer):

@@ -29,6 +29,7 @@ SERVICE_REPORT: dict[str, dict[str, str]] = {
         "label_vin": "VIN",
         "label_mileage": "Kilometrazhi në servis",
         "label_technician": "Mekaniku",
+        "label_vehicle_notes": "Shënime për automjetin",
         "section_inspection": "Inspektim Teknik 360°",
         "col_section": "Seksioni",
         "col_check": "Kontrolli",
@@ -42,6 +43,7 @@ SERVICE_REPORT: dict[str, dict[str, str]] = {
         "col_total": "Totali",
         "col_hours": "Orë",
         "col_rate": "Tarifa/orë",
+        "col_technician": "Mekaniku",
         "subtotal_services": "Nëntotali shërbimeve",
         "subtotal_parts": "Nëntotali pjesëve",
         "subtotal_labor": "Nëntotali punës",
@@ -74,6 +76,7 @@ SERVICE_REPORT: dict[str, dict[str, str]] = {
         "label_vin": "VIN",
         "label_mileage": "Mileage at service",
         "label_technician": "Mechanic",
+        "label_vehicle_notes": "Vehicle notes",
         "section_inspection": "360° Technical Inspection",
         "col_section": "Section",
         "col_check": "Check",
@@ -87,6 +90,7 @@ SERVICE_REPORT: dict[str, dict[str, str]] = {
         "col_total": "Total",
         "col_hours": "Hours",
         "col_rate": "Rate/hr",
+        "col_technician": "Mechanic",
         "subtotal_services": "Services subtotal",
         "subtotal_parts": "Parts subtotal",
         "subtotal_labor": "Labor subtotal",
@@ -127,6 +131,31 @@ DOOR_STICKER: dict[str, dict[str, str]] = {
     },
 }
 
+VEHICLE_DOOR_STICKER: dict[str, dict[str, str]] = {
+    "sq": {
+        "title": "Etiketë servisi në derë",
+        "scan_label": "Skano për historikun",
+        "last_service": "Servisi i fundit",
+        "next_service": "Servisi tjetër",
+        "date_label": "Data",
+        "km_label": "KM",
+        "plate_label": "Targa",
+        "vin_label": "VIN",
+        "platform_tag": "Mechanic360",
+    },
+    "en": {
+        "title": "Door-jamb service sticker",
+        "scan_label": "Scan for history",
+        "last_service": "Last service",
+        "next_service": "Next service",
+        "date_label": "Date",
+        "km_label": "KM",
+        "plate_label": "Plate",
+        "vin_label": "VIN",
+        "platform_tag": "Mechanic360",
+    },
+}
+
 SERVICE_BOOKLET: dict[str, dict[str, str]] = {
     "sq": {
         "title": "Libër Digital i Servisit",
@@ -144,6 +173,7 @@ SERVICE_BOOKLET: dict[str, dict[str, str]] = {
         "status": "Statusi",
         "hour_meter": "Orëmotor",
         "performed_by": "Kryer nga",
+        "line_mechanic": "Mekaniku",
         "services_performed": "Shërbimet e Kryera",
         "description": "Përshkrimi",
         "qty": "Sasi",
@@ -184,6 +214,7 @@ SERVICE_BOOKLET: dict[str, dict[str, str]] = {
         "status": "Status",
         "hour_meter": "Hour Meter",
         "performed_by": "Performed By",
+        "line_mechanic": "Mechanic",
         "services_performed": "Services Performed",
         "description": "Description",
         "qty": "Qty",

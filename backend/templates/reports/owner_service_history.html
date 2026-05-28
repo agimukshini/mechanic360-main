@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Service history — {{ vehicle.license_plate }}</title>
+    <style>
+        @page { size: A4; margin: 14mm 14mm 16mm 14mm; }
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "DejaVu Sans", Helvetica, Arial, sans-serif;
+            font-size: 9pt;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .head {
+            border-bottom: 2px solid #0077b6;
+            padding-bottom: 4mm;
+            margin-bottom: 6mm;
+            display: table;
+            width: 100%;
+        }
+
+        .head-left, .head-right {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .head-right { text-align: right; width: 40%; }
+
+        h1 {
+            margin: 0 0 1mm 0;
+            font-size: 16pt;
+            color: #0077b6;
+        }
+
+        .meta {
+            font-size: 8.5pt;
+            color: #475569;
+            line-height: 1.45;
+        }
+
+        .meta strong { color: #0f172a; }
+
+        .summary {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 3mm;
+            padding: 4mm 5mm;
+            margin-bottom: 6mm;
+            display: table;
+            width: 100%;
+        }
+
+        .summary-cell {
+            display: table-cell;
+            width: 33%;
+            vertical-align: top;
+        }
+
+        .summary-cell .label {
+            font-size: 6.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+        }
+
+        .summary-cell .value {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin-top: 0.5mm;
+        }
+
+        h2 {
+            font-size: 10pt;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #0077b6;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1mm;
+            margin: 4mm 0 3mm 0;
+        }
+
+        table.visits {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.5pt;
+        }
+
+        table.visits thead th {
+            background: #0077b6;
+            color: #fff;
+            text-align: left;
+            font-weight: bold;
+            padding: 2mm 2.5mm;
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        table.visits tbody td {
+            padding: 2mm 2.5mm;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        table.visits tbody tr:nth-child(even) td { background: #f8fafc; }
+
+        table.visits .num { text-align: right; white-space: nowrap; }
+
+        .totals {
+            margin-top: 3mm;
+            text-align: right;
+            font-size: 10pt;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .empty {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 3mm;
+            padding: 10mm;
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .footer {
+            margin-top: 8mm;
+            padding-top: 3mm;
+            border-top: 1px solid #e2e8f0;
+            font-size: 7pt;
+            color: #94a3b8;
+            text-align: center;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="head">
+        <div class="head-left">
+            <h1>Service history</h1>
+            <p class="meta">
+                <strong>{{ vehicle.make }} {{ vehicle.model }}</strong>
+                {% if vehicle.year %} · {{ vehicle.year }}{% endif %}<br>
+                Plate: <strong>{{ vehicle.license_plate }}</strong>
+                {% if vehicle.vin %} · VIN: {{ vehicle.vin }}{% endif %}
+            </p>
+        </div>
+        <div class="head-right">
+            <p class="meta">
+                Owner: <strong>{{ owner_name }}</strong><br>
+                Generated: {{ generated_at|date:"d M Y, H:i" }}
+            </p>
+        </div>
+    </div>
+
+    <div class="summary">
+        <div class="summary-cell">
+            <p class="label">Total visits</p>
+            <p class="value">{{ visit_count }}</p>
+        </div>
+        <div class="summary-cell">
+            <p class="label">Current odometer</p>
+            <p class="value">
+                {% if vehicle.odometer_km %}{{ vehicle.odometer_km|floatformat:0 }} km{% else %}—{% endif %}
+            </p>
+        </div>
+        <div class="summary-cell">
+            <p class="label">Total spent</p>
+            <p class="value">{{ grand_total|floatformat:2 }}</p>
+        </div>
+    </div>
+
+    <h2>Visits</h2>
+
+    {% if visits %}
+    <table class="visits">
+        <thead>
+            <tr>
+                <th style="width: 18%;">Date</th>
+                <th>Workshop</th>
+                <th class="num" style="width: 12%;">Mileage</th>
+                <th class="num" style="width: 18%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in visits %}
+            <tr>
+                <td>{{ v.service_date|date:"d M Y" }}</td>
+                <td>
+                    {{ v.tenant_name|default:v.tenant_schema }}
+                    {% if v.notes %}<br><span style="font-size:7pt;color:#64748b;">{{ v.notes }}</span>{% endif %}
+                </td>
+                <td class="num">
+                    {% if v.mileage_km %}{{ v.mileage_km|floatformat:0 }} km{% else %}—{% endif %}
+                </td>
+                <td class="num">{{ v.grand_total|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="totals">
+        Grand total: {{ grand_total|floatformat:2 }}
+    </div>
+    {% else %}
+    <div class="empty">
+        No completed visits on record for this vehicle yet.
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Aggregated from all workshops on the Mechanic360 platform that have serviced this vehicle.
+        Service history is maintained per-workshop; totals here may differ from individual workshop invoices.
+    </div>
+</body>
+</html>

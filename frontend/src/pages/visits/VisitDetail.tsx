@@ -21,6 +21,7 @@ import { PageTabs, SegmentTabs } from '@/components/ui/PageTabs'
 import VisitStatusBadge from '@/components/ui/VisitStatusBadge'
 import { WorkLineList, type WorkLineRow } from '@/components/visits/WorkLineList'
 import { formatEuro, MULTIPLY } from '@/lib/money'
+import { userDisplayName } from '@/lib/userDisplay'
 import {
   fetchServiceReportBlob,
   downloadServiceReportBlob,
@@ -34,8 +35,11 @@ import { createPortal } from 'react-dom'
 import ServiceLineForm from './ServiceLineForm'
 import LaborLineForm from './LaborLineForm'
 import MaterialLineForm from './MaterialLineForm'
-import { useApiToast } from '@/hooks/useApiToast'
 import { useTranslation } from 'react-i18next'
+import { useApiToast } from '@/hooks/useApiToast'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/store'
+import { canLogVisitWork, canManageWorkshopData, isMechanic, normalizeRole } from '@/lib/roles'
 import { hasInspectionContent, pickInspectionForVisit } from '@/lib/inspection'
 import { isAlreadyClosedVisitError, isVisitOpen, visitQueryOptions } from '@/lib/visits'
 
@@ -44,6 +48,11 @@ export default function VisitDetail() {
   const { showError, showToast } = useApiToast()
   const { id } = useParams()
   const queryClient = useQueryClient()
+  const user = useSelector((state: RootState) => state.auth.user)
+  const role = normalizeRole(user?.role)
+  const canManageVisit = canManageWorkshopData(role)
+  const canLogWork = canLogVisitWork(role)
+  const mechanicUser = isMechanic(role)
   const [showConfirmDialog, setShowConfirmDialog] = useState<string | null>(null)
   const [showServiceForm, setShowServiceForm] = useState(false)
   const [showLaborForm, setShowLaborForm] = useState(false)
@@ -181,8 +190,9 @@ export default function VisitDetail() {
   const inspection = hasInspectionContent(inspectionRecord) ? inspectionRecord : undefined
 
   const canEdit = isVisitOpen(visit.status)
-  const canFinish = canEdit && !!inspection && (visit.mileage_km || 0) > 0
-  const canCancel = canEdit
+  const canFinish = canManageVisit && canEdit && !!inspection && (visit.mileage_km || 0) > 0
+  const canCancel = canManageVisit && canEdit
+  const canEditWork = canLogWork && canEdit
   const grandTotalFromApi = parseFloat(visit.grand_total || '0')
   const canExport = visit.status === 'completed'
 
@@ -204,10 +214,14 @@ export default function VisitDetail() {
     quantity: number
     unit_price?: string | number
     total_price: string | number
+    performed_by?: { first_name?: string; last_name?: string; username?: string }
   }) => ({
     id: line.id,
     label: line.description,
     sub: `${line.quantity} ${MULTIPLY} ${formatEuro(line.unit_price)}`,
+    meta: line.performed_by
+      ? `${t('visits.performedBy')}: ${userDisplayName(line.performed_by)}`
+      : undefined,
     total: line.total_price,
   }))
 
@@ -230,18 +244,32 @@ export default function VisitDetail() {
     hours: number
     hourly_rate?: string | number
     total_price: string | number
+    performed_by?: { first_name?: string; last_name?: string; username?: string }
   }) => ({
     id: line.id,
     label: line.description,
     sub: `${line.hours}h ${MULTIPLY} ${formatEuro(line.hourly_rate)}/hr`,
+    meta: line.performed_by
+      ? `${t('visits.performedBy')}: ${userDisplayName(line.performed_by)}`
+      : undefined,
     total: line.total_price,
   }))
 
   const openAddForWorkSegment = () => {
     if (workSegment === 'services') setShowServiceForm(true)
-    else if (workSegment === 'parts') setShowMaterialForm(true)
-    else setShowLaborForm(true)
+    else if (workSegment === 'parts' && canManageVisit) setShowMaterialForm(true)
+    else if (workSegment === 'labor') setShowLaborForm(true)
   }
+
+  const lineOwnedByCurrentUser = (line: { performed_by?: { id?: string } }) =>
+    !mechanicUser || line.performed_by?.id === user?.id
+
+  const guardedDelete =
+    (lines: { id: string; performed_by?: { id?: string } }[], mutate: (id: string) => void) =>
+    (lineId: string) => {
+      const line = lines.find((row) => row.id === lineId)
+      if (line && lineOwnedByCurrentUser(line)) mutate(lineId)
+    }
 
   const activeWorkRows =
     workSegment === 'services' ? serviceRows : workSegment === 'parts' ? materialRows : laborRows
@@ -253,10 +281,10 @@ export default function VisitDetail() {
         : 'No labor added yet'
   const activeWorkDelete =
     workSegment === 'services'
-      ? (lineId: string) => deleteServiceLineMutation.mutate(lineId)
+      ? guardedDelete(serviceLines, (lineId) => deleteServiceLineMutation.mutate(lineId))
       : workSegment === 'parts'
         ? (lineId: string) => deleteMaterialLineMutation.mutate(lineId)
-        : (lineId: string) => deleteLaborLineMutation.mutate(lineId)
+        : guardedDelete(laborLines, (lineId) => deleteLaborLineMutation.mutate(lineId))
   const activeSegmentTotal =
     workSegment === 'services' ? servicesTotal : workSegment === 'parts' ? materialsTotal : laborTotal
 
@@ -352,13 +380,12 @@ export default function VisitDetail() {
       {activeTab === 'overview' && (
         <>
       {/* Status Transition Actions */}
-      {canEdit && (
+      {canEdit && canManageVisit && (
         <div className="card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="font-semibold">Open visit</h2>
             <p className="text-sm text-workshop-charcoal/60 mt-1">
-              Add work items and complete the 360° inspection, then finish.
-              {!inspection && ' Inspection is still required.'}
+              Add work items and finish when ready. The 360° inspection is optional.
             </p>
           </div>
           <div className="flex gap-3 flex-wrap">
@@ -387,6 +414,13 @@ export default function VisitDetail() {
               </button>
             )}
           </div>
+        </div>
+      )}
+
+      {canEdit && mechanicUser && (
+        <div className="card p-6">
+          <h2 className="font-semibold">{t('visits.mechanicWorkHintTitle')}</h2>
+          <p className="text-sm text-workshop-charcoal/60 mt-1">{t('visits.mechanicWorkHint')}</p>
         </div>
       )}
 
@@ -465,13 +499,55 @@ export default function VisitDetail() {
             <h2 className="font-semibold">Vehicle</h2>
           </div>
           <div className="space-y-3 text-sm">
-            <div>
-              <span className="text-workshop-charcoal/40">Owner</span>
-              <p>{visit.client?.name || visit.client?.company_name}</p>
-            </div>
+            {(() => {
+              const ownerName =
+                visit.client?.name ||
+                visit.client?.company_name ||
+                visit.vehicle?.owner?.name ||
+                visit.vehicle?.owner?.company_name ||
+                ''
+              const ownerPhone = visit.client?.phone || visit.vehicle?.owner?.phone || ''
+              const ownerEmail = visit.client?.email || visit.vehicle?.owner?.email || ''
+              return (
+                <div>
+                  <span className="text-workshop-charcoal/40">Owner</span>
+                  {ownerName ? (
+                    <>
+                      <p className="font-medium">{ownerName}</p>
+                      {(ownerPhone || ownerEmail) && (
+                        <p className="text-xs text-workshop-charcoal/60">
+                          {[ownerPhone, ownerEmail].filter(Boolean).join(' · ')}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-workshop-charcoal/60 italic">
+                      No owner assigned
+                      {visit.vehicle?.id && (
+                        <>
+                          {' · '}
+                          <a
+                            href={`/vehicles/${visit.vehicle.id}`}
+                            className="text-accent underline hover:no-underline"
+                          >
+                            assign one
+                          </a>
+                        </>
+                      )}
+                    </p>
+                  )}
+                </div>
+              )
+            })()}
+            {visit.vehicle?.description && (
+              <div>
+                <span className="text-workshop-charcoal/40">Notes</span>
+                <p className="whitespace-pre-wrap">{visit.vehicle.description}</p>
+              </div>
+            )}
             <div>
               <span className="text-workshop-charcoal/40">VIN</span>
-              <p className="font-mono">{visit.vehicle?.vin}</p>
+              <p className="font-mono">{visit.vehicle?.vin || '—'}</p>
             </div>
           </div>
         </div>
@@ -489,12 +565,20 @@ export default function VisitDetail() {
           <p className="font-semibold text-gray-900 truncate">
             {visit.vehicle?.make} {visit.vehicle?.model}
           </p>
-          <p className="text-sm text-secondary truncate">
-            {visit.vehicle?.license_plate}
-            {visit.client?.name || visit.client?.company_name
-              ? ` \u00b7 ${visit.client?.name || visit.client?.company_name}`
-              : ''}
-          </p>
+          {(() => {
+            const ownerLabel =
+              visit.client?.name ||
+              visit.client?.company_name ||
+              visit.vehicle?.owner?.name ||
+              visit.vehicle?.owner?.company_name ||
+              ''
+            return (
+              <p className="text-sm text-secondary truncate">
+                {visit.vehicle?.license_plate}
+                {ownerLabel ? ` \u00b7 ${ownerLabel}` : ''}
+              </p>
+            )
+          })()}
         </div>
         <span className="text-xl font-bold text-accent tabular-nums shrink-0">
           {formatEuro(visitTotal)}
@@ -508,7 +592,9 @@ export default function VisitDetail() {
             onChange={(id) => setWorkSegment(id as typeof workSegment)}
             tabs={[
               { id: 'services', label: 'Services', badge: serviceLines.length || undefined },
-              { id: 'parts', label: 'Parts', badge: materialLines.length || undefined },
+              ...(canManageVisit
+                ? [{ id: 'parts' as const, label: 'Parts', badge: materialLines.length || undefined }]
+                : []),
               { id: 'labor', label: 'Labor', badge: laborLines.length || undefined },
             ]}
           />
@@ -516,7 +602,7 @@ export default function VisitDetail() {
             <span className="text-base font-semibold text-gray-900 tabular-nums">
               {formatEuro(activeSegmentTotal)}
             </span>
-            {canEdit && (
+            {canEditWork && (workSegment !== 'parts' || canManageVisit) && (
               <button type="button" onClick={openAddForWorkSegment} className="btn btn-primary">
                 <Plus className="w-4 h-4 mr-1" />
                 Add {workSegment === 'services' ? 'service' : workSegment === 'parts' ? 'part' : 'labor'}
@@ -527,8 +613,14 @@ export default function VisitDetail() {
         <WorkLineList
           empty={activeWorkEmpty}
           lines={activeWorkRows}
-          isEditable={canEdit}
+          isEditable={canEditWork}
           onDelete={activeWorkDelete}
+          canDeleteLine={(lineId) => {
+            if (workSegment === 'parts') return canManageVisit
+            const lines = workSegment === 'services' ? serviceLines : laborLines
+            const line = lines.find((row: { id: string }) => row.id === lineId)
+            return line ? lineOwnedByCurrentUser(line) : false
+          }}
         />
       </div>
 
@@ -546,7 +638,7 @@ export default function VisitDetail() {
       {!inspection ? (
         <div className="card p-6 text-center">
           <p className="text-secondary mb-4">No inspection recorded for this visit.</p>
-          {canEdit && (
+          {canEditWork && (
             <Link to={`/visits/${id}/inspection/new`} className="btn btn-primary">
               Start 360° inspection
             </Link>
