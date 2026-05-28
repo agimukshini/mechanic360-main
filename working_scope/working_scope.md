@@ -210,14 +210,16 @@ Printable formats:
 ---
 
 ## 15. Security & Architecture
-- Single PostgreSQL with **Row-Level Security (RLS)** for tenant isolation
-- JWT authentication
-- S3/MinIO bucket for images & documents
-- Backend: Node.js (NestJS) with TypeScript
+- Single PostgreSQL with **schema-based multi-tenancy** (`django-tenants`); RLS optional later
+- JWT authentication (httpOnly cookies)
+- **File storage**: QNAP NAS on the LAN — Django `MEDIA_ROOT` bind-mounted to a QNAP shared folder (NFS/SMB)
+- Backend: **Django 5+** with Django REST Framework (Python)
 - Frontend: React with TypeScript (mobile-first PWA)
 - Containerized with Docker for deployment
-- **GDPR Compliance** measures implemented
-- **ISO 27001** security controls
+- **GDPR Compliance** measures (planned)
+- **ISO 27001** security controls (planned)
+
+See [working_scope/ARCHITECTURE.md](working_scope/ARCHITECTURE.md) for topology diagrams and QNAP integration details.
 
 ---
 
@@ -243,7 +245,7 @@ Printable formats:
 - **Authorization**: Role-based and per-object permissions via Django permissions + custom policies
 - **Database ORM**: Django ORM
 - **Validation**: Django & DRF serializers/validators
-- **File Storage**: S3-compatible storage (MinIO) via django-storages or custom backend
+- **File Storage**: QNAP NAS shared folder (LAN mount to `MEDIA_ROOT`)
 - **Notifications**: Email (e.g. SMTP, SendGrid) and Twilio (SMS/WhatsApp) integration
 - **Background Jobs**: Celery or RQ with Redis for reminders and async processing
 
@@ -251,7 +253,7 @@ Printable formats:
 - **RDBMS**: PostgreSQL 15+ with schema-based multi-tenancy
 - **Multi-tenancy**: Row-Level Security (RLS) policies
 - **Migrations**: Managed through Prisma
-- **Object Storage**: MinIO (S3-compatible)
+- **Object / file storage**: QNAP NAS (NFS/SMB mount to Django `MEDIA_ROOT`)
 
 ### DevOps
 - **Containerization**: Docker with Docker Compose

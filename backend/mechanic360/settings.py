@@ -5,7 +5,7 @@ This is a trimmed, commented settings module focused on:
 - PostgreSQL + schema-based multi-tenancy (via django-tenants)
 - JWT auth (SimpleJWT)
 - REST API (Django REST Framework)
-- S3-compatible storage (e.g. MinIO)
+- File storage: local MEDIA_ROOT (dev / QNAP NAS bind mount in prod)
 
 You should still create a `.env` file and override secrets and environment-
 specific values there.
@@ -274,19 +274,22 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# S3 / MinIO storage (can be toggled via env vars)
-USE_S3_STORAGE = os.getenv("USE_S3_STORAGE", "0") == "1"
+# Production: bind-mount QNAP shared folder to /app/media (see working_scope/ARCHITECTURE.md).
+# Optional override, e.g. MEDIA_ROOT=/mnt/qnap/mechanic360-media
+_media_root = os.getenv("MEDIA_ROOT", "").strip()
+if _media_root:
+    MEDIA_ROOT = Path(_media_root)
 
-if USE_S3_STORAGE:
-    # Configure django-storages to talk to MinIO or S3
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    AWS_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "")
-    AWS_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "")
-    AWS_STORAGE_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "mechanic360")
-    AWS_S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "http://minio:9000")
-    AWS_S3_REGION_NAME = os.getenv("S3_REGION", "us-east-1")
-    # Signed URLs in production unless explicitly disabled
-    AWS_QUERYSTRING_AUTH = os.getenv("S3_QUERYSTRING_AUTH", "0" if DEBUG else "1") == "1"
+# --- S3 / django-storages (disabled — files go to QNAP via MEDIA_ROOT mount) ---
+# USE_S3_STORAGE = os.getenv("USE_S3_STORAGE", "0") == "1"
+# if USE_S3_STORAGE:
+#     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+#     AWS_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "")
+#     AWS_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "")
+#     AWS_STORAGE_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "mechanic360")
+#     AWS_S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
+#     AWS_S3_REGION_NAME = os.getenv("S3_REGION", "us-east-1")
+#     AWS_QUERYSTRING_AUTH = os.getenv("S3_QUERYSTRING_AUTH", "0" if DEBUG else "1") == "1"
 
 
 # -----------------------------------------------------------------------------

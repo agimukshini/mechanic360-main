@@ -60,6 +60,8 @@ curl http://localhost:8001/api/v1/auth/me/ \
 | celery-beat | mechanic360-celery-beat | - | Celery Beat Scheduler |
 | frontend | mechanic360-frontend | 5173 | React + Vite + TypeScript |
 
+**File storage (dev):** uploads go to Docker volume `media_data` → `/app/media`. Production uses a **QNAP NAS** share on the LAN — see [working_scope/ARCHITECTURE.md](working_scope/ARCHITECTURE.md).
+
 ### Pre-configured Tenants
 
 | Tenant | Schema | Domain | Description |

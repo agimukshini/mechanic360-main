@@ -4,6 +4,8 @@ This guide covers deploying the workshop management stack beyond local Docker Co
 
 ## Architecture
 
+See **[working_scope/ARCHITECTURE.md](working_scope/ARCHITECTURE.md)** for diagrams, tenant flow, and QNAP file storage.
+
 | Component | Role |
 |-----------|------|
 | **Frontend** | React/Vite static build served by CDN or nginx |
@@ -11,6 +13,7 @@ This guide covers deploying the workshop management stack beyond local Docker Co
 | **PostgreSQL** | Multi-tenant schemas (`django-tenants`) |
 | **Redis** | Celery broker + cache |
 | **Celery worker + beat** | Maintenance reminders |
+| **QNAP NAS (LAN)** | Shared folder for uploads — photos, documents, inspection files (`MEDIA_ROOT`) |
 
 ## Prerequisites
 
@@ -37,13 +40,8 @@ POSTGRES_PORT=5432
 CORS_ALLOWED_ORIGINS=https://app.yourdomain.com
 CELERY_BROKER_URL=redis://redis:6379/0
 
-USE_S3_STORAGE=1
-S3_ACCESS_KEY_ID=...
-S3_SECRET_ACCESS_KEY=...
-S3_BUCKET_NAME=mechanic360-media
-S3_ENDPOINT_URL=https://...
-S3_REGION=us-east-1
-S3_QUERYSTRING_AUTH=1
+# File storage — QNAP NAS bind mount (see working_scope/ARCHITECTURE.md)
+# MEDIA_ROOT=/mnt/qnap/mechanic360-media
 ```
 
 JWTs are issued as **httpOnly cookies**. The SPA must call the API with credentials:
@@ -91,7 +89,13 @@ Serve `frontend/dist/` as static files.
    celery -A mechanic360 beat -l info
    ```
 
-4. **Static/media** — Collect static files; use S3 for uploaded documents in production.
+4. **Static/media** — Collect static files into `staticfiles/`. Mount the QNAP shared folder on the Docker host and bind it to `/app/media` on the backend container (see [working_scope/ARCHITECTURE.md](working_scope/ARCHITECTURE.md)).
+
+   ```yaml
+   backend:
+     volumes:
+       - /mnt/qnap/mechanic360-media:/app/media
+   ```
 
 5. **Health** — Verify `GET /api/v1/auth/me/` returns 401 without session; login sets cookies; tenant APIs resolve correct schema.
 
@@ -104,7 +108,8 @@ Serve `frontend/dist/` as static files.
 - [ ] API docs disabled (only available when `DEBUG=True`)
 - [ ] Rate limits active on login and tenant registration
 - [ ] Role-based permissions: mechanics cannot delete clients/vehicles or edit catalog/inventory
-- [ ] Backups for PostgreSQL and media storage
+- [ ] Backups for PostgreSQL **and** QNAP `mechanic360-media` folder (snapshots or QNAP backup job)
+- [ ] QNAP share restricted to app server IP; dedicated NAS user with write access to media folder only
 
 ## Roles
 
