@@ -6,12 +6,13 @@ parts of the scope from a backend perspective.
 """
 from __future__ import annotations
 
+from django.core.exceptions import ValidationError
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from vehicles.models import ServiceVisit
-from .completion import apply_visit_completion_effects
+from .services import complete_in_progress_visit, finish_service_visit
 from .models import (
     ServiceCatalogItem,
     VisitLaborLine,
@@ -30,6 +31,11 @@ from .serializers import (
     VisitServiceLineSerializer,
     PreventiveMaintenancePlanSerializer,
 )
+
+
+def _validation_error_response(exc: ValidationError) -> Response:
+    message = exc.messages[0] if getattr(exc, "messages", None) else str(exc)
+    return Response({"error": message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ServiceVisitViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
@@ -86,14 +92,10 @@ class ServiceVisitViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
         Transition visit from in_progress to completed.
         """
         visit = self.get_object()
-        if visit.status != ServiceVisit.Status.IN_PROGRESS:
-            return Response(
-                {"error": f"Cannot complete visit in '{visit.status}' status. Must be in progress."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        visit.status = ServiceVisit.Status.COMPLETED
-        visit.save(update_fields=["status", "updated_at"])
-        apply_visit_completion_effects(visit)
+        try:
+            visit = complete_in_progress_visit(visit)
+        except ValidationError as exc:
+            return _validation_error_response(exc)
         serializer = self.get_serializer(visit)
         return Response(serializer.data)
 
@@ -103,43 +105,22 @@ class ServiceVisitViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
         Save visit details and mark completed in one step (from draft or in_progress).
         """
         visit = self.get_object()
-        mileage_km = request.data.get("mileage_km")
-        notes = request.data.get("notes")
-
-        if visit.status == ServiceVisit.Status.COMPLETED:
-            if mileage_km is not None:
-                visit.mileage_km = int(mileage_km)
-            if notes is not None:
-                visit.notes = notes
-            update_fields = ["updated_at"]
-            if mileage_km is not None:
-                update_fields.append("mileage_km")
-            if notes is not None:
-                update_fields.append("notes")
-            if len(update_fields) > 1:
-                visit.save(update_fields=update_fields)
-                apply_visit_completion_effects(visit)
-            serializer = self.get_serializer(visit)
+        was_completed = visit.status == ServiceVisit.Status.COMPLETED
+        try:
+            visit = finish_service_visit(
+                visit,
+                mileage_km=request.data.get("mileage_km"),
+                hour_meter=request.data.get("hour_meter"),
+                notes=request.data.get("notes"),
+            )
+        except ValidationError as exc:
+            return _validation_error_response(exc)
+        serializer = self.get_serializer(visit)
+        if was_completed:
             return Response(
                 {**serializer.data, "already_completed": True},
                 status=status.HTTP_200_OK,
             )
-
-        if visit.status == ServiceVisit.Status.CANCELLED:
-            return Response(
-                {"error": f"Cannot finish visit in '{visit.status}' status."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if mileage_km is not None:
-            visit.mileage_km = int(mileage_km)
-        if notes is not None:
-            visit.notes = notes
-
-        visit.status = ServiceVisit.Status.COMPLETED
-        visit.save(update_fields=["status", "mileage_km", "notes", "updated_at"])
-        apply_visit_completion_effects(visit)
-        serializer = self.get_serializer(visit)
         return Response(serializer.data)
 
     @action(detail=True, methods=["post"], url_path="cancel")

@@ -341,3 +341,5 @@ or
 
 Reply with one word to confirm:
 **Standardized** / **Customizable**
+
+**Decision (2026-05): Standardized** — all workshops use the same checklist defined in the app (`InspectionForm.tsx`); per-tenant customization is deferred.

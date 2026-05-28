@@ -126,7 +126,7 @@ export const visitsApi = {
   delete: (id: string) => api.delete(`/visits/${id}/`),
   startVisit: (id: string) => api.post(`/visits/${id}/start/`),
   completeVisit: (id: string) => api.post(`/visits/${id}/complete/`),
-  finishVisit: (id: string, data?: { mileage_km?: number; notes?: string }) =>
+  finishVisit: (id: string, data?: { mileage_km?: number; hour_meter?: number; notes?: string }) =>
     api.post(`/visits/${id}/finish/`, data ?? {}),
   cancelVisit: (id: string) => api.post(`/visits/${id}/cancel/`),
   catalog: {

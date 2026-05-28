@@ -1,9 +1,10 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link, useSearchParams, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { visitsApi, vehiclesApi, api } from '@/api'
+import { visitsApi, vehiclesApi, inspectionsApi, api } from '@/api'
 import { useToast } from '@/components/ui/Toast'
 import { getApiErrorMessage } from '@/lib/utils'
+import { hasInspectionContent, pickInspectionForVisit } from '@/lib/inspection'
 import { isAlreadyClosedVisitError, isVisitClosed, isVisitOpen, visitQueryOptions } from '@/lib/visits'
 import ServiceLineForm from './ServiceLineForm'
 import LaborLineForm from './LaborLineForm'
@@ -36,6 +37,7 @@ export default function VisitForm() {
   const isNewRoute = !visitId
 
   const [mileage, setMileage] = useState(0)
+  const [hourMeter, setHourMeter] = useState(0)
   const [notes, setNotes] = useState('')
   const [pickVehicleId, setPickVehicleId] = useState(vehicleIdFromUrl || '')
   const [showServiceForm, setShowServiceForm] = useState(false)
@@ -88,6 +90,18 @@ export default function VisitForm() {
     enabled: !!visitId,
   })
 
+  const { data: inspectionData } = useQuery({
+    queryKey: ['inspection', { visit: visitId }],
+    queryFn: () => inspectionsApi.list({ visit: visitId }),
+    enabled: !!visitId,
+  })
+
+  const visitInspection = pickInspectionForVisit(
+    inspectionData?.data?.results || inspectionData?.data,
+    visitId || '',
+  )
+  const inspectionComplete = hasInspectionContent(visitInspection)
+
   const serviceLines = serviceLinesData?.data?.results || serviceLinesData?.data || []
   const materialLines = materialLinesData?.data?.results || materialLinesData?.data || []
   const laborLines = laborLinesData?.data?.results || laborLinesData?.data || []
@@ -115,6 +129,7 @@ export default function VisitForm() {
     if (hydratedVisitIdRef.current !== visit.id) {
       hydratedVisitIdRef.current = visit.id
       setMileage(visit.mileage_km || 0)
+      setHourMeter(visit.hour_meter || 0)
       setNotes(visit.notes || '')
     }
     if (isVisitClosed(visit.status)) {
@@ -163,7 +178,11 @@ export default function VisitForm() {
 
   const saveMutation = useMutation({
     mutationFn: () =>
-      visitsApi.patch(visitId!, { mileage_km: mileage, notes: notes || '' }),
+      visitsApi.patch(visitId!, {
+        mileage_km: mileage,
+        hour_meter: hourMeter,
+        notes: notes || '',
+      }),
     onSuccess: (response) => {
       queryClient.setQueryData(['visit', visitId], response)
       queryClient.invalidateQueries({ queryKey: ['visits'] })
@@ -185,7 +204,11 @@ export default function VisitForm() {
         err.code = 'ALREADY_CLOSED'
         throw err
       }
-      return visitsApi.finishVisit(visitId!, { mileage_km: mileage, notes: notes || '' })
+      return visitsApi.finishVisit(visitId!, {
+        mileage_km: mileage,
+        hour_meter: hourMeter,
+        notes: notes || '',
+      })
     },
     onSuccess: (response) => {
       queryClient.setQueryData(['visit', visitId], response)
@@ -277,8 +300,11 @@ export default function VisitForm() {
       selectedVehicle={selectedVehicle}
       mileage={mileage}
       setMileage={setMileage}
+      hourMeter={hourMeter}
+      setHourMeter={setHourMeter}
       notes={notes}
       setNotes={setNotes}
+      inspectionComplete={inspectionComplete}
       isEditable={isEditable}
       serviceLines={serviceLines}
       materialLines={materialLines}
@@ -339,8 +365,11 @@ function VisitEditor({
   selectedVehicle,
   mileage,
   setMileage,
+  hourMeter,
+  setHourMeter,
   notes,
   setNotes,
+  inspectionComplete,
   isEditable,
   serviceLines,
   materialLines,
@@ -363,8 +392,11 @@ function VisitEditor({
   selectedVehicle?: { make: string; model: string; license_plate: string; owner?: { name: string } }
   mileage: number
   setMileage: (n: number) => void
+  hourMeter: number
+  setHourMeter: (n: number) => void
   notes: string
   setNotes: (s: string) => void
+  inspectionComplete: boolean
   isEditable: boolean
   serviceLines: { id: string; description: string; quantity: number; total_price: string | number }[]
   materialLines: {
@@ -387,6 +419,7 @@ function VisitEditor({
   saveMutation: { mutate: () => void; isPending: boolean }
   finishMutation: { mutate: () => void; isPending: boolean }
 }) {
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState<'details' | 'work' | 'inspection'>('work')
   const [workSegment, setWorkSegment] = useState<'services' | 'parts' | 'labor'>('services')
 
@@ -473,16 +506,29 @@ function VisitEditor({
 
       {activeTab === 'details' && (
       <div className="card p-6 space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Mileage (km)</label>
-          <input
-            type="number"
-            min={0}
-            value={mileage || ''}
-            onChange={(e) => setMileage(parseInt(e.target.value, 10) || 0)}
-            disabled={!isEditable}
-            className="input w-full max-w-xs"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Mileage (km)</label>
+            <input
+              type="number"
+              min={0}
+              value={mileage || ''}
+              onChange={(e) => setMileage(parseInt(e.target.value, 10) || 0)}
+              disabled={!isEditable}
+              className="input w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Hour meter (hrs)</label>
+            <input
+              type="number"
+              min={0}
+              value={hourMeter || ''}
+              onChange={(e) => setHourMeter(parseInt(e.target.value, 10) || 0)}
+              disabled={!isEditable}
+              className="input w-full"
+            />
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Notes</label>
@@ -527,27 +573,38 @@ function VisitEditor({
       )}
 
       {activeTab === 'inspection' && (
-      <div className="card p-6">
+      <div className="card p-6 space-y-3">
+        {!inspectionComplete && isEditable && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            A 360° inspection is required before you can finish this visit.
+          </div>
+        )}
         {isEditable ? (
           <Link
             to={`/visits/${visitId}/inspection/new`}
             className="flex items-center justify-between gap-4 group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center">
-                <ClipboardList className="w-5 h-5 text-accent" />
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+                inspectionComplete ? 'bg-green-100' : 'bg-accent/10'
+              }`}>
+                <ClipboardList className={`w-5 h-5 ${inspectionComplete ? 'text-green-700' : 'text-accent'}`} />
               </div>
               <div>
                 <p className="font-semibold text-gray-900 group-hover:text-accent transition-colors">
                   360{'\u00b0'} inspection
                 </p>
-                <p className="text-sm text-secondary mt-0.5">Optional full vehicle checklist</p>
+                <p className="text-sm text-secondary mt-0.5">
+                  {inspectionComplete ? 'Checklist completed' : 'Required — open checklist'}
+                </p>
               </div>
             </div>
             <Plus className="w-5 h-5 text-gray-400 group-hover:text-accent" />
           </Link>
         ) : (
-          <p className="text-sm text-secondary">Inspection is available while the visit is open.</p>
+          <p className="text-sm text-secondary">
+            {inspectionComplete ? 'Inspection recorded for this visit.' : 'No inspection on file.'}
+          </p>
         )}
       </div>
       )}
@@ -569,7 +626,14 @@ function VisitEditor({
               </button>
               <button
                 type="button"
-                onClick={() => finishMutation.mutate()}
+                onClick={() => {
+                  if (!inspectionComplete) {
+                    showToast('Complete the 360° inspection before finishing this visit.', 'info')
+                    setActiveTab('inspection')
+                    return
+                  }
+                  finishMutation.mutate()
+                }}
                 disabled={finishMutation.isPending || mileage <= 0}
                 className="btn btn-primary flex-1 sm:flex-none"
               >

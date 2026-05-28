@@ -70,7 +70,7 @@ export default function LoginPage() {
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
               <Wrench className="w-6 h-6 text-yellow-400" />
             </div>
-            <span className="text-2xl font-bold text-white">Mechanic360</span>
+            <span className="text-2xl font-bold text-white">Workshop360</span>
           </div>
 
           <div className="space-y-6">

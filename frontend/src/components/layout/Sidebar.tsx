@@ -71,7 +71,7 @@ function SidebarContent({
         <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center text-white shadow-soft">
           <Wrench className="w-5 h-5" />
         </div>
-        <span className="text-lg font-bold text-white">Mechanic360</span>
+        <span className="text-lg font-bold text-white">Workshop360</span>
       </div>
       {showClose && onClose && (
         <button

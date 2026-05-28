@@ -93,8 +93,6 @@ Replace the dev `media_data` volume with the host mount:
 backend:
   volumes:
     - /mnt/qnap/mechanic360-media:/app/media
-  environment:
-    USE_S3_STORAGE: "0"
 ```
 
 Celery workers do not need the QNAP mount unless a background task writes files; the **backend** service must have it.

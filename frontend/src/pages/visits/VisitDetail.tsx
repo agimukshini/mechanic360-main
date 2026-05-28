@@ -109,6 +109,7 @@ export default function VisitDetail() {
       }
       return visitsApi.finishVisit(id!, {
         mileage_km: current?.mileage_km,
+        hour_meter: current?.hour_meter,
         notes: current?.notes,
       })
     },
@@ -180,7 +181,7 @@ export default function VisitDetail() {
   const inspection = hasInspectionContent(inspectionRecord) ? inspectionRecord : undefined
 
   const canEdit = isVisitOpen(visit.status)
-  const canFinish = canEdit
+  const canFinish = canEdit && !!inspection && (visit.mileage_km || 0) > 0
   const canCancel = canEdit
   const grandTotalFromApi = parseFloat(visit.grand_total || '0')
   const canExport = visit.status === 'completed'
@@ -356,7 +357,8 @@ export default function VisitDetail() {
           <div>
             <h2 className="font-semibold">Open visit</h2>
             <p className="text-sm text-workshop-charcoal/60 mt-1">
-              Add work items on the edit screen, then finish.
+              Add work items and complete the 360° inspection, then finish.
+              {!inspection && ' Inspection is still required.'}
             </p>
           </div>
           <div className="flex gap-3 flex-wrap">
@@ -398,7 +400,7 @@ export default function VisitDetail() {
             </h3>
             <p className="text-workshop-charcoal/60 mb-6">
               {showConfirmDialog === 'finish' &&
-                'This will complete the visit, update vehicle mileage, and lock the record.'}
+                'This will complete the visit, update vehicle mileage/hours, and lock the record.'}
               {showConfirmDialog === 'cancel' && 'This will cancel the visit.'}
             </p>
             <div className="flex gap-3 justify-end">
