@@ -21,7 +21,11 @@ services:
         VITE_API_URL: /api/v1
     ports:
       - "5173:80"
-    volumes: !reset []
+    # Share the QNAP media mount with nginx so /media/<file> is served
+    # directly from disk (no Django round-trip). Read-only — uploads still
+    # happen via the backend.
+    volumes:
+      - /mnt/qnap/mechanic:/usr/share/nginx/media:ro
     environment: !reset {}
     depends_on:
       - backend

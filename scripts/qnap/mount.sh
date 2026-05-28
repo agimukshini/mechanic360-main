@@ -27,10 +27,14 @@ if mountpoint -q "$MOUNT_POINT"; then
   exit 0
 fi
 
-MOUNT_OPTS="credentials=${CREDS_FILE},vers=3.0,uid=0,gid=0,file_mode=0660,dir_mode=0770,noserverino,_netdev"
+# file_mode=0644 / dir_mode=0755 so the nginx user (uid 101) inside the
+# frontend container can read uploaded media for direct serving. Backend
+# runs as root and can still write. These files are user-uploaded photos —
+# not secrets — so world-readable on the host is acceptable.
+MOUNT_OPTS="credentials=${CREDS_FILE},vers=3.0,uid=0,gid=0,file_mode=0644,dir_mode=0755,noserverino,_netdev"
 if ! mount -t cifs "//${QNAP_HOST}/${QNAP_SHARE}" "$MOUNT_POINT" -o "$MOUNT_OPTS"; then
   echo "SMB3 failed — retrying SMB2..."
-  MOUNT_OPTS="credentials=${CREDS_FILE},vers=2.1,uid=0,gid=0,file_mode=0660,dir_mode=0770,noserverino,_netdev"
+  MOUNT_OPTS="credentials=${CREDS_FILE},vers=2.1,uid=0,gid=0,file_mode=0644,dir_mode=0755,noserverino,_netdev"
   mount -t cifs "//${QNAP_HOST}/${QNAP_SHARE}" "$MOUNT_POINT" -o "$MOUNT_OPTS"
 fi
 
