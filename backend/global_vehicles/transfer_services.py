@@ -366,26 +366,29 @@ def reverse_transfer(
         active.effective_to = now
         active.save(update_fields=["effective_to"])
 
-    # Restore previous plate too, if the transfer rewrote it.
-    if (
-        transfer.new_license_plate
-        and transfer.new_license_plate == vehicle.license_plate
-        and active
-        and active.license_plate
-        and active.license_plate != vehicle.license_plate
-    ):
-        old_plate = vehicle.license_plate
-        # The closed ownership row stored the *current* plate; we use
-        # the row just before that to recover the pre-transfer plate.
-        prior = (
-            VehicleOwnership.objects.filter(vehicle=vehicle, owner=original_from)
-            .order_by("-effective_from")
-            .first()
+    # Restore the pre-transfer plate by walking back to the most recent
+    # *closed* ownership for the original owner. That row stored the plate
+    # they had before this transfer rewrote it.
+    prior = (
+        VehicleOwnership.objects.filter(vehicle=vehicle, owner=original_from)
+        .exclude(id=active.id if active else None)
+        .order_by("-effective_from")
+        .first()
+    )
+    restored_plate = prior.license_plate if prior and prior.license_plate else vehicle.license_plate
+    old_plate = vehicle.license_plate
+    if restored_plate and restored_plate != vehicle.license_plate:
+        vehicle.license_plate = restored_plate
+        vehicle.save(update_fields=["license_plate", "updated_at"])
+        log_vehicle_event(
+            entity=VehicleAuditEvent.Entity.REGISTRATION,
+            action=VehicleAuditEvent.Action.UPDATED,
+            vehicle=vehicle,
+            request=request,
+            target_id=str(vehicle.id),
+            changes={"license_plate": {"before": old_plate, "after": restored_plate}},
+            note="Restored on transfer reversal",
         )
-        prior_plate = prior.license_plate if prior else ""
-        if prior_plate and prior_plate != old_plate:
-            vehicle.license_plate = prior_plate
-            vehicle.save(update_fields=["license_plate", "updated_at"])
 
     # Re-open ownership for the original owner.
     VehicleOwnership.objects.create(

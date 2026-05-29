@@ -83,6 +83,21 @@ class GlobalVehicle(models.Model):
 
     @property
     def current_owner(self) -> GlobalOwner | None:
+        """
+        Return the active ownership owner.
+
+        Honours `prefetch_related("ownerships__owner")` — important because
+        callers fetch this object inside a `public_schema()` context but
+        access the property later from a tenant context. Without the cache
+        check, `.filter()` triggers a fresh query in the wrong schema and
+        silently returns nothing.
+        """
+        cache = getattr(self, "_prefetched_objects_cache", None) or {}
+        if "ownerships" in cache:
+            for o in cache["ownerships"]:
+                if o.effective_to is None:
+                    return o.owner
+            return None
         ownership = (
             self.ownerships.filter(effective_to__isnull=True)
             .select_related("owner")

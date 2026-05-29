@@ -170,24 +170,51 @@ class VehicleSerializer(serializers.ModelSerializer):
         return attrs
 
     def _attach_global_profile(self, data: dict, instance: Vehicle) -> dict:
+        # All global registry reads must run in the public schema — the
+        # cross-schema prefetch is set up inside `get_global_vehicle`, but
+        # any *additional* queryset access (history, current_owner via
+        # `.filter()`) would otherwise hit the tenant schema and silently
+        # return nothing.
+        from django_tenants.utils import schema_context
+
         global_vehicle = get_global_vehicle(instance)
         if not global_vehicle:
             data["global_current_owner"] = None
             data["registration_history"] = []
             return data
 
-        data["global_vehicle_id"] = str(global_vehicle.id)
-        owner = global_vehicle.current_owner
-        data["global_current_owner"] = (
-            GlobalOwnerSerializer(owner).data if owner else None
-        )
-        ownerships = global_vehicle.ownerships.select_related("owner").order_by(
-            "-effective_from",
-        )
-        data["registration_history"] = VehicleOwnershipSerializer(
-            ownerships,
-            many=True,
-        ).data
+        with schema_context("public"):
+            data["global_vehicle_id"] = str(global_vehicle.id)
+            owner = global_vehicle.current_owner
+            data["global_current_owner"] = (
+                GlobalOwnerSerializer(owner).data if owner else None
+            )
+            ownerships = list(
+                global_vehicle.ownerships.select_related("owner").order_by(
+                    "-effective_from",
+                ),
+            )
+            data["registration_history"] = VehicleOwnershipSerializer(
+                ownerships,
+                many=True,
+            ).data
+            global_plate = (global_vehicle.license_plate or "").strip().upper()
+
+        # Tenant-side plate sync — global registry is authoritative since a
+        # transfer in another workshop changes it without the local workshop
+        # being notified. Done OUTSIDE public_schema() so the Vehicle.save
+        # writes to the tenant schema.
+        if (
+            global_plate
+            and global_plate != (instance.license_plate or "").strip().upper()
+        ):
+            data["license_plate"] = global_plate
+            try:
+                instance.license_plate = global_plate
+                instance.save(update_fields=["license_plate"])
+            except Exception:  # pragma: no cover — best-effort sync
+                pass
+
         return data
 
     def to_representation(self, instance):
