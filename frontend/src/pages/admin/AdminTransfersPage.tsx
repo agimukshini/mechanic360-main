@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { adminTransfersApi } from '@/api'
 import { useApiToast } from '@/hooks/useApiToast'
-import { getApiErrorMessage } from '@/lib/utils'
 
 interface TransferRow {
   id: string
@@ -98,7 +97,7 @@ export default function AdminTransfersPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-transfers'] })
       showToast('Transfer marked as disputed', 'success')
     },
-    onError: (err) => showError(getApiErrorMessage(err, 'Failed to dispute transfer')),
+    onError: (err) => showError(err, 'Failed to dispute transfer'),
   })
 
   const reverseMutation = useMutation({
@@ -108,7 +107,7 @@ export default function AdminTransfersPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-transfers'] })
       showToast('Transfer reversed', 'success')
     },
-    onError: (err) => showError(getApiErrorMessage(err, 'Failed to reverse transfer')),
+    onError: (err) => showError(err, 'Failed to reverse transfer'),
   })
 
   const billingMutation = useMutation({
@@ -129,7 +128,7 @@ export default function AdminTransfersPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-transfers'] })
       showToast('Billing updated', 'success')
     },
-    onError: (err) => showError(getApiErrorMessage(err, 'Failed to update billing')),
+    onError: (err) => showError(err, 'Failed to update billing'),
   })
 
   const transfers = transfersQuery.data ?? []

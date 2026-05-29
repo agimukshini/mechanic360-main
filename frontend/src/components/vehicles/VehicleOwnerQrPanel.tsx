@@ -79,7 +79,7 @@ export default function VehicleOwnerQrPanel({
       ])
       showToast('Owner claim QR generated', 'success')
     },
-    onError: (err) => showError(getApiErrorMessage(err, 'Failed to generate QR')),
+    onError: (err) => showError(err, 'Failed to generate QR'),
   })
 
   const transferMutation = useMutation({
@@ -112,7 +112,7 @@ export default function VehicleOwnerQrPanel({
       transfersQuery.refetch()
       showToast('Transfer initiated — share the QR with the new owner', 'success')
     },
-    onError: (err) => showError(getApiErrorMessage(err, 'Failed to start transfer')),
+    onError: (err) => showError(err, 'Failed to start transfer'),
   })
 
   const cancelMutation = useMutation({
@@ -121,7 +121,7 @@ export default function VehicleOwnerQrPanel({
       transfersQuery.refetch()
       showToast('Transfer cancelled', 'success')
     },
-    onError: (err) => showError(getApiErrorMessage(err, 'Failed to cancel transfer')),
+    onError: (err) => showError(err, 'Failed to cancel transfer'),
   })
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function VehicleOwnerQrPanel({
       queryClient.invalidateQueries({ queryKey: ['vehicle', vehicleId] })
       showToast('Registration plate updated', 'success')
     },
-    onError: (err) => showError(getApiErrorMessage(err, 'Failed to update registration')),
+    onError: (err) => showError(err, 'Failed to update registration'),
   })
 
   return (

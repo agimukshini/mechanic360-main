@@ -49,24 +49,42 @@ export function resolveMediaUrl(url: string | null | undefined): string | undefi
 
 /** Extract a user-facing message from API errors. */
 export function getApiErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
+  // Allow callers to pass a pre-extracted string straight through — keeps
+  // `showError(getApiErrorMessage(e, ...))` and `showError(e, ...)` both safe.
+  if (typeof error === 'string' && error.trim()) return error
   if (!error || typeof error !== 'object') return fallback
 
-  const axiosError = error as AxiosError<Record<string, unknown>>
+  const axiosError = error as AxiosError<unknown>
   const data = axiosError.response?.data
 
-  if (typeof data === 'string') return data
+  if (typeof data === 'string' && data.trim()) return data
+  // DRF: `raise ValidationError("text")` serialises to `["text"]`. Treat a
+  // plain string-array as a single message rather than `"0: text"`.
+  if (Array.isArray(data)) {
+    const strings = data.filter((v): v is string => typeof v === 'string')
+    if (strings.length > 0) return strings.join(' ')
+  }
   if (!data || typeof data !== 'object') {
     return axiosError.message || fallback
   }
 
-  if (typeof data.detail === 'string') return data.detail
-  if (typeof data.error === 'string') return data.error
-  if (typeof data.message === 'string') return data.message
+  const obj = data as Record<string, unknown>
+  if (typeof obj.detail === 'string') return obj.detail
+  if (typeof obj.error === 'string') return obj.error
+  if (typeof obj.message === 'string') return obj.message
+  // DRF non_field_errors comes through as an array of strings.
+  if (Array.isArray(obj.non_field_errors)) {
+    const strings = obj.non_field_errors.filter(
+      (v): v is string => typeof v === 'string',
+    )
+    if (strings.length > 0) return strings.join(' ')
+  }
 
   const fieldMessages: string[] = []
-  for (const [key, value] of Object.entries(data)) {
+  for (const [key, value] of Object.entries(obj)) {
     if (Array.isArray(value)) {
-      fieldMessages.push(`${key}: ${value.join(', ')}`)
+      const strings = value.filter((v): v is string => typeof v === 'string')
+      if (strings.length > 0) fieldMessages.push(`${key}: ${strings.join(', ')}`)
     } else if (typeof value === 'string') {
       fieldMessages.push(`${key}: ${value}`)
     }
