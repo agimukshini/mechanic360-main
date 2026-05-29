@@ -54,7 +54,15 @@ def baseline_mileage_km_for_vehicle(vehicle: Vehicle) -> int:
 
 
 def apply_visit_completion_effects(visit: ServiceVisit) -> None:
-    """Update vehicle odometer and hour meter from visit readings when finishing."""
+    """
+    Update vehicle odometer and hour meter from the visit readings.
+
+    Per `VEHICLE_SHARING_POLICY.md` §4.2 we propagate the latest reading
+    to the platform-wide `GlobalVehicle` so the owner portal and any other
+    workshop sees the freshest mileage. Both layers use a max() merge —
+    odometers never go backwards, even if a stale visit closes after a
+    later one.
+    """
     vehicle = visit.vehicle
     update_fields: list[str] = []
 
@@ -71,3 +79,33 @@ def apply_visit_completion_effects(visit: ServiceVisit) -> None:
     if update_fields:
         update_fields.append("updated_at")
         vehicle.save(update_fields=update_fields)
+
+    if mileage > 0 or hours > 0:
+        _propagate_readings_to_global(vehicle, mileage=mileage, hours=hours)
+
+
+def _propagate_readings_to_global(vehicle: Vehicle, *, mileage: int, hours: int) -> None:
+    """Bump the public GlobalVehicle row to the latest reading, max-merge."""
+    global_id = getattr(vehicle, "global_vehicle_id", None)
+    if not global_id:
+        return
+    try:
+        from global_vehicles.models import GlobalVehicle
+        from tenancy.views import public_schema
+    except Exception:  # pragma: no cover — defensive
+        return
+    with public_schema():
+        try:
+            gv = GlobalVehicle.objects.get(id=global_id)
+        except GlobalVehicle.DoesNotExist:
+            return
+        global_fields: list[str] = []
+        if mileage > 0 and mileage > (gv.odometer_km or 0):
+            gv.odometer_km = mileage
+            global_fields.append("odometer_km")
+        if hours > 0 and hours > (gv.hour_meter or 0):
+            gv.hour_meter = hours
+            global_fields.append("hour_meter")
+        if global_fields:
+            global_fields.append("updated_at")
+            gv.save(update_fields=global_fields)

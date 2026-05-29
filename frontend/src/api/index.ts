@@ -169,6 +169,14 @@ export const ownerApi = {
   confirmTransfer: (id: string) => api.post(`/owner/transfers/${id}/confirm/`, {}),
 }
 
+// Platform-wide (cross-workshop) registry — read-only search from the tenant side.
+export const globalVehiclesApi = {
+  list: (params?: { search?: string; active?: 'true' | 'false' | 'all' }) =>
+    api.get('/global-vehicles/', { params }),
+  lookup: (code: string) =>
+    api.get('/global-vehicles/lookup/', { params: { code } }),
+}
+
 // Ownership-transfer API (workshop side)
 export const transfersApi = {
   list: (params?: { vehicle?: string; status?: string }) =>
@@ -266,6 +274,8 @@ export const vehiclesApi = {
   patch: (id: string, data: object) => api.patch(`/vehicles/${id}/`, data),
   delete: (id: string) => api.delete(`/vehicles/${id}/`),
   lookup: (code: string) => api.get('/vehicles/lookup/', { params: { code } }),
+  adoptGlobal: (globalVehicleId: string) =>
+    api.post('/vehicles/adopt-global/', { global_vehicle_id: globalVehicleId }),
   ownerClaimQr: (id: string, notes?: string) =>
     api.post(`/vehicles/${id}/owner_claim_qr/`, { notes: notes ?? '' }),
   transferQr: (id: string, documentsVerified: boolean, newLicensePlate: string, notes?: string) =>

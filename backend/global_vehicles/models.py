@@ -743,3 +743,57 @@ class VehicleRegistrationCharge(models.Model):
 
     def __str__(self) -> str:
         return f"Reg charge {self.fee_amount} {self.fee_currency} — {self.payment_status}"
+
+
+class GlobalVehiclePhoto(models.Model):
+    """
+    Cross-tenant gallery photo for a vehicle.
+
+    Lives in the public schema so any workshop opening the same VIN sees the
+    same set of pictures. The owning workshop (the tenant whose user uploaded
+    the photo) is recorded for audit / edit-permission purposes — the spec
+    (`VEHICLE_SHARING_POLICY.md` §2.1) says photos are operational data on
+    the global vehicle, not part of a specific shop's history. Visit and
+    inspection rows stay tenant-scoped; only the picture is shared.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    vehicle = models.ForeignKey(
+        GlobalVehicle,
+        related_name="gallery_photos",
+        on_delete=models.CASCADE,
+    )
+    image = models.ImageField(upload_to="vehicle_photos/")
+    caption = models.CharField(max_length=255, blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="uploaded_global_vehicle_photos",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    uploaded_by_tenant = models.ForeignKey(
+        "tenancy.WorkshopTenant",
+        related_name="uploaded_vehicle_photos",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Workshop that posted the photo. Used to gate edits / deletes.",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "-created_at"]
+        verbose_name = "Global vehicle photo"
+        verbose_name_plural = "Global vehicle photos"
+        indexes = [
+            models.Index(fields=["vehicle", "sort_order"]),
+            models.Index(fields=["uploaded_by_tenant"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"Photo for {self.vehicle.vin} ({self.id})"

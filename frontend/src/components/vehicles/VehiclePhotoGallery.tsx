@@ -127,7 +127,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
               >
                 <img
                   src={photo.image_url}
-                  alt={photo.caption || 'Vehicle'}
+                  alt={photo.caption || t('photoGallery.title')}
                   className="w-full h-32 object-cover transition-transform group-hover:scale-105"
                 />
               </button>
@@ -164,7 +164,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
                               setEditingId(photo.id)
                               setDraftCaption(photo.caption)
                             }}
-                            title="Edit caption"
+                            title={t('photoGallery.editCaption')}
                           >
                             <Pencil className="w-3 h-3" />
                           </button>

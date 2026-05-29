@@ -13,6 +13,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from django.contrib.auth import get_user_model
+from global_vehicles.models import GlobalVehicle
+from tenancy.views import public_schema
 from vehicles.models import ServiceVisit
 from .services import complete_in_progress_visit, finish_service_visit
 from .models import (
@@ -74,7 +76,17 @@ class ServiceVisitViewSet(DestroyRequiresAdvisorMixin, VisitAdvisorActionsMixin,
     permission_classes = [IsTenantUser]
 
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["vehicle__license_plate", "vehicle__vin", "client__name", "status"]
+    # Substring matching (icontains) is the default for DRF SearchFilter, so
+    # `?search=AB123` matches any visit whose vehicle plate, VIN, or owner
+    # name contains "AB123".
+    search_fields = [
+        "vehicle__license_plate",
+        "vehicle__vin",
+        "vehicle__make",
+        "vehicle__model",
+        "client__name",
+        "status",
+    ]
     ordering_fields = ["service_date", "status", "created_at"]
     ordering = ["-service_date"]
 
@@ -96,6 +108,35 @@ class ServiceVisitViewSet(DestroyRequiresAdvisorMixin, VisitAdvisorActionsMixin,
                 | Q(inspection__performed_by_id=mechanic_id)
             ).distinct()
         return queryset
+
+    def filter_queryset(self, queryset):
+        """
+        Run the standard DRF SearchFilter, then widen the result set to also
+        include visits whose linked GlobalVehicle (public schema) matches the
+        same VIN/plate/make/model substring. The local Vehicle.global_vehicle_id
+        column is a UUID with no FK relation (cross-schema), so we resolve
+        matching globals first and OR-in their IDs.
+        """
+        queryset = super().filter_queryset(queryset)
+        search = self.request.query_params.get("search", "").strip()
+        if not search:
+            return queryset
+        with public_schema():
+            global_ids = list(
+                GlobalVehicle.objects.filter(
+                    Q(vin__icontains=search)
+                    | Q(license_plate__icontains=search)
+                    | Q(make__icontains=search)
+                    | Q(model__icontains=search)
+                ).values_list("id", flat=True)[:500]
+            )
+        if not global_ids:
+            return queryset
+        # Re-fetch the unfiltered base queryset so we can OR-in global hits
+        # without losing the mechanic / vehicle / role scoping above.
+        base = self.get_queryset()
+        global_hits = base.filter(vehicle__global_vehicle_id__in=global_ids)
+        return (queryset | global_hits).distinct()
 
     @action(detail=True, methods=["post"], url_path="start")
     def start_visit(self, request, pk=None):

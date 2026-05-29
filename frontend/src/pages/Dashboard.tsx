@@ -95,7 +95,7 @@ export default function Dashboard() {
       <section className="card p-4 lg:p-5">
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
-            to="/visits/new"
+            to="/visits"
             className="btn btn-primary flex-1 h-12 text-base font-semibold justify-center gap-2"
           >
             <Plus className="w-5 h-5" />
@@ -178,7 +178,7 @@ export default function Dashboard() {
             <div className="text-center py-10 w-full">
               <Car className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-sm text-secondary">{t('dashboard.noOpenVisits')}</p>
-              <Link to="/visits/new" className="mt-3 inline-block text-accent hover:underline text-sm font-medium">
+              <Link to="/visits" className="mt-3 inline-block text-accent hover:underline text-sm font-medium">
                 {t('dashboard.startNewVisit')}
               </Link>
             </div>

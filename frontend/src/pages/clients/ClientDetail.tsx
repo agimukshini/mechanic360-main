@@ -286,7 +286,7 @@ export default function ClientDetail() {
                 {t('clients.addVehicle')}
               </Link>
               <Link
-                to="/visits/new"
+                to="/visits"
                 className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm"
               >
                 <Calendar className="w-3.5 h-3.5" />

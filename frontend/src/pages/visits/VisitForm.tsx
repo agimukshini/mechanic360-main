@@ -1,5 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react'
-import { useNavigate, Link, useSearchParams, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { visitsApi, vehiclesApi, inspectionsApi, api } from '@/api'
 import { useToast } from '@/components/ui/Toast'
@@ -29,8 +29,7 @@ import {
 export default function VisitForm() {
   const { t } = useTranslation()
   const { id: visitId } = useParams()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const vehicleIdFromUrl = searchParams.get('vehicleId')
+  const vehicleIdFromUrl = new URLSearchParams(window.location.search).get('vehicleId')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showToast } = useToast()
@@ -42,7 +41,6 @@ export default function VisitForm() {
   const [mileage, setMileage] = useState(0)
   const [hourMeter, setHourMeter] = useState(0)
   const [notes, setNotes] = useState('')
-  const [pickVehicleId, setPickVehicleId] = useState(vehicleIdFromUrl || '')
   const [showServiceForm, setShowServiceForm] = useState(false)
   const [showLaborForm, setShowLaborForm] = useState(false)
   const [showMaterialForm, setShowMaterialForm] = useState(false)
@@ -60,12 +58,6 @@ export default function VisitForm() {
   const visit = visitData?.data
   const activeVehicleId = vehicleIdFromUrl || visit?.vehicle?.id || visit?.vehicle_id
 
-  const { data: vehiclesData } = useQuery({
-    queryKey: ['vehicles'],
-    queryFn: () => vehiclesApi.list(),
-    enabled: isNewRoute && !vehicleIdFromUrl,
-  })
-
   const { data: vehicleData } = useQuery({
     queryKey: ['vehicle', activeVehicleId],
     queryFn: () => vehiclesApi.get(activeVehicleId!),
@@ -73,7 +65,6 @@ export default function VisitForm() {
   })
 
   const selectedVehicle = vehicleData?.data
-  const vehicles = vehiclesData?.data?.results || vehiclesData?.data || []
 
   const { data: serviceLinesData } = useQuery({
     queryKey: ['service-lines', { visit: visitId }],
@@ -259,21 +250,16 @@ export default function VisitForm() {
       queryClient.invalidateQueries({ queryKey: ['labor-lines', { visit: visitId }] }),
   })
 
+  // The standalone "/visits/new" page is no longer used: the visits list owns
+  // vehicle selection (search + QR). If anything still hits this route without
+  // a vehicleId, send the user back to the list so they can search/check in.
+  useEffect(() => {
+    if (isNewRoute && !vehicleIdFromUrl) {
+      navigate('/visits', { replace: true })
+    }
+  }, [isNewRoute, vehicleIdFromUrl, navigate])
   if (isNewRoute && !vehicleIdFromUrl) {
-    return (
-      <div className="max-w-lg mx-auto space-y-6">
-        <Link to="/visits" className="inline-flex items-center gap-2 text-workshop-charcoal/60 hover:text-workshop-charcoal">
-          <ArrowLeft className="w-4 h-4" />
-          {t('visits.backToVisits')}
-        </Link>
-        <VehiclePickerCard
-          vehicles={vehicles}
-          pickVehicleId={pickVehicleId}
-          setPickVehicleId={setPickVehicleId}
-          onContinue={() => pickVehicleId && setSearchParams({ vehicleId: pickVehicleId })}
-        />
-      </div>
-    )
+    return null
   }
 
   if (isNewRoute && (createVisitMutation.isPending || !visitId)) {
@@ -325,41 +311,6 @@ export default function VisitForm() {
       saveMutation={saveMutation}
       finishMutation={finishMutation}
     />
-  )
-}
-
-function VehiclePickerCard({
-  vehicles,
-  pickVehicleId,
-  setPickVehicleId,
-  onContinue,
-}: {
-  vehicles: { id: string; license_plate: string; make: string; model: string }[]
-  pickVehicleId: string
-  setPickVehicleId: (id: string) => void
-  onContinue: () => void
-}) {
-  const { t } = useTranslation()
-  return (
-    <div className="card p-6 space-y-4">
-      <h1 className="text-xl font-bold text-workshop-charcoal">{t('visits.newServiceVisit')}</h1>
-      <p className="text-sm text-workshop-charcoal/60">{t('visits.selectVehicleHint')}</p>
-      <select
-        value={pickVehicleId}
-        onChange={(e) => setPickVehicleId(e.target.value)}
-        className="input w-full"
-      >
-        <option value="">{t('visits.chooseVehicle')}</option>
-        {vehicles.map((v) => (
-          <option key={v.id} value={v.id}>
-            {v.license_plate} — {v.make} {v.model}
-          </option>
-        ))}
-      </select>
-      <button type="button" onClick={onContinue} disabled={!pickVehicleId} className="btn btn-primary w-full">
-        {t('visits.continue')}
-      </button>
-    </div>
   )
 }
 

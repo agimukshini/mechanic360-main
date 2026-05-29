@@ -269,6 +269,97 @@ class VehicleViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
 
         return Response({"error": "Vehicle not found"}, status=404)
 
+    @action(detail=False, methods=["post"], url_path="adopt-global")
+    def adopt_global(self, request):
+        """
+        Associate an existing GlobalVehicle with the current workshop.
+
+        The vehicle already exists in the platform-wide registry (some other
+        workshop registered it first); this just creates the tenant-local
+        Vehicle row that visits/inspections need as a FK target. Local fields
+        are inherited from the global record. Idempotent: if a local row
+        already references this global vehicle (or its VIN), that row is
+        returned untouched.
+
+        No registration fee is charged on adoption — the platform charge
+        fires once per global vehicle, on first registration. No audit event
+        is emitted: only edits to the local copy from this point forward
+        write to the audit log.
+        """
+        global_id = request.data.get("global_vehicle_id")
+        if not global_id:
+            return Response(
+                {"global_vehicle_id": "Required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with public_schema():
+            try:
+                global_vehicle = (
+                    GlobalVehicle.objects
+                    .prefetch_related("ownerships__owner")
+                    .get(id=global_id)
+                )
+            except (GlobalVehicle.DoesNotExist, ValueError, TypeError):
+                return Response(
+                    {"global_vehicle_id": "Global vehicle not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            current_owner = global_vehicle.current_owner
+            snapshot = {
+                "id": global_vehicle.id,
+                "vin": global_vehicle.vin,
+                "license_plate": global_vehicle.license_plate,
+                "make": global_vehicle.make,
+                "model": global_vehicle.model,
+                "year": global_vehicle.year,
+                "engine_type": global_vehicle.engine_type or "",
+                "fuel_type": global_vehicle.fuel_type or "",
+                "odometer_km": global_vehicle.odometer_km or 0,
+                "hour_meter": global_vehicle.hour_meter or 0,
+            }
+
+        # Mirror the platform-wide owner (if any) into this workshop's CRM
+        # so subsequent visits and the Clients page recognise the person.
+        # Idempotent — the helper finds or creates by global_owner_id.
+        from clients.services import ensure_client_for_global_owner
+        client = ensure_client_for_global_owner(current_owner)
+
+        existing = Vehicle.objects.filter(
+            Q(global_vehicle_id=snapshot["id"]) | Q(vin__iexact=snapshot["vin"]),
+        ).first()
+        if existing is not None:
+            update_fields: list[str] = []
+            if existing.global_vehicle_id != snapshot["id"]:
+                existing.global_vehicle_id = snapshot["id"]
+                update_fields.append("global_vehicle_id")
+            if client is not None and existing.owner_id != client.id:
+                existing.owner = client
+                update_fields.append("owner")
+            if update_fields:
+                existing.save(update_fields=update_fields)
+            return Response(self.get_serializer(existing).data)
+
+        vehicle = Vehicle.objects.create(
+            global_vehicle_id=snapshot["id"],
+            vin=snapshot["vin"],
+            license_plate=snapshot["license_plate"],
+            make=snapshot["make"],
+            model=snapshot["model"],
+            year=snapshot["year"],
+            engine_type=snapshot["engine_type"],
+            fuel_type=snapshot["fuel_type"],
+            odometer_km=snapshot["odometer_km"] or None,
+            hour_meter=snapshot["hour_meter"] or None,
+            owner=client,
+            assigned_mechanic=None,
+            is_active=True,
+        )
+        return Response(
+            self.get_serializer(vehicle).data,
+            status=status.HTTP_201_CREATED,
+        )
+
     @action(detail=True, methods=["post"])
     def owner_claim_qr(self, request, pk=None):
         vehicle = self.get_object()

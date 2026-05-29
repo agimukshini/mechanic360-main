@@ -66,8 +66,8 @@ SERVICE_CATALOG_SQ: dict[str, tuple[str, str]] = {
         "Diagnozë dhe riparim i problemeve të transmisionit. Çmimi varion sipas punës.",
     ),
     "Tire Rotation": (
-        "Rrotullim gomash",
-        "Rrotullim gomash për konsum të barabartë. Përfshin kontroll presioni.",
+        "Balancim i rrotave",
+        "Balancim i rrotave dhe gomave për konsum të barabartë. Përfshin kontroll presioni.",
     ),
     "Wheel Alignment": (
         "Rregullim gometrie",
@@ -80,10 +80,6 @@ SERVICE_CATALOG_SQ: dict[str, tuple[str, str]] = {
     "Flat Tire Repair": (
         "Riparim gome",
         "Patch ose plug për gomën e shpuar. Përfshin kontroll balancimi.",
-    ),
-    "Wheel Balancing": (
-        "Balancim rrotash",
-        "Balancim rrotash për eliminim dridhjeje.",
     ),
     "Battery Replacement": (
         "Ndryshim baterie",

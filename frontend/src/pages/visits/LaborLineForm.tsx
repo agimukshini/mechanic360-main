@@ -152,9 +152,10 @@ export default function LaborLineForm({ isOpen, onClose }: LaborLineFormProps) {
             <input
               type="number"
               step="0.01"
+              min="0"
               value={formData.totalPrice}
-              readOnly
-              className="input w-full bg-workshop-charcoal/5"
+              onChange={(e) => setFormData((prev) => ({ ...prev, totalPrice: e.target.value }))}
+              className="input w-full"
             />
           </div>
 

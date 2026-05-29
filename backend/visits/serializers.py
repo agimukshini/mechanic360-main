@@ -162,7 +162,15 @@ class ServiceVisitSerializer(serializers.ModelSerializer):
         client_id = validated_data.pop("client_id", None)
         vehicle = Vehicle.objects.get(id=vehicle_id)
 
-        # Use provided client_id or derive from vehicle owner
+        # Resolve the client in three layers:
+        #   1. Explicit client_id from the request body.
+        #   2. The local Vehicle.owner FK if already set.
+        #   3. Mirror the platform-wide GlobalOwner into this workshop's CRM
+        #      so a vehicle that exists only in the global registry still
+        #      surfaces its owner under /clients here. This is what the spec
+        #      calls a "shadow" client — it persists even after the global
+        #      owner sells the vehicle, preserving the workshop's memory of
+        #      "this person walked into our bay on these dates".
         if client_id:
             from clients.models import Client
             client = Client.objects.get(id=client_id)
@@ -170,6 +178,17 @@ class ServiceVisitSerializer(serializers.ModelSerializer):
             client = vehicle.owner
         else:
             client = None
+            try:
+                from visits.report_utils import vehicle_global_owner
+                from clients.services import ensure_client_for_global_owner
+
+                global_owner = vehicle_global_owner(vehicle)
+                client = ensure_client_for_global_owner(global_owner)
+                if client is not None and vehicle.owner_id != client.id:
+                    vehicle.owner = client
+                    vehicle.save(update_fields=["owner", "updated_at"])
+            except Exception:  # pragma: no cover — never block visit creation
+                client = None
 
         validated_data["vehicle"] = vehicle
         validated_data["client"] = client

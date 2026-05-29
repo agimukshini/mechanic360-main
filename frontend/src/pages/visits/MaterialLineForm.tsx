@@ -91,6 +91,19 @@ export default function MaterialLineForm({ isOpen, onClose, visitId: visitIdProp
     setFormData((prev) => ({ ...prev, quantity, totalPrice: total.toFixed(2) }))
   }
 
+  // Mechanics need to override prices on the spot (rounding, supplier
+  // markup, customer discount). Editing the unit price recomputes the
+  // total; editing the total directly is the final say.
+  const handleUnitPriceChange = (unitPrice: string) => {
+    const qty = parseFloat(formData.quantity || '0')
+    const total = qty * parseFloat(unitPrice || '0')
+    setFormData((prev) => ({ ...prev, unitPrice, totalPrice: total.toFixed(2) }))
+  }
+
+  const handleTotalPriceChange = (totalPrice: string) => {
+    setFormData((prev) => ({ ...prev, totalPrice }))
+  }
+
   const resetForm = () => {
     setFormData({
       quantity: '1',
@@ -200,9 +213,10 @@ export default function MaterialLineForm({ isOpen, onClose, visitId: visitIdProp
               <input
                 type="number"
                 step="0.01"
+                min="0"
                 value={formData.unitPrice}
-                readOnly
-                className="input w-full bg-workshop-charcoal/5"
+                onChange={(e) => handleUnitPriceChange(e.target.value)}
+                className="input w-full"
               />
             </div>
           </div>
@@ -212,9 +226,10 @@ export default function MaterialLineForm({ isOpen, onClose, visitId: visitIdProp
             <input
               type="number"
               step="0.01"
+              min="0"
               value={formData.totalPrice}
-              readOnly
-              className="input w-full bg-workshop-charcoal/5"
+              onChange={(e) => handleTotalPriceChange(e.target.value)}
+              className="input w-full"
             />
           </div>
 
