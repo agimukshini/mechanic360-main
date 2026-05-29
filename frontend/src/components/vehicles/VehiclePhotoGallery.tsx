@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ImagePlus, Loader2, Pencil, Trash2, X } from 'lucide-react'
 import { vehiclePhotosApi } from '@/api'
 import { useApiToast } from '@/hooks/useApiToast'
@@ -21,6 +22,7 @@ interface Props {
 export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
   const queryClient = useQueryClient()
   const { showError, showSuccess } = useApiToast()
+  const { t } = useTranslation()
   const fileRef = useRef<HTMLInputElement>(null)
   const [lightbox, setLightbox] = useState<Photo | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -45,9 +47,9 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicle-photos', vehicleId] })
-      showSuccess('Photo(s) uploaded')
+      showSuccess(t('photoGallery.uploadedToast'))
     },
-    onError: (err) => showError(err, 'Upload failed'),
+    onError: (err) => showError(err, t('photoGallery.uploadError')),
   })
 
   const captionMutation = useMutation({
@@ -57,7 +59,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
       queryClient.invalidateQueries({ queryKey: ['vehicle-photos', vehicleId] })
       setEditingId(null)
     },
-    onError: (err) => showError(err, 'Failed to update caption'),
+    onError: (err) => showError(err, t('photoGallery.captionError')),
   })
 
   const deleteMutation = useMutation({
@@ -65,9 +67,9 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicle-photos', vehicleId] })
       setLightbox(null)
-      showSuccess('Photo deleted')
+      showSuccess(t('photoGallery.deletedToast'))
     },
-    onError: (err) => showError(err, 'Delete failed'),
+    onError: (err) => showError(err, t('photoGallery.deleteError')),
   })
 
   const photos = data || []
@@ -75,7 +77,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
   return (
     <div className="card p-6 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-semibold text-workshop-charcoal">Photo gallery</h3>
+        <h3 className="font-semibold text-workshop-charcoal">{t('photoGallery.title')}</h3>
         {canEdit && (
           <button
             type="button"
@@ -88,7 +90,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
             ) : (
               <ImagePlus className="w-4 h-4" />
             )}
-            Add photos
+            {t('photoGallery.addPhotos')}
           </button>
         )}
         <input
@@ -112,7 +114,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
         </div>
       ) : photos.length === 0 ? (
         <p className="text-sm text-workshop-charcoal/60 py-6 text-center">
-          No photos yet. {canEdit && 'Add some from above.'}
+          {t('photoGallery.noPhotos')} {canEdit && t('photoGallery.addHint')}
         </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -169,11 +171,11 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
                           <button
                             type="button"
                             onClick={() => {
-                              if (window.confirm('Delete this photo?')) {
+                              if (window.confirm(t('photoGallery.deleteConfirm'))) {
                                 deleteMutation.mutate(photo.id)
                               }
                             }}
-                            title="Delete"
+                            title={t('photoGallery.delete')}
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -206,22 +208,26 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
               <div>
                 <p className="font-semibold">{lightbox.caption || '—'}</p>
                 <p className="text-white/60 text-xs">
-                  Uploaded {new Date(lightbox.created_at).toLocaleString()}
-                  {lightbox.uploaded_by_username && ` by ${lightbox.uploaded_by_username}`}
+                  {t('photoGallery.uploadedAt', {
+                    when: new Date(lightbox.created_at).toLocaleString(),
+                  })}
+                  {lightbox.uploaded_by_username
+                    ? ` ${t('photoGallery.uploadedBy', { user: lightbox.uploaded_by_username })}`
+                    : ''}
                 </p>
               </div>
               {canEdit && (
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm('Delete this photo?')) {
+                    if (window.confirm(t('photoGallery.deleteConfirm'))) {
                       deleteMutation.mutate(lightbox.id)
                     }
                   }}
                   className="btn btn-danger inline-flex items-center gap-1.5 text-sm"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete
+                  {t('photoGallery.delete')}
                 </button>
               )}
             </div>

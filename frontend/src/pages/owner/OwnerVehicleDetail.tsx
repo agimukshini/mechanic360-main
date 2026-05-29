@@ -12,6 +12,7 @@ import {
   Wrench,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ownerApi, ownerPhotosApi } from '@/api'
 import { getApiErrorMessage } from '@/lib/utils'
 import OwnerLayout from '@/components/layout/OwnerLayout'
@@ -328,6 +329,7 @@ interface OwnerPhoto {
 
 function OwnerVehiclePhotoGallery({ vehicleId }: { vehicleId: string }) {
   const [lightbox, setLightbox] = useState<OwnerPhoto | null>(null)
+  const { t } = useTranslation()
 
   const { data, isLoading } = useQuery({
     queryKey: ['owner-vehicle-photos', vehicleId],
@@ -352,9 +354,9 @@ function OwnerVehiclePhotoGallery({ vehicleId }: { vehicleId: string }) {
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3 mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('photoGallery.title')}</h2>
           <p className="text-xs text-gray-500">
-            Uploaded by the workshops that have serviced this vehicle.
+            {t('photoGallery.ownerSubtitle')}
           </p>
         </div>
       </div>

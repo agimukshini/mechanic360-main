@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "i18n": "node ../scripts/i18n-audit.mjs",
+    "i18n:fix": "node ../scripts/i18n-audit.mjs --fix"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

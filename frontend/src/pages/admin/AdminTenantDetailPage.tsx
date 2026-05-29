@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, CreditCard, Loader2, RefreshCcw, Save } from 'lucide-react'
 import { platformBillingApi, tenantsApi } from '@/api'
 import { useApiToast } from '@/hooks/useApiToast'
@@ -58,6 +59,7 @@ export default function AdminTenantDetailPage() {
   const { id } = useParams<{ id: string }>()
   const queryClient = useQueryClient()
   const { showError, showSuccess } = useApiToast()
+  const { t } = useTranslation()
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-tenant', id],
@@ -84,9 +86,9 @@ export default function AdminTenantDetailPage() {
       platformBillingApi.update(id!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-tenant-platform-billing', id] })
-      showSuccess('Platform billing updated')
+      showSuccess(t('platformBilling.savedToast'))
     },
-    onError: (err) => showError(err, 'Failed to update platform billing'),
+    onError: (err) => showError(err, t('platformBilling.saveError')),
   })
 
   if (isLoading) {
@@ -187,6 +189,7 @@ interface BillingPanelProps {
 }
 
 function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingPanelProps) {
+  const { t } = useTranslation()
   const [form, setForm] = useState<Partial<PlatformBilling>>({})
 
   useEffect(() => {
@@ -258,18 +261,15 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
         <div>
           <h3 className="font-semibold text-workshop-charcoal flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-workshop-blue" />
-            Platform billing
+            {t('platformBilling.title')}
           </h3>
           <p className="text-xs text-workshop-charcoal/60 mt-1">
-            What the PLATFORM charges this workshop. Distinct from this
-            workshop's prices for its own service-catalog. Each new transfer
-            or registration freezes a snapshot of these values, so changes
-            here never rewrite historical fees.
+            {t('platformBilling.subtitle')}
           </p>
         </div>
         {billing?.updated_by_username && (
           <p className="text-xs text-workshop-charcoal/50 text-right shrink-0">
-            Last updated by <strong>{billing.updated_by_username}</strong>
+            {t('platformBilling.lastUpdatedBy')} <strong>{billing.updated_by_username}</strong>
             <br />
             {new Date(billing.updated_at).toLocaleString()}
           </p>
@@ -280,27 +280,27 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
         {renderMoney(
           'transfer_fee_amount',
           'transfer_fee_currency',
-          'Ownership transfer fee',
-          'Charged per confirmed ownership transfer.',
+          t('platformBilling.ownershipTransferFee'),
+          t('platformBilling.ownershipTransferFeeHint'),
         )}
         {renderMoney(
           'registration_fee_amount',
           'registration_fee_currency',
-          'Vehicle registration fee',
-          'Charged once when a vehicle is added to the global registry.',
+          t('platformBilling.registrationFee'),
+          t('platformBilling.registrationFeeHint'),
         )}
         {renderMoney(
           'subscription_fee_amount',
           'subscription_fee_currency',
-          'Subscription fee',
-          'Recurring platform access fee.',
+          t('platformBilling.subscriptionFee'),
+          t('platformBilling.subscriptionFeeHint'),
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-workshop-charcoal/70">
-            Subscription period
+            {t('platformBilling.subscriptionPeriod')}
           </label>
           <select
             value={form.subscription_period ?? 'none'}
@@ -309,14 +309,14 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           >
-            <option value="none">No subscription</option>
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
+            <option value="none">{t('platformBilling.periodNone')}</option>
+            <option value="monthly">{t('platformBilling.periodMonthly')}</option>
+            <option value="yearly">{t('platformBilling.periodYearly')}</option>
           </select>
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-workshop-charcoal/70">
-            Next charge at
+            {t('platformBilling.nextChargeAt')}
           </label>
           <input
             type="datetime-local"
@@ -338,13 +338,13 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
 
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-workshop-charcoal/70">
-          Superadmin notes
+          {t('platformBilling.superadminNotes')}
         </label>
         <textarea
           rows={2}
           value={form.notes ?? ''}
           onChange={(e) => update('notes', e.target.value as never)}
-          placeholder="Visible only to superadmins (pilot pricing, manual adjustments, …)"
+          placeholder={t('platformBilling.superadminNotesPlaceholder')}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
         />
       </div>
@@ -369,7 +369,7 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
           className="btn btn-secondary inline-flex items-center gap-1.5 text-sm"
         >
           <RefreshCcw className="w-4 h-4" />
-          Reset
+          {t('platformBilling.reset')}
         </button>
         <button
           type="button"
@@ -378,7 +378,7 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
           className="btn btn-primary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
-          {isSaving ? 'Saving…' : 'Save platform billing'}
+          {isSaving ? t('platformBilling.saving') : t('platformBilling.save')}
         </button>
       </div>
     </div>

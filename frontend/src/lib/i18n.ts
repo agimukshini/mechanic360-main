@@ -36,6 +36,11 @@ export function applyDocumentLanguage(code: WorkshopLanguage) {
 
 const initial = readCachedLanguage() ?? 'sq'
 
+// Track missing keys per language so dev / QA can spot untranslated strings
+// without grepping. In production we still warn (once per key) so we can
+// scrape the warnings from monitoring later.
+const _seenMissing = new Set<string>()
+
 void i18n.use(initReactI18next).init({
   resources: {
     sq: { translation: sq },
@@ -45,6 +50,15 @@ void i18n.use(initReactI18next).init({
   fallbackLng: 'sq',
   supportedLngs: ['sq', 'en'],
   interpolation: { escapeValue: false },
+  saveMissing: true,
+  missingKeyHandler: (lngs, _ns, key) => {
+    const sig = `${lngs.join(',')}::${key}`
+    if (_seenMissing.has(sig)) return
+    _seenMissing.add(sig)
+    if (import.meta.env.DEV) {
+      console.warn(`[i18n] missing key "${key}" for ${lngs.join(', ')}`)
+    }
+  },
 })
 
 applyDocumentLanguage(initial)
