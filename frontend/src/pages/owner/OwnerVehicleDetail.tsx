@@ -11,7 +11,8 @@ import {
   QrCode,
   Wrench,
 } from 'lucide-react'
-import { ownerApi } from '@/api'
+import { useQuery } from '@tanstack/react-query'
+import { ownerApi, ownerPhotosApi } from '@/api'
 import { getApiErrorMessage } from '@/lib/utils'
 import OwnerLayout from '@/components/layout/OwnerLayout'
 
@@ -246,6 +247,8 @@ export default function OwnerVehicleDetail() {
           </div>
         </div>
 
+        <OwnerVehiclePhotoGallery vehicleId={id!} />
+
         {/* Aggregated history */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3 mb-4">
@@ -311,5 +314,90 @@ export default function OwnerVehicleDetail() {
         </div>
       </div>
     </OwnerLayout>
+  )
+}
+
+interface OwnerPhoto {
+  id: string
+  image_url: string
+  caption: string
+  workshop_name: string
+  uploaded_by_username: string
+  created_at: string
+}
+
+function OwnerVehiclePhotoGallery({ vehicleId }: { vehicleId: string }) {
+  const [lightbox, setLightbox] = useState<OwnerPhoto | null>(null)
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['owner-vehicle-photos', vehicleId],
+    queryFn: () =>
+      ownerPhotosApi.list(vehicleId).then((r) => (r.data.photos || []) as OwnerPhoto[]),
+    enabled: Boolean(vehicleId),
+  })
+
+  const photos = data || []
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 flex justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+
+  if (photos.length === 0) return null
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+          <p className="text-xs text-gray-500">
+            Uploaded by the workshops that have serviced this vehicle.
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {photos.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            className="group relative rounded-lg overflow-hidden border border-gray-200"
+            onClick={() => setLightbox(p)}
+          >
+            <img
+              src={p.image_url}
+              alt={p.caption || 'Vehicle'}
+              className="w-full h-32 object-cover transition-transform group-hover:scale-105"
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent text-white text-xs p-2 pt-6 text-left">
+              <p className="truncate font-medium">{p.workshop_name}</p>
+              {p.caption && <p className="truncate text-white/80">{p.caption}</p>}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6"
+          onClick={() => setLightbox(null)}
+        >
+          <div onClick={(e) => e.stopPropagation()} className="max-w-5xl max-h-full">
+            <img src={lightbox.image_url} alt={lightbox.caption} className="max-h-[80vh] w-auto rounded-lg" />
+            <div className="text-white text-sm mt-3 space-y-1">
+              <p className="font-semibold">{lightbox.caption || '—'}</p>
+              <p className="text-white/70 text-xs">
+                Uploaded by {lightbox.workshop_name}
+                {lightbox.uploaded_by_username && ` · ${lightbox.uploaded_by_username}`}
+                {' · '}
+                {new Date(lightbox.created_at).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

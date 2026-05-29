@@ -20,6 +20,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from mechanic360.permissions import (
     IsOwnerUser,
@@ -30,16 +31,20 @@ from mechanic360.permissions import (
 from .models import (
     GlobalVehicle,
     OwnershipTransfer,
+    TenantPlatformBilling,
     TransferBilling,
     VehicleAuditEvent,
+    VehicleRegistrationCharge,
 )
 from .serializers import (
     DisputeOrReverseSerializer,
     OwnershipTransferSerializer,
     StartTransferSerializer,
     TenantOwnershipTransferSerializer,
+    TenantPlatformBillingSerializer,
     UpdateBillingSerializer,
     VehicleAuditEventSerializer,
+    VehicleRegistrationChargeSerializer,
     qr_code_response,
 )
 from .transfer_services import (
@@ -49,6 +54,8 @@ from .transfer_services import (
     initiate_transfer,
     reverse_transfer,
     update_billing,
+    update_registration_charge,
+    update_tenant_platform_billing,
 )
 
 
@@ -308,6 +315,90 @@ class AdminTransferViewSet(
         )
         transfer.refresh_from_db()
         return Response(self.get_serializer(transfer).data)
+
+
+class AdminTenantPlatformBillingViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Per-tenant platform-billing configuration — superadmin reads / patches.
+
+    URL pattern: `/api/v1/tenants/platform-billing/<tenant_id>/`. The pk is
+    the tenant id (the row is keyed by `tenant_id`), so a missing row is
+    auto-created on first read.
+    """
+
+    serializer_class = TenantPlatformBillingSerializer
+    permission_classes = [IsPlatformSuperuser]
+    queryset = TenantPlatformBilling.objects.select_related(
+        "tenant", "updated_by",
+    ).all()
+    lookup_field = "tenant_id"
+
+    def get_object(self):
+        tenant_id = self.kwargs.get(self.lookup_field)
+        from tenancy.models import WorkshopTenant
+        try:
+            tenant = WorkshopTenant.objects.get(id=tenant_id)
+        except WorkshopTenant.DoesNotExist:
+            raise NotFound("Tenant not found.")
+        billing = TenantPlatformBilling.for_tenant(tenant)
+        return billing
+
+    def partial_update(self, request, *args, **kwargs):
+        billing = self.get_object()
+        serializer = self.get_serializer(billing, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        update_tenant_platform_billing(
+            billing=billing,
+            superadmin=request.user,
+            fields=serializer.validated_data,
+            request=request,
+        )
+        return Response(self.get_serializer(billing).data)
+
+
+class AdminRegistrationChargeViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Cross-tenant feed of per-vehicle registration charges."""
+
+    serializer_class = VehicleRegistrationChargeSerializer
+    permission_classes = [IsPlatformSuperuser]
+    queryset = VehicleRegistrationCharge.objects.select_related(
+        "vehicle", "tenant", "created_by",
+    ).all()
+
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ["created_at", "fee_amount", "payment_status"]
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        params = self.request.query_params
+        if tenant_id := params.get("tenant_id"):
+            qs = qs.filter(tenant_id=tenant_id)
+        if payment_status := params.get("payment_status"):
+            qs = qs.filter(payment_status=payment_status)
+        return qs
+
+    @action(detail=True, methods=["patch"], url_path="billing")
+    def billing(self, request, pk=None):
+        charge = self.get_object()
+        update_registration_charge(
+            charge=charge,
+            superadmin=request.user,
+            new_status=request.data.get("payment_status"),
+            invoice_reference=request.data.get("invoice_reference"),
+            request=request,
+        )
+        charge.refresh_from_db()
+        return Response(self.get_serializer(charge).data)
 
 
 class AdminVehicleAuditViewSet(

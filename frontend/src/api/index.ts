@@ -202,6 +202,61 @@ export const vehicleAuditApi = {
   get: (id: string) => api.get(`/tenants/vehicle-audit/${id}/`),
 }
 
+// Per-tenant platform billing — what the PLATFORM charges this workshop.
+// Distinct from the workshop's own service catalog prices.
+export const platformBillingApi = {
+  get: (tenantId: string) =>
+    api.get(`/tenants/platform-billing/${tenantId}/`),
+  update: (
+    tenantId: string,
+    data: {
+      transfer_fee_amount?: string | number
+      transfer_fee_currency?: string
+      registration_fee_amount?: string | number
+      registration_fee_currency?: string
+      subscription_fee_amount?: string | number
+      subscription_fee_currency?: string
+      subscription_period?: 'none' | 'monthly' | 'yearly'
+      subscription_next_charge_at?: string | null
+      notes?: string
+    },
+  ) => api.patch(`/tenants/platform-billing/${tenantId}/`, data),
+}
+
+export const vehiclePhotosApi = {
+  list: (vehicleId: string) =>
+    api.get('/vehicles/photos/', { params: { vehicle: vehicleId } }),
+  upload: (vehicleId: string, file: File, caption = '', sortOrder = 0) => {
+    const fd = new FormData()
+    fd.append('vehicle_id', vehicleId)
+    fd.append('image', file)
+    fd.append('caption', caption)
+    fd.append('sort_order', String(sortOrder))
+    return api.post('/vehicles/photos/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  update: (
+    id: string,
+    data: { caption?: string; sort_order?: number },
+  ) => api.patch(`/vehicles/photos/${id}/`, data),
+  remove: (id: string) => api.delete(`/vehicles/photos/${id}/`),
+}
+
+export const ownerPhotosApi = {
+  list: (globalVehicleId: string) =>
+    api.get(`/owner/vehicles/${globalVehicleId}/photos/`),
+}
+
+export const registrationChargesApi = {
+  list: (params?: { tenant_id?: string; payment_status?: string }) =>
+    api.get('/tenants/registration-charges/', { params }),
+  updateBilling: (
+    id: string,
+    data: { payment_status?: string; invoice_reference?: string },
+  ) => api.patch(`/tenants/registration-charges/${id}/billing/`, data),
+}
+
 // Vehicles API
 export const vehiclesApi = {
   list: (params?: object) => api.get('/vehicles/', { params }),

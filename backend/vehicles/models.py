@@ -177,6 +177,48 @@ class Inspection(models.Model):
         return f"Inspection for {self.visit}"
 
 
+class VehicleGalleryPhoto(models.Model):
+    """
+    A photo in the vehicle's gallery — multiple photos per car.
+
+    Tenant-scoped because uploads are workshop-owned and stored per-tenant.
+    Owners see aggregated photos across all workshops via the owner endpoint.
+    Photo CRUD is gated to workshop staff (mechanic / admin) — the audit log
+    captures every change.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    vehicle = models.ForeignKey(
+        Vehicle,
+        related_name="gallery_photos",
+        on_delete=models.CASCADE,
+    )
+    image = models.ImageField(upload_to="vehicle_photos/")
+    caption = models.CharField(max_length=255, blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="uploaded_vehicle_photos",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "-created_at"]
+        verbose_name = "Vehicle gallery photo"
+        verbose_name_plural = "Vehicle gallery photos"
+        indexes = [
+            models.Index(fields=["vehicle", "sort_order"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"Photo for {self.vehicle} ({self.id})"
+
+
 class VehicleDocument(models.Model):
     """
     Documents attached to a vehicle (service records, receipts, photos, etc.).

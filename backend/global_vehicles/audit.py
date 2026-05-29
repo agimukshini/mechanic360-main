@@ -125,6 +125,7 @@ def log_vehicle_event(
     note: str = "",
     explicit_tenant_schema: str | None = None,
     explicit_tenant_name: str | None = None,
+    actor_user: Any | None = None,
 ) -> VehicleAuditEvent | None:
     """Write one `VehicleAuditEvent` in the public schema.
 
@@ -157,6 +158,16 @@ def log_vehicle_event(
             gv_id = gv_id or v_id
 
     actor = actor_context(request)
+    # Explicit actor_user fills in attribution for non-HTTP contexts
+    # (background jobs, management commands, tests).
+    if actor_user is not None and not actor["actor_user_id"]:
+        actor = {
+            "actor_user_id": getattr(actor_user, "id", None),
+            "actor_username": getattr(actor_user, "username", "") or "",
+            "actor_role": getattr(actor_user, "role", "") or "",
+            "request_ip": actor["request_ip"],
+            "request_user_agent": actor["request_user_agent"],
+        }
 
     try:
         with schema_context("public"):

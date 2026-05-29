@@ -561,27 +561,79 @@ class TransferBilling(models.Model):
 
 
 # =============================================================================
-# Platform pricing — single config row read by the transfer initiator
+# Per-tenant platform billing — what the PLATFORM charges this workshop
+# =============================================================================
+#
+# Separate from the workshop's own pricing for their customers (service
+# catalog / parts). This is strictly the platform → tenant relationship:
+#
+#   • Per-transfer fee (charged on every ownership transfer)
+#   • Per-vehicle-registration fee (charged when a global vehicle is created)
+#   • Subscription plan + recurring fee
+#
+# `TransferBilling.snapshot` / `VehicleRegistrationCharge.snapshot` freeze
+# the config at charge time so changing rates here never rewrites history.
 # =============================================================================
 
 
-class PlatformPricing(models.Model):
+class TenantPlatformBilling(models.Model):
     """
-    Singleton-ish config: the current fee charged for an ownership transfer.
+    Per-tenant fee configuration for what the PLATFORM charges this workshop.
 
-    Future: split per-tenant, per-country, per-vehicle-class. For now we keep
-    one row and use `.objects.first()`. Each `TransferBilling.snapshot` freezes
-    these values at charging time so changing this row doesn't rewrite history.
+    Lives in the public schema so the superadmin reads/writes it once. Each
+    `TransferBilling` / `VehicleRegistrationCharge` snapshot freezes the
+    amounts at charge time — changing this row never rewrites history.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.OneToOneField(
+        "tenancy.WorkshopTenant",
+        related_name="platform_billing",
+        on_delete=models.CASCADE,
+    )
 
+    # --- Per-event fees ------------------------------------------------------
     transfer_fee_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=Decimal("0.00"),
+        help_text="Charged on every confirmed ownership transfer.",
     )
     transfer_fee_currency = models.CharField(max_length=3, default="EUR")
+
+    registration_fee_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        help_text="Charged when a new vehicle is added to the global registry.",
+    )
+    registration_fee_currency = models.CharField(max_length=3, default="EUR")
+
+    # --- Subscription -------------------------------------------------------
+    class SubscriptionPeriod(models.TextChoices):
+        NONE = "none", "No subscription"
+        MONTHLY = "monthly", "Monthly"
+        YEARLY = "yearly", "Yearly"
+
+    subscription_fee_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+    subscription_fee_currency = models.CharField(max_length=3, default="EUR")
+    subscription_period = models.CharField(
+        max_length=16,
+        choices=SubscriptionPeriod.choices,
+        default=SubscriptionPeriod.NONE,
+    )
+    subscription_next_charge_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the next subscription invoice is due. Set by the billing cron.",
+    )
+
+    # Superadmin-only commentary (e.g. "free for first 6 months — pilot").
+    notes = models.TextField(blank=True)
 
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -589,25 +641,105 @@ class PlatformPricing(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Platform pricing"
-        verbose_name_plural = "Platform pricing"
+        verbose_name = "Tenant platform billing"
+        verbose_name_plural = "Tenant platform billing"
 
     def __str__(self) -> str:
-        return f"Transfer fee: {self.transfer_fee_amount} {self.transfer_fee_currency}"
+        return (
+            f"{self.tenant.name if self.tenant_id else '?'} — "
+            f"transfer:{self.transfer_fee_amount} reg:{self.registration_fee_amount} "
+            f"sub:{self.subscription_fee_amount}/{self.subscription_period}"
+        )
 
-    def snapshot(self) -> dict:
+    def transfer_snapshot(self) -> dict:
         return {
-            "transfer_fee_amount": str(self.transfer_fee_amount),
-            "transfer_fee_currency": self.transfer_fee_currency,
+            "kind": "transfer",
+            "amount": str(self.transfer_fee_amount),
+            "currency": self.transfer_fee_currency,
+            "tenant_id": str(self.tenant_id),
+            "tenant_name": self.tenant.name if self.tenant_id else "",
+            "captured_at": timezone.now().isoformat(),
+        }
+
+    def registration_snapshot(self) -> dict:
+        return {
+            "kind": "registration",
+            "amount": str(self.registration_fee_amount),
+            "currency": self.registration_fee_currency,
+            "tenant_id": str(self.tenant_id),
+            "tenant_name": self.tenant.name if self.tenant_id else "",
             "captured_at": timezone.now().isoformat(),
         }
 
     @classmethod
-    def current(cls) -> "PlatformPricing":
-        row = cls.objects.first()
-        if row is None:
-            row = cls.objects.create()
+    def for_tenant(cls, tenant) -> "TenantPlatformBilling":
+        """Return (or create on the fly) the billing row for a tenant."""
+        row, _ = cls.objects.get_or_create(tenant=tenant)
         return row
+
+
+class VehicleRegistrationCharge(models.Model):
+    """
+    A single platform-billing line item for adding a vehicle to the global
+    registry.
+
+    Created the first time a tenant calls `sync_vehicle_to_global` for a VIN.
+    `snapshot` freezes the per-tenant fee config so changing rates later
+    never rewrites history.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    vehicle = models.OneToOneField(
+        GlobalVehicle,
+        related_name="registration_charge",
+        on_delete=models.PROTECT,
+    )
+    tenant = models.ForeignKey(
+        "tenancy.WorkshopTenant",
+        related_name="registration_charges",
+        on_delete=models.PROTECT,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    fee_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    fee_currency = models.CharField(max_length=3, default="EUR")
+
+    class PaymentStatus(models.TextChoices):
+        UNPAID = "unpaid", "Unpaid"
+        PROCESSING = "processing", "Processing"
+        PAID = "paid", "Paid"
+        REFUNDED = "refunded", "Refunded"
+        WAIVED = "waived", "Waived (superadmin)"
+
+    payment_status = models.CharField(
+        max_length=16,
+        choices=PaymentStatus.choices,
+        default=PaymentStatus.UNPAID,
+    )
+    invoice_reference = models.CharField(max_length=64, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    snapshot = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Vehicle registration charge"
+        verbose_name_plural = "Vehicle registration charges"
+        indexes = [
+            models.Index(fields=["tenant", "-created_at"]),
+            models.Index(fields=["payment_status"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"Reg charge {self.fee_amount} {self.fee_currency} — {self.payment_status}"

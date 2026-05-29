@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/Toast'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import VehiclePhoto from '@/components/vehicles/VehiclePhoto'
 import VehicleOwnerQrPanel from '@/components/vehicles/VehicleOwnerQrPanel'
+import { VehiclePhotoGallery } from '@/components/vehicles/VehiclePhotoGallery'
 import { unwrapList, getApiErrorMessage, resolveMediaUrl } from '@/lib/utils'
 import { formatHourMeter, formatOdometer, type OdometerUnit } from '@/lib/odometer'
 import { canManageVehicles, canManageWorkshopData, normalizeRole } from '@/lib/roles'
@@ -521,6 +522,11 @@ export default function VehicleDetail() {
             vin={vehicle.vin}
             globalCurrentOwner={vehicle.global_current_owner}
             registrationHistory={vehicle.registration_history}
+          />
+
+          <VehiclePhotoGallery
+            vehicleId={id!}
+            canEdit={canManageVehicles(normalizeRole(user?.role))}
           />
 
           {/* Recent Visits */}

@@ -18,7 +18,7 @@ from clients.serializers import ClientSerializer
 from global_vehicles.serializers import GlobalOwnerSerializer, VehicleOwnershipSerializer
 
 from .global_sync import get_global_vehicle, sync_vehicle_to_global
-from .models import Vehicle, VehicleDocument
+from .models import Vehicle, VehicleDocument, VehicleGalleryPhoto
 
 User = get_user_model()
 
@@ -340,5 +340,59 @@ class VehicleDocumentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["uploaded_by"] = self.context["request"].user
         return super().create(validated_data)
+
+
+class VehicleGalleryPhotoSerializer(serializers.ModelSerializer):
+    """Workshop-uploaded photos in the vehicle gallery."""
+
+    image_url = serializers.SerializerMethodField()
+    uploaded_by_username = serializers.CharField(
+        source="uploaded_by.username", read_only=True,
+    )
+
+    ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}
+    MAX_BYTES = 25 * 1024 * 1024
+
+    class Meta:
+        model = VehicleGalleryPhoto
+        fields = [
+            "id",
+            "vehicle",
+            "image",
+            "image_url",
+            "caption",
+            "sort_order",
+            "uploaded_by",
+            "uploaded_by_username",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "vehicle",
+            "image_url",
+            "uploaded_by",
+            "uploaded_by_username",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate_image(self, image):
+        ct = getattr(image, "content_type", "") or ""
+        if ct and ct not in self.ALLOWED_CONTENT_TYPES:
+            raise serializers.ValidationError(
+                "Unsupported image type. Allowed: JPEG, PNG, WebP, HEIC.",
+            )
+        if image.size > self.MAX_BYTES:
+            raise serializers.ValidationError(
+                "Image too large. Maximum size is 25MB.",
+            )
+        return image
+
+    def get_image_url(self, obj: VehicleGalleryPhoto) -> str:
+        request = self.context.get("request")
+        if obj.image and hasattr(obj.image, "url"):
+            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+        return ""
 
 

@@ -95,6 +95,7 @@ def sync_vehicle_to_global(*, vehicle: Vehicle, user, tenant) -> GlobalVehicle:
         else:
             global_vehicle = GlobalVehicle.objects.filter(vin=vin).first()
 
+        is_first_registration = False
         if global_vehicle is None:
             global_vehicle = GlobalVehicle(
                 id=uuid.uuid4(),
@@ -102,6 +103,7 @@ def sync_vehicle_to_global(*, vehicle: Vehicle, user, tenant) -> GlobalVehicle:
                 registered_by_tenant=tenant,
                 registered_by=user if user and user.is_authenticated else None,
             )
+            is_first_registration = True
         elif global_vehicle.vin != vin:
             raise ValidationError(
                 {"vin": "This vehicle is already linked to a different VIN in the global registry."},
@@ -111,6 +113,21 @@ def sync_vehicle_to_global(*, vehicle: Vehicle, user, tenant) -> GlobalVehicle:
         _sync_photo(global_vehicle=global_vehicle, vehicle=vehicle)
         global_vehicle.save()
         global_id = global_vehicle.id
+
+        # First-time registration triggers the platform billing line. Done
+        # inside the public_schema block — the charge row lives there too.
+        if is_first_registration and tenant is not None:
+            try:
+                from global_vehicles.transfer_services import (
+                    record_registration_charge,
+                )
+                record_registration_charge(
+                    vehicle=global_vehicle,
+                    tenant=tenant,
+                    created_by=user if user and user.is_authenticated else None,
+                )
+            except Exception:  # pragma: no cover — never block vehicle save
+                pass
 
     connection.set_schema(tenant_schema)
     if vehicle.global_vehicle_id != global_id:

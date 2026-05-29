@@ -20,11 +20,12 @@ from .models import (
     GlobalOwner,
     GlobalVehicle,
     OwnershipTransfer,
-    PlatformPricing,
+    TenantPlatformBilling,
     TransferBilling,
     VehicleAuditEvent,
     VehicleClaimToken,
     VehicleOwnership,
+    VehicleRegistrationCharge,
 )
 from .services import (
     create_owner_claim_token,
@@ -91,7 +92,7 @@ def initiate_transfer(
         notes=notes,
     )
 
-    pricing = PlatformPricing.current()
+    billing_config = TenantPlatformBilling.for_tenant(tenant)
     actor = actor_context(request)
 
     transfer = OwnershipTransfer.objects.create(
@@ -110,9 +111,9 @@ def initiate_transfer(
 
     TransferBilling.objects.create(
         transfer=transfer,
-        fee_amount=pricing.transfer_fee_amount,
-        fee_currency=pricing.transfer_fee_currency,
-        snapshot=pricing.snapshot(),
+        fee_amount=billing_config.transfer_fee_amount,
+        fee_currency=billing_config.transfer_fee_currency,
+        snapshot=billing_config.transfer_snapshot(),
     )
 
     log_vehicle_event(
@@ -120,6 +121,9 @@ def initiate_transfer(
         action=VehicleAuditEvent.Action.TRANSFER_INITIATED,
         vehicle=vehicle,
         request=request,
+        actor_user=initiator,
+        explicit_tenant_schema=getattr(tenant, "schema_name", None),
+        explicit_tenant_name=getattr(tenant, "name", None),
         target_id=str(transfer.id),
         changes={
             "from_owner": {
@@ -345,8 +349,13 @@ def reverse_transfer(
         raise PermissionDenied("Platform superuser access required.")
     if not notes.strip():
         raise ValidationError("Reversal requires explanatory notes.")
-    if transfer.status != OwnershipTransfer.Status.CONFIRMED:
-        raise ValidationError("Only confirmed transfers can be reversed.")
+    if transfer.status not in (
+        OwnershipTransfer.Status.CONFIRMED,
+        OwnershipTransfer.Status.DISPUTED,
+    ):
+        raise ValidationError(
+            "Only confirmed or disputed transfers can be reversed.",
+        )
 
     vehicle = transfer.vehicle
     original_from = transfer.from_owner
@@ -405,11 +414,22 @@ def reverse_transfer(
     )
     transfer.save(update_fields=["status", "superadmin_notes"])
 
+    # Waive the platform fee — a reversed transfer shouldn't be charged.
+    # Refunded > waived if the customer already paid; preserve that signal.
+    billing = getattr(transfer, "billing", None)
+    if billing is not None and billing.payment_status not in (
+        TransferBilling.PaymentStatus.PAID,
+        TransferBilling.PaymentStatus.REFUNDED,
+    ):
+        billing.payment_status = TransferBilling.PaymentStatus.WAIVED
+        billing.save(update_fields=["payment_status", "updated_at"])
+
     log_vehicle_event(
         entity=VehicleAuditEvent.Entity.OWNERSHIP,
         action=VehicleAuditEvent.Action.TRANSFER_REVERSED,
         vehicle=vehicle,
         request=request,
+        actor_user=superadmin,
         target_id=str(transfer.id),
         note=notes[:512],
     )
@@ -461,5 +481,159 @@ def update_billing(
         request=request,
         target_id=str(billing.transfer_id),
         changes=changes,
+    )
+    return billing
+
+
+# ---------------------------------------------------------------------------
+# Vehicle registration charge — created when a tenant adds a vehicle to the
+# global registry. Snapshots the per-tenant fee config so changes never
+# rewrite history.
+# ---------------------------------------------------------------------------
+
+
+@transaction.atomic
+def record_registration_charge(
+    *,
+    vehicle: GlobalVehicle,
+    tenant,
+    created_by,
+    request=None,
+) -> VehicleRegistrationCharge | None:
+    """Idempotent — never charges the same vehicle twice."""
+    if not tenant or not vehicle:
+        return None
+    existing = VehicleRegistrationCharge.objects.filter(vehicle=vehicle).first()
+    if existing is not None:
+        return existing
+
+    config = TenantPlatformBilling.for_tenant(tenant)
+    charge = VehicleRegistrationCharge.objects.create(
+        vehicle=vehicle,
+        tenant=tenant,
+        created_by=created_by,
+        fee_amount=config.registration_fee_amount,
+        fee_currency=config.registration_fee_currency,
+        snapshot=config.registration_snapshot(),
+    )
+    log_vehicle_event(
+        entity=VehicleAuditEvent.Entity.BILLING,
+        action=VehicleAuditEvent.Action.BILLING_CHANGED,
+        vehicle=vehicle,
+        request=request,
+        target_id=str(charge.id),
+        changes={
+            "registration_fee": {
+                "before": None,
+                "after": f"{charge.fee_amount} {charge.fee_currency}",
+            },
+        },
+        note=f"Registration charge for tenant {tenant.name}",
+    )
+    return charge
+
+
+@transaction.atomic
+def update_registration_charge(
+    *,
+    charge: VehicleRegistrationCharge,
+    superadmin,
+    new_status: str | None = None,
+    invoice_reference: str | None = None,
+    request=None,
+) -> VehicleRegistrationCharge:
+    if not superadmin.is_superuser:
+        raise PermissionDenied("Platform superuser access required.")
+
+    changes: dict[str, Any] = {}
+    if new_status and new_status != charge.payment_status:
+        if new_status not in dict(VehicleRegistrationCharge.PaymentStatus.choices):
+            raise ValidationError("Unknown payment status.")
+        changes["payment_status"] = {"before": charge.payment_status, "after": new_status}
+        charge.payment_status = new_status
+        if (
+            new_status == VehicleRegistrationCharge.PaymentStatus.PAID
+            and charge.paid_at is None
+        ):
+            charge.paid_at = timezone.now()
+
+    if invoice_reference is not None and invoice_reference != charge.invoice_reference:
+        changes["invoice_reference"] = {
+            "before": charge.invoice_reference,
+            "after": invoice_reference,
+        }
+        charge.invoice_reference = invoice_reference
+
+    if not changes:
+        return charge
+
+    charge.save()
+    log_vehicle_event(
+        entity=VehicleAuditEvent.Entity.BILLING,
+        action=VehicleAuditEvent.Action.BILLING_CHANGED,
+        vehicle=charge.vehicle,
+        request=request,
+        target_id=str(charge.id),
+        changes=changes,
+        note="Registration charge",
+    )
+    return charge
+
+
+# ---------------------------------------------------------------------------
+# Tenant platform-billing config — superadmin CRUD with auditing
+# ---------------------------------------------------------------------------
+
+
+@transaction.atomic
+def update_tenant_platform_billing(
+    *,
+    billing: TenantPlatformBilling,
+    superadmin,
+    fields: dict[str, Any],
+    request=None,
+) -> TenantPlatformBilling:
+    if not superadmin.is_superuser:
+        raise PermissionDenied("Platform superuser access required.")
+
+    AUDITABLE = [
+        "transfer_fee_amount",
+        "transfer_fee_currency",
+        "registration_fee_amount",
+        "registration_fee_currency",
+        "subscription_fee_amount",
+        "subscription_fee_currency",
+        "subscription_period",
+        "subscription_next_charge_at",
+        "notes",
+    ]
+    changes: dict[str, dict[str, Any]] = {}
+    for f in AUDITABLE:
+        if f not in fields:
+            continue
+        new = fields[f]
+        old = getattr(billing, f)
+        if str(old) == str(new):
+            continue
+        changes[f] = {"before": str(old) if old is not None else None,
+                      "after": str(new) if new is not None else None}
+        setattr(billing, f, new)
+
+    if not changes:
+        return billing
+
+    billing.updated_by = superadmin
+    billing.save()
+
+    log_vehicle_event(
+        entity=VehicleAuditEvent.Entity.BILLING,
+        action=VehicleAuditEvent.Action.BILLING_CHANGED,
+        vehicle=None,
+        request=request,
+        target_id=str(billing.tenant_id),
+        changes=changes,
+        note=f"Platform billing for tenant {billing.tenant.name}",
+        explicit_tenant_schema=billing.tenant.schema_name,
+        explicit_tenant_name=billing.tenant.name,
     )
     return billing

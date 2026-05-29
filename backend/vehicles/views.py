@@ -12,7 +12,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
 
-from global_vehicles.models import GlobalVehicle, VehicleClaimToken
+from global_vehicles.audit import log_vehicle_event, vehicle_diff
+from global_vehicles.models import GlobalVehicle, VehicleAuditEvent, VehicleClaimToken
 from global_vehicles.serializers import (
     UpdateRegistrationSerializer,
     VehicleClaimTokenSerializer,
@@ -29,8 +30,36 @@ from mechanic360.permissions import IsTenantUser
 from tenancy.views import public_schema
 
 from .global_sync import get_global_vehicle_or_sync, sync_vehicle_to_global
-from .models import Vehicle, VehicleDocument
-from .serializers import VehicleSerializer, VehicleDocumentSerializer
+from .models import Vehicle, VehicleDocument, VehicleGalleryPhoto
+from .serializers import (
+    VehicleDocumentSerializer,
+    VehicleGalleryPhotoSerializer,
+    VehicleSerializer,
+)
+
+_AUDIT_FIELDS = (
+    "license_plate",
+    "make",
+    "model",
+    "year",
+    "engine_type",
+    "fuel_type",
+    "odometer_km",
+    "hour_meter",
+    "description",
+    "owner_id",
+    "assigned_mechanic_id",
+    "is_active",
+)
+
+
+def _vehicle_snapshot(vehicle: Vehicle) -> dict:
+    snap: dict = {}
+    for f in _AUDIT_FIELDS:
+        snap[f] = getattr(vehicle, f, None)
+        if snap[f] is not None:
+            snap[f] = str(snap[f]) if hasattr(snap[f], "hex") else snap[f]
+    return snap
 
 User = get_user_model()
 
@@ -68,6 +97,66 @@ class VehicleViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
                 queryset = queryset.filter(is_active=True)
         return queryset
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_vehicle_event(
+            entity=VehicleAuditEvent.Entity.VEHICLE,
+            action=VehicleAuditEvent.Action.CREATED,
+            vehicle=instance,
+            request=self.request,
+            target_id=str(instance.id),
+            changes=vehicle_diff(None, _vehicle_snapshot(instance), fields=list(_AUDIT_FIELDS)),
+        )
+
+    def perform_update(self, serializer):
+        before = _vehicle_snapshot(self.get_object())
+        instance = serializer.save()
+        after = _vehicle_snapshot(instance)
+        diff = vehicle_diff(before, after, fields=list(_AUDIT_FIELDS))
+
+        # Split archive/restore from generic updates for clarity in the log.
+        if "is_active" in diff:
+            archived = bool(before.get("is_active")) and not bool(after.get("is_active"))
+            restored = not bool(before.get("is_active")) and bool(after.get("is_active"))
+            if archived or restored:
+                log_vehicle_event(
+                    entity=VehicleAuditEvent.Entity.ARCHIVE,
+                    action=(
+                        VehicleAuditEvent.Action.ARCHIVED
+                        if archived
+                        else VehicleAuditEvent.Action.RESTORED
+                    ),
+                    vehicle=instance,
+                    request=self.request,
+                    target_id=str(instance.id),
+                    changes={"is_active": diff["is_active"]},
+                )
+                diff.pop("is_active", None)
+
+        # Mechanic assignment changes get their own entity so the admin can
+        # filter for "who handed the car to whom" without scrolling generic
+        # updates.
+        if "assigned_mechanic_id" in diff:
+            log_vehicle_event(
+                entity=VehicleAuditEvent.Entity.ASSIGNMENT,
+                action=VehicleAuditEvent.Action.UPDATED,
+                vehicle=instance,
+                request=self.request,
+                target_id=str(instance.id),
+                changes={"assigned_mechanic_id": diff["assigned_mechanic_id"]},
+            )
+            diff.pop("assigned_mechanic_id", None)
+
+        if diff:
+            log_vehicle_event(
+                entity=VehicleAuditEvent.Entity.VEHICLE,
+                action=VehicleAuditEvent.Action.UPDATED,
+                vehicle=instance,
+                request=self.request,
+                target_id=str(instance.id),
+                changes=diff,
+            )
+
     def destroy(self, request, *args, **kwargs):
         vehicle = self.get_object()
         if vehicle.visits.exists():
@@ -80,7 +169,22 @@ class VehicleViewSet(DestroyRequiresAdvisorMixin, viewsets.ModelViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return super().destroy(request, *args, **kwargs)
+        # Snapshot BEFORE the delete so the diff captures the final state.
+        snapshot = _vehicle_snapshot(vehicle)
+        target_id = str(vehicle.id)
+        plate = vehicle.license_plate or ""
+        response = super().destroy(request, *args, **kwargs)
+        log_vehicle_event(
+            entity=VehicleAuditEvent.Entity.VEHICLE,
+            action=VehicleAuditEvent.Action.DELETED,
+            vehicle=None,
+            global_vehicle_id=getattr(vehicle, "global_vehicle_id", None),
+            request=request,
+            target_id=target_id,
+            changes={k: {"before": v, "after": None} for k, v in snapshot.items() if v is not None},
+            note=f"Deleted vehicle {plate}",
+        )
+        return response
 
     def _global_vehicle_for_action(self, vehicle: Vehicle) -> GlobalVehicle:
         return get_global_vehicle_or_sync(
@@ -368,3 +472,72 @@ class VehicleDocumentViewSet(viewsets.ModelViewSet):
         vehicle_id = self.request.data.get("vehicle_id")
         vehicle = Vehicle.objects.get(id=vehicle_id)
         serializer.save(vehicle=vehicle)
+
+
+class VehicleGalleryPhotoViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for the per-vehicle photo gallery.
+
+    All writes go through `IsTenantUser` — only workshop staff (mechanic or
+    admin, never owner accounts) may upload, edit, or delete photos. Every
+    mutation writes a `VehicleAuditEvent` so the superadmin can see exactly
+    who touched which car's gallery.
+    """
+
+    serializer_class = VehicleGalleryPhotoSerializer
+    permission_classes = [IsTenantUser]
+
+    def get_queryset(self):
+        qs = VehicleGalleryPhoto.objects.select_related("vehicle", "uploaded_by")
+        vehicle_id = self.request.query_params.get("vehicle")
+        if vehicle_id:
+            qs = qs.filter(vehicle_id=vehicle_id)
+        return qs
+
+    def perform_create(self, serializer):
+        vehicle_id = self.request.data.get("vehicle_id") or self.request.data.get("vehicle")
+        if not vehicle_id:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"vehicle_id": "Required."})
+        vehicle = Vehicle.objects.get(id=vehicle_id)
+        instance = serializer.save(vehicle=vehicle, uploaded_by=self.request.user)
+        log_vehicle_event(
+            entity=VehicleAuditEvent.Entity.PHOTO,
+            action=VehicleAuditEvent.Action.CREATED,
+            vehicle=vehicle,
+            request=self.request,
+            target_id=str(instance.id),
+            note=f"Uploaded photo (caption: {instance.caption or '—'})",
+        )
+
+    def perform_update(self, serializer):
+        before = {
+            "caption": self.get_object().caption,
+            "sort_order": self.get_object().sort_order,
+        }
+        instance = serializer.save()
+        after = {"caption": instance.caption, "sort_order": instance.sort_order}
+        diff = vehicle_diff(before, after, fields=["caption", "sort_order"])
+        if diff:
+            log_vehicle_event(
+                entity=VehicleAuditEvent.Entity.PHOTO,
+                action=VehicleAuditEvent.Action.UPDATED,
+                vehicle=instance.vehicle,
+                request=self.request,
+                target_id=str(instance.id),
+                changes=diff,
+            )
+
+    def perform_destroy(self, instance):
+        vehicle = instance.vehicle
+        photo_id = str(instance.id)
+        caption = instance.caption
+        instance.delete()
+        log_vehicle_event(
+            entity=VehicleAuditEvent.Entity.PHOTO,
+            action=VehicleAuditEvent.Action.DELETED,
+            vehicle=vehicle,
+            request=self.request,
+            target_id=photo_id,
+            note=f"Deleted photo (caption: {caption or '—'})",
+        )

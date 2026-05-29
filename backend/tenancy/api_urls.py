@@ -12,6 +12,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from global_vehicles.transfer_views import (
+    AdminRegistrationChargeViewSet,
+    AdminTenantPlatformBillingViewSet,
     AdminTransferViewSet,
     AdminVehicleAuditViewSet,
 )
@@ -33,6 +35,16 @@ router.register(
 router.register(r"admin/tenants", WorkshopTenantAdminViewSet, basename="admin-tenants")
 router.register(r"transfers", AdminTransferViewSet, basename="admin-transfers")
 router.register(r"vehicle-audit", AdminVehicleAuditViewSet, basename="admin-vehicle-audit")
+router.register(
+    r"platform-billing",
+    AdminTenantPlatformBillingViewSet,
+    basename="admin-platform-billing",
+)
+router.register(
+    r"registration-charges",
+    AdminRegistrationChargeViewSet,
+    basename="admin-registration-charges",
+)
 
 urlpatterns = [
     path("register/", TenantRegisterView.as_view(), name="tenant_register"),

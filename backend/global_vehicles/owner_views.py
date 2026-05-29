@@ -194,6 +194,65 @@ class OwnerVehicleViewSet(viewsets.ReadOnlyModelViewSet):
         response["Cache-Control"] = "no-store"
         return response
 
+    @action(detail=True, methods=["get"], url_path="photos")
+    def photos(self, request, pk=None):
+        """
+        Aggregated read-only feed of every photo in every workshop's gallery
+        for this global vehicle. Owners cannot upload or delete — they only
+        view. Workshop name is included so the owner knows the source.
+        """
+        from django.db import connection
+        from tenancy.models import WorkshopTenant
+        from tenancy.views import public_schema
+        from vehicles.models import Vehicle, VehicleGalleryPhoto
+
+        vehicle = self.get_object()
+        global_id = vehicle.id
+
+        # Re-confirm ownership inside public schema so an owner can't peek at
+        # someone else's vehicle by guessing the UUID.
+        with public_schema():
+            owns = VehicleOwnership.objects.filter(
+                vehicle_id=global_id,
+                owner=request.user.global_owner_profile,
+                effective_to__isnull=True,
+            ).exists()
+        if not owns:
+            return Response({"detail": "Not found."}, status=404)
+
+        original_schema = connection.schema_name
+        photos: list[dict] = []
+        try:
+            with public_schema():
+                tenants = list(WorkshopTenant.objects.exclude(schema_name="public"))
+            for tenant in tenants:
+                connection.set_schema(tenant.schema_name)
+                local_vehicles = list(
+                    Vehicle.objects.filter(global_vehicle_id=global_id).values_list("id", flat=True),
+                )
+                if not local_vehicles:
+                    continue
+                qs = (
+                    VehicleGalleryPhoto.objects.filter(vehicle_id__in=local_vehicles)
+                    .select_related("uploaded_by")
+                    .order_by("sort_order", "-created_at")
+                )
+                for p in qs:
+                    photos.append({
+                        "id": str(p.id),
+                        "image_url": request.build_absolute_uri(p.image.url) if p.image else "",
+                        "caption": p.caption,
+                        "sort_order": p.sort_order,
+                        "workshop_name": tenant.name,
+                        "workshop_schema": tenant.schema_name,
+                        "uploaded_by_username": getattr(p.uploaded_by, "username", "") if p.uploaded_by else "",
+                        "created_at": p.created_at.isoformat() if p.created_at else None,
+                    })
+        finally:
+            connection.set_schema(original_schema)
+
+        return Response({"vehicle_id": str(global_id), "photos": photos})
+
     @action(detail=True, methods=["get"], url_path="service-booklet")
     def service_booklet(self, request, pk=None):
         """

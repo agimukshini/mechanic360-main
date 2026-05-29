@@ -10,10 +10,12 @@ from .models import (
     GlobalOwner,
     GlobalVehicle,
     OwnershipTransfer,
+    TenantPlatformBilling,
     TransferBilling,
     VehicleAuditEvent,
     VehicleClaimToken,
     VehicleOwnership,
+    VehicleRegistrationCharge,
 )
 
 
@@ -325,6 +327,103 @@ class UpdateBillingSerializer(serializers.Serializer):
 # -----------------------------------------------------------------------------
 # Audit
 # -----------------------------------------------------------------------------
+
+
+class TenantPlatformBillingSerializer(serializers.ModelSerializer):
+    """Per-tenant fee config — what the PLATFORM charges this workshop."""
+
+    tenant_id = serializers.UUIDField(source="tenant.id", read_only=True)
+    tenant_name = serializers.CharField(source="tenant.name", read_only=True)
+    tenant_schema = serializers.CharField(
+        source="tenant.schema_name", read_only=True,
+    )
+    updated_by_username = serializers.CharField(
+        source="updated_by.username", read_only=True,
+    )
+
+    class Meta:
+        model = TenantPlatformBilling
+        fields = [
+            "id",
+            "tenant_id",
+            "tenant_name",
+            "tenant_schema",
+            "transfer_fee_amount",
+            "transfer_fee_currency",
+            "registration_fee_amount",
+            "registration_fee_currency",
+            "subscription_fee_amount",
+            "subscription_fee_currency",
+            "subscription_period",
+            "subscription_next_charge_at",
+            "notes",
+            "updated_by",
+            "updated_by_username",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "tenant_id",
+            "tenant_name",
+            "tenant_schema",
+            "updated_by",
+            "updated_by_username",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate(self, attrs):
+        for amount_field in (
+            "transfer_fee_amount",
+            "registration_fee_amount",
+            "subscription_fee_amount",
+        ):
+            if amount_field in attrs and attrs[amount_field] < 0:
+                raise serializers.ValidationError(
+                    {amount_field: "Fee cannot be negative."},
+                )
+        for ccy_field in (
+            "transfer_fee_currency",
+            "registration_fee_currency",
+            "subscription_fee_currency",
+        ):
+            if ccy_field in attrs:
+                v = (attrs[ccy_field] or "").strip().upper()
+                if len(v) != 3:
+                    raise serializers.ValidationError(
+                        {ccy_field: "Currency must be a 3-letter ISO code."},
+                    )
+                attrs[ccy_field] = v
+        return attrs
+
+
+class VehicleRegistrationChargeSerializer(serializers.ModelSerializer):
+    tenant_name = serializers.CharField(source="tenant.name", read_only=True)
+    vehicle_license_plate = serializers.CharField(
+        source="vehicle.license_plate", read_only=True,
+    )
+    vehicle_vin = serializers.CharField(source="vehicle.vin", read_only=True)
+
+    class Meta:
+        model = VehicleRegistrationCharge
+        fields = [
+            "id",
+            "vehicle",
+            "vehicle_license_plate",
+            "vehicle_vin",
+            "tenant",
+            "tenant_name",
+            "fee_amount",
+            "fee_currency",
+            "payment_status",
+            "invoice_reference",
+            "paid_at",
+            "snapshot",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields
 
 
 class VehicleAuditEventSerializer(serializers.ModelSerializer):
