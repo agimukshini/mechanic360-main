@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Building2, Car, ClipboardList, Loader2, Users } from 'lucide-react'
 import { tenantsApi } from '@/api'
 
@@ -57,6 +58,7 @@ function StatCard({
 }
 
 export default function AdminDashboardPage() {
+  const { t } = useTranslation()
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: () => tenantsApi.getDashboard(),
@@ -71,7 +73,7 @@ export default function AdminDashboardPage() {
   }
 
   if (error || !data?.data) {
-    return <div className="card p-8 text-red-700">Failed to load dashboard.</div>
+    return <div className="card p-8 text-red-700">{t('adminDashboard.loadFailed')}</div>
   }
 
   const platform = data.data.platform as PlatformStats
@@ -80,40 +82,46 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-workshop-charcoal">Dashboard</h2>
-        <p className="text-workshop-charcoal/60 mt-1">Platform overview and tenant usage</p>
+        <h2 className="text-2xl font-bold text-workshop-charcoal">{t('adminDashboard.title')}</h2>
+        <p className="text-workshop-charcoal/60 mt-1">{t('adminDashboard.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
-          label="Workshops"
+          label={t('adminDashboard.workshops')}
           value={platform.tenants_total}
           icon={Building2}
-          hint={`${platform.tenants_active} active · ${platform.tenants_inactive} inactive`}
+          hint={t('adminDashboard.workshopsHint', {
+            active: platform.tenants_active,
+            inactive: platform.tenants_inactive,
+          })}
         />
         <StatCard
-          label="Pending onboarding"
+          label={t('adminDashboard.pendingOnboarding')}
           value={platform.pending_onboarding}
           icon={ClipboardList}
         />
         <StatCard
-          label="Workshop users"
+          label={t('adminDashboard.workshopUsers')}
           value={platform.users_total}
           icon={Users}
         />
         <StatCard
-          label="Global vehicles"
+          label={t('adminDashboard.globalVehicles')}
           value={platform.global_vehicles}
           icon={Car}
-          hint={`${platform.global_owners} owners · ${platform.owner_accounts} owner accounts`}
+          hint={t('adminDashboard.globalVehiclesHint', {
+            owners: platform.global_owners,
+            accounts: platform.owner_accounts,
+          })}
         />
       </div>
 
       <div className="card overflow-hidden">
         <div className="px-6 py-4 border-b border-workshop-charcoal/10 flex items-center justify-between">
-          <h3 className="font-semibold text-workshop-charcoal">Tenants</h3>
+          <h3 className="font-semibold text-workshop-charcoal">{t('adminDashboard.tenants')}</h3>
           <Link to="/admin/tenants" className="text-sm text-workshop-blue hover:underline">
-            View all
+            {t('adminDashboard.viewAll')}
           </Link>
         </div>
         <div className="overflow-x-auto">
@@ -121,25 +129,25 @@ export default function AdminDashboardPage() {
             <thead className="bg-workshop-charcoal/5">
               <tr>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Workshop
+                  {t('adminDashboard.tableWorkshop')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Plan
+                  {t('adminDashboard.tablePlan')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Users
+                  {t('adminDashboard.tableUsers')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Clients
+                  {t('adminDashboard.tableClients')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Vehicles
+                  {t('adminDashboard.tableVehicles')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Visits
+                  {t('adminDashboard.tableVisits')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Status
+                  {t('adminDashboard.tableStatus')}
                 </th>
               </tr>
             </thead>
@@ -168,7 +176,7 @@ export default function AdminDashboardPage() {
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {tenant.is_active ? 'Active' : 'Inactive'}
+                      {tenant.is_active ? t('adminDashboard.active') : t('adminDashboard.inactive')}
                     </span>
                   </td>
                 </tr>

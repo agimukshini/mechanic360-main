@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import QRScanner from '@/components/QRScanner'
 import { ownerApi } from '@/api'
 import { getApiErrorMessage } from '@/lib/utils'
@@ -29,6 +30,7 @@ interface TransferDetails {
 }
 
 export default function OwnerClaimPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [token, setToken] = useState(searchParams.get('token') ?? '')
@@ -74,7 +76,7 @@ export default function OwnerClaimPage() {
     } catch (err) {
       setPreview(null)
       setIsValid(false)
-      setError(getApiErrorMessage(err, 'Invalid QR code'))
+      setError(getApiErrorMessage(err, t('ownerClaim.errInvalidQr')))
     }
   }
 
@@ -98,7 +100,7 @@ export default function OwnerClaimPage() {
       setSuccess(true)
       setTimeout(() => navigate('/owner/vehicles'), 1500)
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Failed to add vehicle'))
+      setError(getApiErrorMessage(err, t('ownerClaim.errAddVehicle')))
     } finally {
       setLoading(false)
     }
@@ -106,9 +108,9 @@ export default function OwnerClaimPage() {
 
   return (
     <OwnerLayout>
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Add vehicle</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('ownerClaim.title')}</h1>
       <p className="text-sm text-gray-600 mb-6">
-        Scan the QR code from your workshop after they register the vehicle, or paste the claim code.
+        {t('ownerClaim.subtitle')}
       </p>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4 max-w-lg">
@@ -117,16 +119,16 @@ export default function OwnerClaimPage() {
           onClick={() => setShowScanner(true)}
           className="w-full py-2.5 bg-slate-800 text-white rounded-lg hover:bg-slate-900"
         >
-          Scan QR code
+          {t('ownerClaim.scanQr')}
         </button>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Claim code</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('ownerClaim.claimCode')}</label>
           <input
             value={token}
             onChange={(e) => setToken(e.target.value)}
             onBlur={() => token && void loadPreview(token)}
-            placeholder="Paste code from QR"
+            placeholder={t('ownerClaim.pastePlaceholder')}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg"
           />
         </div>
@@ -135,7 +137,7 @@ export default function OwnerClaimPage() {
           <div className={`p-4 rounded-lg ${isTransfer ? 'bg-amber-50 border border-amber-200' : 'bg-blue-50'}`}>
             {isTransfer && (
               <p className="text-xs uppercase tracking-wider font-semibold text-amber-800 mb-2">
-                Ownership transfer
+                {t('ownerClaim.ownershipTransfer')}
               </p>
             )}
             <p className="font-medium text-gray-900">{preview.license_plate}</p>
@@ -146,24 +148,24 @@ export default function OwnerClaimPage() {
 
             {isTransfer && previewToken?.new_license_plate && (
               <p className="text-sm text-amber-800 mt-2">
-                New registration plate: <strong>{previewToken.new_license_plate}</strong>
+                {t('ownerClaim.newPlate')} <strong>{previewToken.new_license_plate}</strong>
               </p>
             )}
 
             {transfer && (
               <div className="mt-3 space-y-1 text-xs text-gray-700">
                 <p>
-                  <span className="text-gray-500">From:</span>{' '}
+                  <span className="text-gray-500">{t('ownerClaim.from')}</span>{' '}
                   <span className="font-medium">
-                    {transfer.from_owner?.name || 'Unknown'}
+                    {transfer.from_owner?.name || t('ownerClaim.unknown')}
                   </span>
                 </p>
                 <p>
-                  <span className="text-gray-500">Initiated by:</span>{' '}
+                  <span className="text-gray-500">{t('ownerClaim.initiatedBy')}</span>{' '}
                   <span className="font-medium">{transfer.initiator_username}</span>
                   {transfer.tenant_name && (
                     <>
-                      {' at '}
+                      {t('ownerClaim.atSeparator')}
                       <span className="font-medium">{transfer.tenant_name}</span>
                     </>
                   )}
@@ -173,7 +175,7 @@ export default function OwnerClaimPage() {
                 </p>
                 {transfer.billing && (
                   <p className="pt-1 border-t border-amber-200 mt-2">
-                    <span className="text-gray-500">Transfer fee:</span>{' '}
+                    <span className="text-gray-500">{t('ownerClaim.transferFee')}</span>{' '}
                     <span className="font-semibold">
                       {transfer.billing.fee_amount} {transfer.billing.fee_currency}
                     </span>
@@ -185,14 +187,14 @@ export default function OwnerClaimPage() {
             )}
 
             {isValid === false && (
-              <p className="text-sm text-amber-700 mt-2">This code is expired or already used.</p>
+              <p className="text-sm text-amber-700 mt-2">{t('ownerClaim.expired')}</p>
             )}
           </div>
         )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
         {success && (
-          <p className="text-sm text-green-700">Vehicle added to your inventory!</p>
+          <p className="text-sm text-green-700">{t('ownerClaim.addedSuccess')}</p>
         )}
 
         <button
@@ -207,11 +209,11 @@ export default function OwnerClaimPage() {
         >
           {loading
             ? isTransfer
-              ? 'Confirming…'
-              : 'Adding…'
+              ? t('ownerClaim.confirming')
+              : t('ownerClaim.adding')
             : isTransfer
-              ? 'Confirm ownership transfer'
-              : 'Add to my vehicles'}
+              ? t('ownerClaim.confirmTransfer')
+              : t('ownerClaim.addToMyVehicles')}
         </button>
       </div>
 

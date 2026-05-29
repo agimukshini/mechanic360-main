@@ -195,11 +195,11 @@ export default function InspectionForm() {
     const accepted: string[] = []
     for (const file of files) {
       if (!file.type.startsWith('image/')) {
-        showToast('Please select an image file', 'info')
+        showToast(t('inspectionForm.imageOnly'), 'info')
         continue
       }
       if (file.size > 10 * 1024 * 1024) {
-        showToast(`File too large (${file.name}). Max 10MB.`, 'error')
+        showToast(t('inspectionForm.fileTooLarge', { name: file.name }), 'error')
         continue
       }
       const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -281,7 +281,7 @@ export default function InspectionForm() {
                 <span className="w-8 h-8 bg-workshop-blue/10 text-workshop-blue rounded-lg flex items-center justify-center text-sm">
                   {section.name[0]}
                 </span>
-                {section.name}
+                {t(`inspectionForm.sections.${section.name}`, { defaultValue: section.name })}
               </h2>
               <label className="cursor-pointer">
                 <input
@@ -324,7 +324,7 @@ export default function InspectionForm() {
               {section.items.map((item) => (
                 <div key={item.name} className="p-4 bg-workshop-charcoal/5 rounded-lg">
                   <label className="block text-sm font-medium text-workshop-charcoal mb-2">
-                    {item.name}
+                    {t(`inspectionForm.items.${item.name}`, { defaultValue: item.name })}
                   </label>
 
                   {item.type === 'pass_fail' && (
@@ -339,7 +339,7 @@ export default function InspectionForm() {
                         }`}
                       >
                         <CheckCircle className="w-4 h-4" />
-                        Pass
+                        {t('inspectionForm.pass')}
                       </button>
                       <button
                         type="button"
@@ -351,7 +351,7 @@ export default function InspectionForm() {
                         }`}
                       >
                         <XCircle className="w-4 h-4" />
-                        Fail
+                        {t('inspectionForm.fail')}
                       </button>
                     </div>
                   )}
@@ -390,7 +390,13 @@ export default function InspectionForm() {
                           }`}
                         >
                           <AlertTriangle className="w-4 h-4 mx-auto mb-1" />
-                          {level}
+                          {t(
+                            level === 'green'
+                              ? 'inspectionForm.severityGreen'
+                              : level === 'yellow'
+                                ? 'inspectionForm.severityYellow'
+                                : 'inspectionForm.severityRed',
+                          )}
                         </button>
                       ))}
                     </div>

@@ -1,10 +1,20 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ownerApi, authApi } from '@/api'
 import { getApiErrorMessage } from '@/lib/utils'
-import OwnerLayout from '@/components/layout/OwnerLayout'
+
+const FIELD_LABEL_KEY: Record<string, string> = {
+  username: 'ownerRegister.username',
+  email: 'ownerRegister.email',
+  password: 'ownerRegister.password',
+  first_name: 'ownerRegister.firstName',
+  last_name: 'ownerRegister.lastName',
+  phone: 'ownerRegister.phone',
+}
 
 export default function OwnerRegisterPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [form, setForm] = useState({
     username: '',
@@ -26,7 +36,7 @@ export default function OwnerRegisterPage() {
       await authApi.login(form.username, form.password)
       navigate('/owner/vehicles')
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Registration failed'))
+      setError(getApiErrorMessage(err, t('ownerRegister.registrationFailed')))
     } finally {
       setLoading(false)
     }
@@ -35,9 +45,9 @@ export default function OwnerRegisterPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-blue-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Create owner account</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('ownerRegister.title')}</h1>
         <p className="text-sm text-gray-600 mb-6">
-          Register to add vehicles from workshop QR codes to your personal inventory.
+          {t('ownerRegister.subtitle')}
         </p>
 
         {error && (
@@ -48,8 +58,8 @@ export default function OwnerRegisterPage() {
           {(['username', 'email', 'password', 'first_name', 'last_name', 'phone'] as const).map(
             (field) => (
               <div key={field}>
-                <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                  {field.replace('_', ' ')}
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t(FIELD_LABEL_KEY[field])}
                   {field === 'username' || field === 'email' || field === 'password' ? ' *' : ''}
                 </label>
                 <input
@@ -67,20 +77,20 @@ export default function OwnerRegisterPage() {
             disabled={loading}
             className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg disabled:opacity-50"
           >
-            {loading ? 'Creating account…' : 'Register'}
+            {loading ? t('ownerRegister.creating') : t('ownerRegister.register')}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          Already have an account?{' '}
+          {t('ownerRegister.alreadyHaveAccount')}{' '}
           <Link to="/login" className="text-blue-600 hover:underline">
-            Sign in
+            {t('ownerRegister.signIn')}
           </Link>
         </p>
         <p className="mt-2 text-center text-sm text-gray-500">
-          Workshop staff?{' '}
+          {t('ownerRegister.workshopStaff')}{' '}
           <Link to="/register" className="text-blue-600 hover:underline">
-            Register a workshop
+            {t('ownerRegister.registerWorkshop')}
           </Link>
         </p>
       </div>

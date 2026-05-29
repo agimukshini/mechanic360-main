@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
 import { tenantsApi } from '@/api'
 
 export default function AdminGlobalPage() {
+  const { t } = useTranslation()
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-global'],
     queryFn: () => tenantsApi.getGlobalRegistry(),
@@ -17,7 +19,7 @@ export default function AdminGlobalPage() {
   }
 
   if (error || !data?.data) {
-    return <div className="card p-8 text-red-700">Failed to load global registry.</div>
+    return <div className="card p-8 text-red-700">{t('adminGlobal.loadFailed')}</div>
   }
 
   const { summary, recent_vehicles } = data.data
@@ -25,19 +27,19 @@ export default function AdminGlobalPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-workshop-charcoal">Global registry</h2>
+        <h2 className="text-2xl font-bold text-workshop-charcoal">{t('adminGlobal.title')}</h2>
         <p className="text-workshop-charcoal/60 mt-1">
-          Platform-wide vehicle and owner data (read-only)
+          {t('adminGlobal.subtitle')}
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {[
-          { label: 'Global vehicles', value: summary.global_vehicles },
-          { label: 'Active vehicles', value: summary.global_vehicles_active },
-          { label: 'Global owners', value: summary.global_owners },
-          { label: 'Owner accounts', value: summary.owner_accounts },
-          { label: 'Pending claim tokens', value: summary.claim_tokens_pending },
+          { label: t('adminGlobal.globalVehicles'), value: summary.global_vehicles },
+          { label: t('adminGlobal.activeVehicles'), value: summary.global_vehicles_active },
+          { label: t('adminGlobal.globalOwners'), value: summary.global_owners },
+          { label: t('adminGlobal.ownerAccounts'), value: summary.owner_accounts },
+          { label: t('adminGlobal.pendingClaims'), value: summary.claim_tokens_pending },
         ].map((item) => (
           <div key={item.label} className="card p-5">
             <p className="text-sm text-workshop-charcoal/60">{item.label}</p>
@@ -48,26 +50,26 @@ export default function AdminGlobalPage() {
 
       <div className="card overflow-hidden">
         <div className="px-6 py-4 border-b border-workshop-charcoal/10">
-          <h3 className="font-semibold text-workshop-charcoal">Recently registered vehicles</h3>
+          <h3 className="font-semibold text-workshop-charcoal">{t('adminGlobal.recentVehicles')}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-workshop-charcoal/5">
               <tr>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Plate
+                  {t('adminGlobal.tablePlate')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  VIN
+                  {t('adminGlobal.tableVin')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Vehicle
+                  {t('adminGlobal.tableVehicle')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Registered by
+                  {t('adminGlobal.tableRegisteredBy')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Registered
+                  {t('adminGlobal.tableRegistered')}
                 </th>
               </tr>
             </thead>

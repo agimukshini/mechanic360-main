@@ -68,7 +68,7 @@ export default function Header({ onOpenMobileNav }: HeaderProps) {
           type="button"
           onClick={onOpenMobileNav}
           className="lg:hidden w-10 h-10 shrink-0 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-primary hover:bg-gray-50 transition-colors shadow-sm"
-          aria-label="Open menu"
+          aria-label={t('a11y.openMenu')}
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -87,7 +87,7 @@ export default function Header({ onOpenMobileNav }: HeaderProps) {
           type="button"
           onClick={() => setMobileSearchOpen((open) => !open)}
           className="lg:hidden w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-primary shadow-sm"
-          aria-label="Search"
+          aria-label={t('a11y.search')}
         >
           <Search className="w-5 h-5" />
         </button>
@@ -98,7 +98,7 @@ export default function Header({ onOpenMobileNav }: HeaderProps) {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
             <input
               type="search"
-              placeholder="Search vehicles, clients..."
+              placeholder={t('header.searchPlaceholder')}
               className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-accent focus:border-accent outline-none text-gray-900 text-sm shadow-sm"
             />
           </div>
@@ -113,7 +113,7 @@ export default function Header({ onOpenMobileNav }: HeaderProps) {
           type="button"
           onClick={() => navigate('/settings')}
           className="hidden lg:flex w-10 h-10 rounded-full bg-white border border-gray-200 items-center justify-center text-gray-500 hover:text-primary hover:bg-gray-50 transition-colors shadow-sm"
-          title="Settings"
+          title={t('a11y.settings')}
         >
           <Settings className="w-5 h-5" />
         </button>
@@ -123,7 +123,7 @@ export default function Header({ onOpenMobileNav }: HeaderProps) {
             type="button"
             onClick={() => setShowNotifications(!showNotifications)}
             className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-primary hover:bg-gray-50 transition-colors shadow-sm relative"
-            title="Notifications"
+            title={t('a11y.notifications')}
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
@@ -136,7 +136,7 @@ export default function Header({ onOpenMobileNav }: HeaderProps) {
           {showNotifications && (
             <div className="absolute right-0 top-12 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
               <div className="p-3 border-b border-gray-100 bg-gray-50">
-                <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
+                <h3 className="font-semibold text-gray-900 text-sm">{t('header.notifications')}</h3>
               </div>
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length > 0 ? (
@@ -169,7 +169,7 @@ export default function Header({ onOpenMobileNav }: HeaderProps) {
                     </button>
                   ))
                 ) : (
-                  <div className="p-6 text-center text-gray-400 text-sm">No notifications</div>
+                  <div className="p-6 text-center text-gray-400 text-sm">{t('header.noNotifications')}</div>
                 )}
               </div>
             </div>

@@ -1,10 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 import { Car, LogOut, QrCode } from 'lucide-react'
 import { logoutUser } from '@/store/authSlice'
 import type { AppDispatch } from '@/store'
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation()
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
 
@@ -19,7 +21,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Car className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-lg">Workshop360 — My Vehicles</span>
+            <span className="font-bold text-lg">Workshop360 — {t('ownerLayout.myVehicles')}</span>
           </div>
           <nav className="flex items-center gap-4">
             <NavLink
@@ -28,7 +30,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
                 `text-sm font-medium ${isActive ? 'text-blue-300' : 'text-gray-300 hover:text-white'}`
               }
             >
-              My vehicles
+              {t('ownerLayout.myVehicles')}
             </NavLink>
             <NavLink
               to="/owner/claim"
@@ -37,7 +39,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
               }
             >
               <QrCode className="w-4 h-4" />
-              Add vehicle
+              {t('ownerLayout.addVehicle')}
             </NavLink>
             <button
               type="button"
@@ -45,7 +47,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
               className="text-sm text-gray-300 hover:text-white flex items-center gap-1"
             >
               <LogOut className="w-4 h-4" />
-              Log out
+              {t('ownerLayout.logout')}
             </button>
           </nav>
         </div>

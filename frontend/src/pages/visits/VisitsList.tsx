@@ -132,12 +132,12 @@ export default function VisitsList() {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">Vehicle</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">Date</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">Mileage</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">Total</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">Status</th>
-                    <th className="text-right px-6 py-3 text-xs font-medium text-secondary uppercase">Actions</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">{t('visits.vehicle')}</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">{t('visits.date')}</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">{t('visits.mileage')}</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">{t('visits.total')}</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-secondary uppercase">{t('visits.status')}</th>
+                    <th className="text-right px-6 py-3 text-xs font-medium text-secondary uppercase">{t('visits.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">

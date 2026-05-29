@@ -132,7 +132,7 @@ export default function VisitDetail() {
       }
       setShowConfirmDialog(null)
       if (response.data?.already_completed) {
-        showToast('This visit was already completed.', 'info')
+        showToast(t('visits.alreadyCompleted'), 'info')
       }
     },
     onError: (error: unknown) => {
@@ -142,10 +142,10 @@ export default function VisitDetail() {
         isAlreadyClosedVisitError(error)
       ) {
         queryClient.invalidateQueries({ queryKey: ['visit', id] })
-        showToast('This visit is already completed.', 'info')
+        showToast(t('visits.alreadyCompletedShort'), 'info')
         return
       }
-      showError(error, 'Failed to finish visit')
+      showError(error, t('visits.finishFailed'))
     },
   })
 
@@ -179,7 +179,7 @@ export default function VisitDetail() {
   })
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>
+    return <div className="flex items-center justify-center h-64">{t('visits.loading')}</div>
   }
 
   const visit = visitData?.data
@@ -275,10 +275,10 @@ export default function VisitDetail() {
     workSegment === 'services' ? serviceRows : workSegment === 'parts' ? materialRows : laborRows
   const activeWorkEmpty =
     workSegment === 'services'
-      ? 'No services added yet'
+      ? t('visits.noServicesYet')
       : workSegment === 'parts'
-        ? 'No parts added yet'
-        : 'No labor added yet'
+        ? t('visits.noPartsYet')
+        : t('visits.noLaborYet')
   const activeWorkDelete =
     workSegment === 'services'
       ? guardedDelete(serviceLines, (lineId) => deleteServiceLineMutation.mutate(lineId))
@@ -302,7 +302,7 @@ export default function VisitDetail() {
         setReportPreviewUrl(createPdfObjectUrl(blob))
       }
     } catch (error) {
-      showError(error, getServiceReportErrorMessage(error, 'Failed to generate service report'))
+      showError(error, getServiceReportErrorMessage(error, t('visits.reportFailedView')))
     } finally {
       setReportAction(null)
     }
@@ -314,10 +314,10 @@ export default function VisitDetail() {
       const blob = await fetchServiceReportBlob(id, 'inline')
       openServiceReportInNewTab(
         blob,
-        `Service report \u2014 ${visit?.vehicle?.license_plate || id.slice(0, 8)}`,
+        `${t('visits.reportTitle')} \u2014 ${visit?.vehicle?.license_plate || id.slice(0, 8)}`,
       )
     } catch (error) {
-      showError(error, getServiceReportErrorMessage(error, 'Failed to open report'))
+      showError(error, getServiceReportErrorMessage(error, t('visits.reportFailedOpen')))
     }
   }
 
@@ -337,7 +337,7 @@ export default function VisitDetail() {
       link.remove()
     } catch (error) {
       console.error('Failed to print sticker:', error)
-      showError(error, 'Failed to generate sticker')
+      showError(error, t('visits.stickerFailed'))
     }
   }
 
@@ -351,7 +351,7 @@ export default function VisitDetail() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-workshop-charcoal">
-              Visit #{id?.slice(0, 8)}
+              {t('visits.visitNumber', { id: id?.slice(0, 8) })}
             </h1>
             <p className="text-workshop-charcoal/60">
               {visit.vehicle?.license_plate} - {visit.vehicle?.make} {visit.vehicle?.model}
@@ -365,15 +365,15 @@ export default function VisitDetail() {
         active={activeTab}
         onChange={(id) => setActiveTab(id as typeof activeTab)}
         tabs={[
-          { id: 'overview', label: 'Overview', icon: Gauge },
+          { id: 'overview', label: t('visits.tabOverview'), icon: Gauge },
           {
             id: 'work',
-            label: 'Work',
+            label: t('visits.tabWork'),
             icon: Wrench,
             badge: serviceLines.length + materialLines.length + laborLines.length || undefined,
           },
-          { id: 'inspection', label: 'Inspection', icon: ClipboardList },
-          { id: 'report', label: 'Report', icon: FileText, hidden: !canExport },
+          { id: 'inspection', label: t('visits.tabInspection'), icon: ClipboardList },
+          { id: 'report', label: t('visits.tabReport'), icon: FileText, hidden: !canExport },
         ]}
       />
 
@@ -383,15 +383,15 @@ export default function VisitDetail() {
       {canEdit && canManageVisit && (
         <div className="card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="font-semibold">Open visit</h2>
+            <h2 className="font-semibold">{t('visits.openVisit')}</h2>
             <p className="text-sm text-workshop-charcoal/60 mt-1">
-              Add work items and finish when ready. The 360° inspection is optional.
+              {t('visits.openVisitHint')}
             </p>
           </div>
           <div className="flex gap-3 flex-wrap">
             <Link to={`/visits/${id}/edit`} className="btn btn-primary">
               <Pencil className="w-4 h-4 mr-2" />
-              Edit visit
+              {t('visits.editVisit')}
             </Link>
             {canFinish && (
               <button
@@ -400,7 +400,7 @@ export default function VisitDetail() {
                 disabled={finishVisitMutation.isPending}
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Finish visit
+                {t('visits.finishVisit')}
               </button>
             )}
             {canCancel && (
@@ -410,7 +410,7 @@ export default function VisitDetail() {
                 disabled={cancelVisitMutation.isPending}
               >
                 <XCircle className="w-4 h-4 mr-2" />
-                Cancel Visit
+                {t('visits.cancelVisit')}
               </button>
             )}
           </div>
@@ -429,20 +429,19 @@ export default function VisitDetail() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="card p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">
-              {showConfirmDialog === 'finish' && 'Finish visit?'}
-              {showConfirmDialog === 'cancel' && 'Cancel visit?'}
+              {showConfirmDialog === 'finish' && t('visits.confirmFinishTitle')}
+              {showConfirmDialog === 'cancel' && t('visits.confirmCancelTitle')}
             </h3>
             <p className="text-workshop-charcoal/60 mb-6">
-              {showConfirmDialog === 'finish' &&
-                'This will complete the visit, update vehicle mileage/hours, and lock the record.'}
-              {showConfirmDialog === 'cancel' && 'This will cancel the visit.'}
+              {showConfirmDialog === 'finish' && t('visits.confirmFinishBody')}
+              {showConfirmDialog === 'cancel' && t('visits.confirmCancelBody')}
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowConfirmDialog(null)}
                 className="btn btn-outline"
               >
-                No
+                {t('visits.confirmNo')}
               </button>
               <button
                 onClick={() => {
@@ -453,7 +452,7 @@ export default function VisitDetail() {
                   showConfirmDialog === 'cancel' ? 'btn-danger' : 'btn-primary'
                 }`}
               >
-                Yes
+                {t('visits.confirmYes')}
               </button>
             </div>
           </div>
@@ -466,37 +465,36 @@ export default function VisitDetail() {
         <div className="card p-6">
           <div className="flex items-center gap-3 mb-4">
             <ClipboardList className="w-5 h-5 text-workshop-blue" />
-            <h2 className="font-semibold">Visit Details</h2>
+            <h2 className="font-semibold">{t('visits.visitDetails')}</h2>
           </div>
           <div className="space-y-3 text-sm">
             <div>
-              <span className="text-workshop-charcoal/40">Date</span>
+              <span className="text-workshop-charcoal/40">{t('visits.date')}</span>
               <p>{new Date(visit.service_date).toLocaleString()}</p>
             </div>
             <div>
-              <span className="text-workshop-charcoal/40">Mileage</span>
+              <span className="text-workshop-charcoal/40">{t('visits.mileage')}</span>
               <p>{visit.mileage_km.toLocaleString()} km</p>
             </div>
             <div>
-              <span className="text-workshop-charcoal/40">Hour Meter</span>
-              <p>{visit.hour_meter} hrs</p>
+              <span className="text-workshop-charcoal/40">{t('visits.hourMeter')}</span>
+              <p>{visit.hour_meter} {t('visits.hourMeterUnit')}</p>
             </div>
             {visit.notes && (
               <div>
-                <span className="text-workshop-charcoal/40">Notes</span>
+                <span className="text-workshop-charcoal/40">{t('visits.notes')}</span>
                 <p>{visit.notes}</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Vehicle Info */}
         <div className="card p-6">
           <div className="flex items-center gap-3 mb-4">
             <svg className="w-5 h-5 text-workshop-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
-            <h2 className="font-semibold">Vehicle</h2>
+            <h2 className="font-semibold">{t('visits.vehicle')}</h2>
           </div>
           <div className="space-y-3 text-sm">
             {(() => {
@@ -510,7 +508,7 @@ export default function VisitDetail() {
               const ownerEmail = visit.client?.email || visit.vehicle?.owner?.email || ''
               return (
                 <div>
-                  <span className="text-workshop-charcoal/40">Owner</span>
+                  <span className="text-workshop-charcoal/40">{t('visits.owner')}</span>
                   {ownerName ? (
                     <>
                       <p className="font-medium">{ownerName}</p>
@@ -522,7 +520,7 @@ export default function VisitDetail() {
                     </>
                   ) : (
                     <p className="text-workshop-charcoal/60 italic">
-                      No owner assigned
+                      {t('visits.noOwnerAssigned')}
                       {visit.vehicle?.id && (
                         <>
                           {' · '}
@@ -530,7 +528,7 @@ export default function VisitDetail() {
                             href={`/vehicles/${visit.vehicle.id}`}
                             className="text-accent underline hover:no-underline"
                           >
-                            assign one
+                            {t('visits.assignOwner')}
                           </a>
                         </>
                       )}
@@ -541,12 +539,12 @@ export default function VisitDetail() {
             })()}
             {visit.vehicle?.description && (
               <div>
-                <span className="text-workshop-charcoal/40">Notes</span>
+                <span className="text-workshop-charcoal/40">{t('visits.notes')}</span>
                 <p className="whitespace-pre-wrap">{visit.vehicle.description}</p>
               </div>
             )}
             <div>
-              <span className="text-workshop-charcoal/40">VIN</span>
+              <span className="text-workshop-charcoal/40">{t('visits.vin')}</span>
               <p className="font-mono">{visit.vehicle?.vin || '—'}</p>
             </div>
           </div>
@@ -591,11 +589,11 @@ export default function VisitDetail() {
             active={workSegment}
             onChange={(id) => setWorkSegment(id as typeof workSegment)}
             tabs={[
-              { id: 'services', label: 'Services', badge: serviceLines.length || undefined },
+              { id: 'services', label: t('visits.tabServices'), badge: serviceLines.length || undefined },
               ...(canManageVisit
-                ? [{ id: 'parts' as const, label: 'Parts', badge: materialLines.length || undefined }]
+                ? [{ id: 'parts' as const, label: t('visits.tabParts'), badge: materialLines.length || undefined }]
                 : []),
-              { id: 'labor', label: 'Labor', badge: laborLines.length || undefined },
+              { id: 'labor', label: t('visits.tabLabor'), badge: laborLines.length || undefined },
             ]}
           />
           <div className="flex items-center gap-3 shrink-0">
@@ -605,7 +603,11 @@ export default function VisitDetail() {
             {canEditWork && (workSegment !== 'parts' || canManageVisit) && (
               <button type="button" onClick={openAddForWorkSegment} className="btn btn-primary">
                 <Plus className="w-4 h-4 mr-1" />
-                Add {workSegment === 'services' ? 'service' : workSegment === 'parts' ? 'part' : 'labor'}
+                {workSegment === 'services'
+                  ? t('visits.addService')
+                  : workSegment === 'parts'
+                    ? t('visits.addPart')
+                    : t('visits.addLabor')}
               </button>
             )}
           </div>
@@ -626,7 +628,7 @@ export default function VisitDetail() {
 
       <div className="card p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Visit total</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('visits.visitTotal')}</h2>
           <span className="text-2xl font-bold text-accent tabular-nums">{formatEuro(visitTotal)}</span>
         </div>
       </div>
@@ -637,10 +639,10 @@ export default function VisitDetail() {
       <>
       {!inspection ? (
         <div className="card p-6 text-center">
-          <p className="text-secondary mb-4">No inspection recorded for this visit.</p>
+          <p className="text-secondary mb-4">{t('visits.noInspection')}</p>
           {canEditWork && (
             <Link to={`/visits/${id}/inspection/new`} className="btn btn-primary">
-              Start 360° inspection
+              {t('visits.startInspection')}
             </Link>
           )}
         </div>
@@ -649,19 +651,19 @@ export default function VisitDetail() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <ClipboardList className="w-5 h-5 text-workshop-blue" />
-              <h2 className="font-semibold">360° Inspection</h2>
+              <h2 className="font-semibold">{t('visits.inspectionTitle')}</h2>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm text-workshop-charcoal/40">
                 {inspection.performed_at
-                  ? `Performed ${new Date(inspection.performed_at).toLocaleString()}`
-                  : 'Inspection on file'}
+                  ? t('visits.inspectionPerformed', { date: new Date(inspection.performed_at).toLocaleString() })
+                  : t('visits.inspectionOnFile')}
               </span>
               <Link
                 to={`/inspections/${inspection.id}`}
                 className="btn btn-outline btn-sm"
               >
-                View Full
+                {t('visits.viewFull')}
               </Link>
             </div>
           </div>
@@ -708,7 +710,7 @@ export default function VisitDetail() {
           </button>
           <button type="button" onClick={handlePrintSticker} className="btn btn-outline w-full">
             <Printer className="w-4 h-4 mr-2" />
-            Print door sticker
+            {t('visits.printDoorSticker')}
           </button>
         </div>
       )}
@@ -750,29 +752,30 @@ function ReportPreviewModal({
   onOpenNewTab: () => void
   onDownload: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-workshop-charcoal/90">
       <div className="flex items-center justify-between gap-3 px-4 py-3 bg-workshop-charcoal text-white shrink-0">
         <div>
-          <p className="font-semibold">Service report</p>
+          <p className="font-semibold">{t('visits.reportTitle')}</p>
           {plate && <p className="text-sm text-white/70">{plate}</p>}
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={onDownload} className="btn btn-outline btn-sm text-white border-white/30 hover:bg-white/10">
             <FileDown className="w-4 h-4 mr-1" />
-            Download
+            {t('visits.reportDownload')}
           </button>
           <button type="button" onClick={onOpenNewTab} className="btn btn-outline btn-sm text-white border-white/30 hover:bg-white/10">
-            New tab
+            {t('visits.reportNewTab')}
           </button>
-          <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-white/10" aria-label="Close preview">
+          <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-white/10" aria-label={t('visits.reportClose')}>
             <X className="w-5 h-5" />
           </button>
         </div>
       </div>
       <iframe
         src={url}
-        title="Service report preview"
+        title={t('visits.reportPreviewTitle')}
         className="flex-1 w-full min-h-0 bg-neutral-600 border-0"
       />
     </div>

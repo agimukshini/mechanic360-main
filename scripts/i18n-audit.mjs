@@ -36,7 +36,9 @@ const REFERENCE = args.reference || 'en'
 
 const PATTERNS = [
   /(?:^|[^A-Za-z0-9_$])t\(\s*(['"])([\w.\-]+)\1/g,
+  /(?:^|[^A-Za-z0-9_$])tr\(\s*(['"])([\w.\-]+)\1/g,
   /<Trans[\s\S]*?i18nKey=(['"])([\w.\-]+)\1/g,
+  /\btk\s*:\s*(['"])([\w.\-]+)\1/g,
 ]
 
 // Dynamic-key patterns. We can't statically resolve interpolations so we

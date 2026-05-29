@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { inventoryApi, api } from '@/api'
 import { Plus, Edit2, Trash2, Search, AlertTriangle, Loader2, Upload } from 'lucide-react'
 import { useState } from 'react'
@@ -7,7 +8,9 @@ import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import { canManageWorkshopData, normalizeRole } from '@/lib/roles'
 import BulkUploadModal from '@/components/BulkUploadModal'
+
 export default function InventoryList() {
+  const { t } = useTranslation()
   const user = useSelector((state: RootState) => state.auth.user)
   const canManage = canManageWorkshopData(normalizeRole(user?.role))
   const [search, setSearch] = useState('')
@@ -49,8 +52,8 @@ export default function InventoryList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-workshop-charcoal">Inventory</h1>
-          <p className="text-workshop-charcoal/60 mt-1">Manage parts and materials</p>
+          <h1 className="text-2xl font-bold text-workshop-charcoal">{t('inventory.title')}</h1>
+          <p className="text-workshop-charcoal/60 mt-1">{t('inventory.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           {canManage && (
@@ -60,41 +63,38 @@ export default function InventoryList() {
               className="btn btn-outline flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
-              Bulk Upload
+              {t('inventory.bulkUpload')}
             </button>
           )}
           <Link to="/inventory/new" className="btn btn-primary">
             <Plus className="w-4 h-4 mr-2" />
-            Add Item
+            {t('inventory.addItem')}
           </Link>
         </div>
       </div>
 
-      {/* Low Stock Alert */}
       {lowStockItems.length > 0 && (
         <div className="card p-4 border-l-4 border-l-yellow-500">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-yellow-500" />
             <span className="font-medium text-workshop-charcoal">
-              {lowStockItems.length} item(s) at or below minimum stock
+              {t('inventory.lowStockAlert', { count: lowStockItems.length })}
             </span>
           </div>
         </div>
       )}
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-workshop-charcoal/40" />
         <input
           type="text"
-          placeholder="Search inventory..."
+          placeholder={t('inventory.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="input pl-10 max-w-md"
         />
       </div>
 
-      {/* Table */}
       <div className="card overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center">
@@ -105,12 +105,12 @@ export default function InventoryList() {
             <table className="w-full">
               <thead className="bg-workshop-charcoal/5">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">SKU</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Name</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Stock</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Price</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Status</th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Actions</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('inventory.sku')}</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('inventory.name')}</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('inventory.stock')}</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('inventory.price')}</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('inventory.status')}</th>
+                  <th className="text-right px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('inventory.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-workshop-charcoal/10">
@@ -127,16 +127,16 @@ export default function InventoryList() {
                       <span className={`font-medium ${item.current_stock <= item.minimum_stock ? 'text-red-600' : 'text-workshop-charcoal'}`}>
                         {item.current_stock}
                       </span>
-                      <span className="text-workshop-charcoal/40 text-sm"> / {item.minimum_stock} min</span>
+                      <span className="text-workshop-charcoal/40 text-sm"> / {item.minimum_stock} {t('inventory.min')}</span>
                     </td>
                     <td className="px-6 py-4 text-sm">€{parseFloat(item.sale_price).toFixed(2)}</td>
                     <td className="px-6 py-4">
-                      {item.current_stock <= item.minimum_stock ? (
-                        <span className="badge badge-danger">Low Stock</span>
-                      ) : item.current_stock === 0 ? (
-                        <span className="badge badge-danger">Out of Stock</span>
+                      {item.current_stock === 0 ? (
+                        <span className="badge badge-danger">{t('inventory.outOfStock')}</span>
+                      ) : item.current_stock <= item.minimum_stock ? (
+                        <span className="badge badge-danger">{t('inventory.lowStock')}</span>
                       ) : (
-                        <span className="badge badge-success">In Stock</span>
+                        <span className="badge badge-success">{t('inventory.inStock')}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -149,7 +149,7 @@ export default function InventoryList() {
                         </Link>
                         <button
                           onClick={() => {
-                            if (confirm('Are you sure?')) {
+                            if (confirm(t('inventory.deleteConfirm'))) {
                               deleteMutation.mutate(item.id)
                             }
                           }}
@@ -166,12 +166,11 @@ export default function InventoryList() {
           </div>
         ) : (
           <div className="p-12 text-center text-workshop-charcoal/40">
-            No inventory items found
+            {t('inventory.noResults')}
           </div>
         )}
       </div>
 
-      {/* Bulk Upload Modal */}
       {showBulkUpload && (
         <BulkUploadModal
           onClose={() => setShowBulkUpload(false)}

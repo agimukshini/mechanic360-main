@@ -7,21 +7,21 @@ import { ArrowLeft, Loader2, CheckCircle, XCircle, AlertTriangle, Edit2 } from '
 import type { RootState } from '@/store'
 import { canLogVisitWork, canManageWorkshopData, normalizeRole } from '@/lib/roles'
 
-function formatValue(value: unknown): { label: string; tone: string } {
+function formatValue(value: unknown, t: (k: string) => string): { label: string; tone: string } {
   if (value === true || value === 'pass') {
-    return { label: 'Pass', tone: 'text-green-700 bg-green-50 border-green-200' }
+    return { label: t('inspectionDetail.valuePass'), tone: 'text-green-700 bg-green-50 border-green-200' }
   }
   if (value === false || value === 'fail') {
-    return { label: 'Fail', tone: 'text-red-700 bg-red-50 border-red-200' }
+    return { label: t('inspectionDetail.valueFail'), tone: 'text-red-700 bg-red-50 border-red-200' }
   }
   if (value === 'green') {
-    return { label: 'Good', tone: 'text-green-700 bg-green-50 border-green-200' }
+    return { label: t('inspectionDetail.valueGood'), tone: 'text-green-700 bg-green-50 border-green-200' }
   }
   if (value === 'yellow') {
-    return { label: 'Caution', tone: 'text-yellow-700 bg-yellow-50 border-yellow-200' }
+    return { label: t('inspectionDetail.valueCaution'), tone: 'text-yellow-700 bg-yellow-50 border-yellow-200' }
   }
   if (value === 'red') {
-    return { label: 'Critical', tone: 'text-red-700 bg-red-50 border-red-200' }
+    return { label: t('inspectionDetail.valueCritical'), tone: 'text-red-700 bg-red-50 border-red-200' }
   }
   if (typeof value === 'number') {
     return { label: `${value}%`, tone: 'text-blue-700 bg-blue-50 border-blue-200' }
@@ -118,17 +118,17 @@ export default function InspectionDetail() {
       <div className="space-y-4">
         {Object.entries(sections).map(([sectionName, items]) => (
           <div key={sectionName} className="card p-5">
-            <h2 className="text-lg font-semibold text-workshop-charcoal mb-4 capitalize">{sectionName}</h2>
+            <h2 className="text-lg font-semibold text-workshop-charcoal mb-4 capitalize">{t(`inspectionForm.sections.${sectionName}`, { defaultValue: sectionName })}</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {items && typeof items === 'object' && !Array.isArray(items)
                 ? Object.entries(items as Record<string, unknown>).map(([itemName, value]) => {
-                    const formatted = formatValue(value)
+                    const formatted = formatValue(value, t)
                     return (
                       <div
                         key={itemName}
                         className={`flex items-center justify-between p-3 rounded-lg border ${formatted.tone}`}
                       >
-                        <span className="text-sm font-medium capitalize">{itemName.replace(/_/g, ' ')}</span>
+                        <span className="text-sm font-medium capitalize">{t(`inspectionForm.items.${itemName}`, { defaultValue: itemName.replace(/_/g, ' ') })}</span>
                         <span className="text-sm font-semibold">{formatted.label}</span>
                       </div>
                     )

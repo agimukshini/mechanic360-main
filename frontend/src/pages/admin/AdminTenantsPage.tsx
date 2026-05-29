@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
 import { tenantsApi } from '@/api'
 
@@ -21,6 +22,7 @@ interface TenantRow {
 }
 
 export default function AdminTenantsPage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-dashboard'],
@@ -47,14 +49,14 @@ export default function AdminTenantsPage() {
   }
 
   if (error) {
-    return <div className="card p-8 text-red-700">Failed to load tenants.</div>
+    return <div className="card p-8 text-red-700">{t('adminTenants.loadFailed')}</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-workshop-charcoal">Tenants</h2>
-        <p className="text-workshop-charcoal/60 mt-1">Manage workshops and activation status</p>
+        <h2 className="text-2xl font-bold text-workshop-charcoal">{t('adminTenants.title')}</h2>
+        <p className="text-workshop-charcoal/60 mt-1">{t('adminTenants.subtitle')}</p>
       </div>
 
       <div className="card overflow-hidden">
@@ -63,19 +65,19 @@ export default function AdminTenantsPage() {
             <thead className="bg-workshop-charcoal/5">
               <tr>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Workshop
+                  {t('adminTenants.tableWorkshop')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Contact
+                  {t('adminTenants.tableContact')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Usage
+                  {t('adminTenants.tableUsage')}
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Status
+                  {t('adminTenants.tableStatus')}
                 </th>
                 <th className="text-right px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  Actions
+                  {t('adminTenants.tableActions')}
                 </th>
               </tr>
             </thead>
@@ -100,8 +102,12 @@ export default function AdminTenantsPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-workshop-charcoal/70">
-                    {tenant.stats.users} users · {tenant.stats.clients} clients ·{' '}
-                    {tenant.stats.vehicles} vehicles · {tenant.stats.visits} visits
+                    {t('adminTenants.usageSummary', {
+                      users: tenant.stats.users,
+                      clients: tenant.stats.clients,
+                      vehicles: tenant.stats.vehicles,
+                      visits: tenant.stats.visits,
+                    })}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -111,7 +117,7 @@ export default function AdminTenantsPage() {
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {tenant.is_active ? 'Active' : 'Inactive'}
+                      {tenant.is_active ? t('adminTenants.active') : t('adminTenants.inactive')}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -126,7 +132,7 @@ export default function AdminTenantsPage() {
                         })
                       }
                     >
-                      {tenant.is_active ? 'Deactivate' : 'Activate'}
+                      {tenant.is_active ? t('adminTenants.deactivate') : t('adminTenants.activate')}
                     </button>
                   </td>
                 </tr>

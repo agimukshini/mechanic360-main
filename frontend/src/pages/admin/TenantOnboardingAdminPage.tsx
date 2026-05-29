@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import { tenantsApi } from '@/api'
 
@@ -22,11 +23,11 @@ interface OnboardingApplication {
   created_at: string
 }
 
-const STATUS_TABS: { value: OnboardingStatus | 'all'; label: string }[] = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'all', label: 'All' },
+const STATUS_TABS: { value: OnboardingStatus | 'all'; tk: string }[] = [
+  { value: 'pending', tk: 'adminOnboarding.tabPending' },
+  { value: 'approved', tk: 'adminOnboarding.tabApproved' },
+  { value: 'rejected', tk: 'adminOnboarding.tabRejected' },
+  { value: 'all', tk: 'adminOnboarding.tabAll' },
 ]
 
 function formatDate(value: string | null) {
@@ -35,6 +36,7 @@ function formatDate(value: string | null) {
 }
 
 export default function TenantOnboardingAdminPage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState<OnboardingStatus | 'all'>('pending')
   const [rejectingId, setRejectingId] = useState<string | null>(null)
@@ -72,12 +74,18 @@ export default function TenantOnboardingAdminPage() {
 
   const applications: OnboardingApplication[] = data?.data?.results ?? data?.data ?? []
 
+  const statusLabel = (s: OnboardingStatus) => {
+    if (s === 'pending') return t('adminOnboarding.statusPending')
+    if (s === 'approved') return t('adminOnboarding.statusApproved')
+    return t('adminOnboarding.statusRejected')
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-workshop-charcoal">Onboarding queue</h2>
+        <h2 className="text-2xl font-bold text-workshop-charcoal">{t('adminOnboarding.title')}</h2>
         <p className="text-workshop-charcoal/60 mt-1">
-          Review workshop signup requests before tenant schemas and admin accounts are created.
+          {t('adminOnboarding.subtitle')}
         </p>
       </div>
 
@@ -93,7 +101,7 @@ export default function TenantOnboardingAdminPage() {
                 : 'bg-white text-workshop-charcoal border border-workshop-charcoal/10 hover:bg-workshop-charcoal/5'
             }`}
           >
-            {tab.label}
+            {t(tab.tk)}
           </button>
         ))}
       </div>
@@ -105,11 +113,15 @@ export default function TenantOnboardingAdminPage() {
           </div>
         ) : error ? (
           <div className="p-8 text-center text-red-700">
-            Failed to load onboarding applications.
+            {t('adminOnboarding.loadFailed')}
           </div>
         ) : applications.length === 0 ? (
           <div className="p-12 text-center text-workshop-charcoal/60">
-            No {statusFilter === 'all' ? '' : `${statusFilter} `}applications found.
+            {statusFilter === 'all'
+              ? t('adminOnboarding.noApplications')
+              : t('adminOnboarding.noApplicationsFiltered', {
+                  status: statusLabel(statusFilter as OnboardingStatus),
+                })}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -117,19 +129,19 @@ export default function TenantOnboardingAdminPage() {
               <thead className="bg-workshop-charcoal/5">
                 <tr>
                   <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                    Workshop
+                    {t('adminOnboarding.tableWorkshop')}
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                    Admin
+                    {t('adminOnboarding.tableAdmin')}
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                    Submitted
+                    {t('adminOnboarding.tableSubmitted')}
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                    Status
+                    {t('adminOnboarding.tableStatus')}
                   </th>
                   <th className="text-right px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                    Actions
+                    {t('adminOnboarding.tableActions')}
                   </th>
                 </tr>
               </thead>
@@ -170,7 +182,7 @@ export default function TenantOnboardingAdminPage() {
                               : 'bg-red-100 text-red-800'
                         }`}
                       >
-                        {application.status}
+                        {statusLabel(application.status)}
                       </span>
                       {application.status === 'rejected' && application.rejection_reason && (
                         <div className="text-sm text-workshop-charcoal/60 mt-2 max-w-xs">
@@ -179,7 +191,7 @@ export default function TenantOnboardingAdminPage() {
                       )}
                       {application.status === 'approved' && application.tenant_schema_name && (
                         <div className="text-sm text-workshop-charcoal/60 mt-2">
-                          Schema: {application.tenant_schema_name}
+                          {t('adminOnboarding.schemaPrefix')} {application.tenant_schema_name}
                         </div>
                       )}
                     </td>
@@ -197,7 +209,7 @@ export default function TenantOnboardingAdminPage() {
                             ) : (
                               <>
                                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Approve
+                                {t('adminOnboarding.approve')}
                               </>
                             )}
                           </button>
@@ -207,7 +219,7 @@ export default function TenantOnboardingAdminPage() {
                                 value={rejectReason}
                                 onChange={(e) => setRejectReason(e.target.value)}
                                 className="input min-h-[80px]"
-                                placeholder="Optional rejection reason"
+                                placeholder={t('adminOnboarding.rejectionPlaceholder')}
                               />
                               <div className="flex justify-end gap-2">
                                 <button
@@ -218,7 +230,7 @@ export default function TenantOnboardingAdminPage() {
                                     setRejectReason('')
                                   }}
                                 >
-                                  Cancel
+                                  {t('adminOnboarding.cancel')}
                                 </button>
                                 <button
                                   type="button"
@@ -231,7 +243,7 @@ export default function TenantOnboardingAdminPage() {
                                     })
                                   }
                                 >
-                                  Confirm reject
+                                  {t('adminOnboarding.confirmReject')}
                                 </button>
                               </div>
                             </div>
@@ -242,14 +254,14 @@ export default function TenantOnboardingAdminPage() {
                               className="btn btn-secondary"
                             >
                               <XCircle className="w-4 h-4 mr-2" />
-                              Reject
+                              {t('adminOnboarding.reject')}
                             </button>
                           )}
                         </div>
                       ) : (
                         <div className="text-right text-sm text-workshop-charcoal/60">
                           {application.reviewed_by_username
-                            ? `By ${application.reviewed_by_username}`
+                            ? t('adminOnboarding.byActor', { name: application.reviewed_by_username })
                             : '—'}
                           <div>{formatDate(application.reviewed_at)}</div>
                         </div>

@@ -29,15 +29,15 @@ interface TenantDetail {
   }
 }
 
-const STAT_LABELS: { key: keyof TenantDetail['stats']; label: string }[] = [
-  { key: 'users', label: 'Users' },
-  { key: 'clients', label: 'Clients' },
-  { key: 'vehicles', label: 'Vehicles' },
-  { key: 'visits', label: 'Visits' },
-  { key: 'inspections', label: 'Inspections' },
-  { key: 'inventory_items', label: 'Inventory items' },
-  { key: 'global_vehicles_registered', label: 'Global vehicles registered' },
-  { key: 'marketplace_listings', label: 'Marketplace listings' },
+const STAT_LABELS: { key: keyof TenantDetail['stats']; tk: string }[] = [
+  { key: 'users', tk: 'adminTenantDetail.statUsers' },
+  { key: 'clients', tk: 'adminTenantDetail.statClients' },
+  { key: 'vehicles', tk: 'adminTenantDetail.statVehicles' },
+  { key: 'visits', tk: 'adminTenantDetail.statVisits' },
+  { key: 'inspections', tk: 'adminTenantDetail.statInspections' },
+  { key: 'inventory_items', tk: 'adminTenantDetail.statInventoryItems' },
+  { key: 'global_vehicles_registered', tk: 'adminTenantDetail.statGlobalVehicles' },
+  { key: 'marketplace_listings', tk: 'adminTenantDetail.statMarketplaceListings' },
 ]
 
 interface PlatformBilling {
@@ -100,7 +100,7 @@ export default function AdminTenantDetailPage() {
   }
 
   if (error || !data?.data) {
-    return <div className="card p-8 text-red-700">Tenant not found.</div>
+    return <div className="card p-8 text-red-700">{t('adminTenantDetail.tenantNotFound')}</div>
   }
 
   const tenant = data.data as TenantDetail
@@ -121,47 +121,47 @@ export default function AdminTenantDetailPage() {
           disabled={toggleMutation.isPending}
           onClick={() => toggleMutation.mutate(!tenant.is_active)}
         >
-          {tenant.is_active ? 'Deactivate tenant' : 'Activate tenant'}
+          {tenant.is_active ? t('adminTenantDetail.deactivateTenant') : t('adminTenantDetail.activateTenant')}
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card p-6 space-y-3">
-          <h3 className="font-semibold text-workshop-charcoal">Workshop details</h3>
+          <h3 className="font-semibold text-workshop-charcoal">{t('adminTenantDetail.workshopDetails')}</h3>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-workshop-charcoal/60">Plan</dt>
+              <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.plan')}</dt>
               <dd>{tenant.subscription_plan}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-workshop-charcoal/60">Status</dt>
-              <dd>{tenant.is_active ? 'Active' : 'Inactive'}</dd>
+              <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.status')}</dt>
+              <dd>{tenant.is_active ? t('adminTenantDetail.active') : t('adminTenantDetail.inactive')}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-workshop-charcoal/60">Email</dt>
+              <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.email')}</dt>
               <dd>{tenant.contact_email || '—'}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-workshop-charcoal/60">Phone</dt>
+              <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.phone')}</dt>
               <dd>{tenant.contact_phone || '—'}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-workshop-charcoal/60">Address</dt>
+              <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.address')}</dt>
               <dd className="text-right">{tenant.address || '—'}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-workshop-charcoal/60">Created</dt>
+              <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.created')}</dt>
               <dd>{new Date(tenant.created_at).toLocaleString()}</dd>
             </div>
           </dl>
         </div>
 
         <div className="card p-6">
-          <h3 className="font-semibold text-workshop-charcoal mb-4">Usage counters</h3>
+          <h3 className="font-semibold text-workshop-charcoal mb-4">{t('adminTenantDetail.usageCounters')}</h3>
           <dl className="grid grid-cols-2 gap-4">
-            {STAT_LABELS.map(({ key, label }) => (
+            {STAT_LABELS.map(({ key, tk }) => (
               <div key={key} className="rounded-lg bg-workshop-charcoal/5 px-4 py-3">
-                <dt className="text-xs text-workshop-charcoal/60">{label}</dt>
+                <dt className="text-xs text-workshop-charcoal/60">{t(tk)}</dt>
                 <dd className="text-xl font-bold text-workshop-charcoal mt-1">
                   {tenant.stats[key]}
                 </dd>

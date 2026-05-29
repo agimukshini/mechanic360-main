@@ -65,6 +65,7 @@ async function downloadBlob(blob: Blob, filename: string) {
 }
 
 export default function OwnerVehicleDetail() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const [vehicle, setVehicle] = useState<OwnerVehicle | null>(null)
   const [visits, setVisits] = useState<AggregatedVisit[]>([])
@@ -82,9 +83,9 @@ export default function OwnerVehicleDetail() {
         setVehicle(vRes.data)
         setVisits(hRes.data.visits || [])
       })
-      .catch((err) => setError(getApiErrorMessage(err, 'Failed to load vehicle')))
+      .catch((err) => setError(getApiErrorMessage(err, t('ownerVehicleDetail.loadFailed'))))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, t])
 
   const grandTotal = visits.reduce((acc, v) => acc + (v.grand_total || 0), 0)
   const plateSlug = (vehicle?.license_plate || 'vehicle').replace(/\s+/g, '')
@@ -96,7 +97,7 @@ export default function OwnerVehicleDetail() {
       const res = await ownerApi.doorStickerPdf(id, 'attachment')
       await downloadBlob(new Blob([res.data]), `door-sticker-${plateSlug}.pdf`)
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Failed to download door sticker'))
+      setError(getApiErrorMessage(err, t('ownerVehicleDetail.stickerFailed')))
     } finally {
       setDownloadAction(null)
     }
@@ -112,7 +113,7 @@ export default function OwnerVehicleDetail() {
       window.open(url, '_blank', 'noopener')
       setTimeout(() => window.URL.revokeObjectURL(url), 30_000)
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Failed to open door sticker'))
+      setError(getApiErrorMessage(err, t('ownerVehicleDetail.stickerOpenFailed')))
     } finally {
       setDownloadAction(null)
     }
@@ -125,7 +126,7 @@ export default function OwnerVehicleDetail() {
       const res = await ownerApi.serviceBookletPdf(id, 'attachment')
       await downloadBlob(new Blob([res.data]), `service-history-${plateSlug}.pdf`)
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Failed to download service history'))
+      setError(getApiErrorMessage(err, t('ownerVehicleDetail.bookletFailed')))
     } finally {
       setDownloadAction(null)
     }
@@ -136,7 +137,7 @@ export default function OwnerVehicleDetail() {
       <OwnerLayout>
         <div className="flex items-center gap-3 text-gray-500">
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span>Loading vehicle…</span>
+          <span>{t('ownerVehicleDetail.loadingVehicle')}</span>
         </div>
       </OwnerLayout>
     )
@@ -145,9 +146,9 @@ export default function OwnerVehicleDetail() {
   if (error || !vehicle) {
     return (
       <OwnerLayout>
-        <p className="text-red-600 mb-3">{error || 'Vehicle not found.'}</p>
+        <p className="text-red-600 mb-3">{error || t('ownerVehicleDetail.vehicleNotFound')}</p>
         <Link to="/owner/vehicles" className="text-blue-600 hover:underline">
-          ← Back to my vehicles
+          {t('ownerVehicleDetail.backLink')}
         </Link>
       </OwnerLayout>
     )
@@ -161,7 +162,7 @@ export default function OwnerVehicleDetail() {
           className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
-          My vehicles
+          {t('ownerVehicleDetail.myVehicles')}
         </Link>
 
         {/* Vehicle header */}
@@ -191,17 +192,16 @@ export default function OwnerVehicleDetail() {
             </div>
             {vehicle.odometer_km != null && (
               <div className="text-left sm:text-right shrink-0">
-                <p className="text-xs uppercase tracking-wider text-blue-200">Odometer</p>
+                <p className="text-xs uppercase tracking-wider text-blue-200">{t('ownerVehicleDetail.odometer')}</p>
                 <p className="text-xl font-bold">{vehicle.odometer_km.toLocaleString()} km</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Reports panel */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Reports & documents</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('ownerVehicleDetail.reportsTitle')}</h2>
             <FileText className="w-5 h-5 text-gray-400" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -212,11 +212,11 @@ export default function OwnerVehicleDetail() {
               className="border border-gray-200 hover:border-blue-400 hover:bg-blue-50/40 rounded-xl p-4 text-left transition-colors disabled:opacity-50"
             >
               <Download className="w-5 h-5 text-blue-600 mb-2" />
-              <p className="font-semibold text-gray-900">Service history (PDF)</p>
+              <p className="font-semibold text-gray-900">{t('ownerVehicleDetail.serviceHistoryPdf')}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {downloadAction === 'booklet'
-                  ? 'Generating…'
-                  : 'All visits across every workshop.'}
+                  ? t('ownerVehicleDetail.generating')
+                  : t('ownerVehicleDetail.serviceHistoryHint')}
               </p>
             </button>
             <button
@@ -226,11 +226,11 @@ export default function OwnerVehicleDetail() {
               className="border border-gray-200 hover:border-blue-400 hover:bg-blue-50/40 rounded-xl p-4 text-left transition-colors disabled:opacity-50"
             >
               <Printer className="w-5 h-5 text-blue-600 mb-2" />
-              <p className="font-semibold text-gray-900">Door-jamb sticker (PDF)</p>
+              <p className="font-semibold text-gray-900">{t('ownerVehicleDetail.doorStickerPdf')}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {downloadAction === 'sticker'
-                  ? 'Generating…'
-                  : 'Print and stick on the door ridge.'}
+                  ? t('ownerVehicleDetail.generating')
+                  : t('ownerVehicleDetail.doorStickerHint')}
               </p>
             </button>
             <button
@@ -240,9 +240,9 @@ export default function OwnerVehicleDetail() {
               className="border border-gray-200 hover:border-blue-400 hover:bg-blue-50/40 rounded-xl p-4 text-left transition-colors disabled:opacity-50"
             >
               <QrCode className="w-5 h-5 text-blue-600 mb-2" />
-              <p className="font-semibold text-gray-900">Preview sticker</p>
+              <p className="font-semibold text-gray-900">{t('ownerVehicleDetail.previewSticker')}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {downloadAction === 'preview' ? 'Opening…' : 'Open the QR sticker in a new tab.'}
+                {downloadAction === 'preview' ? t('ownerVehicleDetail.opening') : t('ownerVehicleDetail.previewStickerHint')}
               </p>
             </button>
           </div>
@@ -254,9 +254,9 @@ export default function OwnerVehicleDetail() {
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Service history</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('ownerVehicleDetail.serviceHistoryTitle')}</h2>
               <p className="text-xs text-gray-500">
-                Visits from every workshop that has serviced this vehicle.
+                {t('ownerVehicleDetail.serviceHistorySubtitle')}
               </p>
             </div>
             <Wrench className="w-5 h-5 text-gray-400" />
@@ -264,7 +264,7 @@ export default function OwnerVehicleDetail() {
 
           {visits.length === 0 ? (
             <div className="border border-dashed border-gray-300 rounded-xl p-6 text-center text-sm text-gray-500">
-              No completed visits on record yet.
+              {t('ownerVehicleDetail.noVisitsRecorded')}
             </div>
           ) : (
             <>
@@ -272,10 +272,10 @@ export default function OwnerVehicleDetail() {
                 <table className="w-full text-sm min-w-[480px]">
                   <thead>
                     <tr className="text-left text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
-                      <th className="py-2 px-3 font-medium">Date</th>
-                      <th className="py-2 px-3 font-medium">Workshop</th>
-                      <th className="py-2 px-3 font-medium text-right">Mileage</th>
-                      <th className="py-2 px-3 font-medium text-right">Total</th>
+                      <th className="py-2 px-3 font-medium">{t('ownerVehicleDetail.tableDate')}</th>
+                      <th className="py-2 px-3 font-medium">{t('ownerVehicleDetail.tableWorkshop')}</th>
+                      <th className="py-2 px-3 font-medium text-right">{t('ownerVehicleDetail.tableMileage')}</th>
+                      <th className="py-2 px-3 font-medium text-right">{t('ownerVehicleDetail.tableTotal')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -305,7 +305,7 @@ export default function OwnerVehicleDetail() {
                 </table>
               </div>
               <div className="flex items-center justify-end gap-2 mt-4 text-sm">
-                <span className="text-gray-500">Grand total</span>
+                <span className="text-gray-500">{t('ownerVehicleDetail.grandTotal')}</span>
                 <span className="text-lg font-bold text-gray-900 tabular-nums">
                   {formatMoney(grandTotal)}
                 </span>
@@ -391,7 +391,7 @@ function OwnerVehiclePhotoGallery({ vehicleId }: { vehicleId: string }) {
             <div className="text-white text-sm mt-3 space-y-1">
               <p className="font-semibold">{lightbox.caption || '—'}</p>
               <p className="text-white/70 text-xs">
-                Uploaded by {lightbox.workshop_name}
+                {t('ownerVehicleDetail.uploadedByLabel', { workshop: lightbox.workshop_name })}
                 {lightbox.uploaded_by_username && ` · ${lightbox.uploaded_by_username}`}
                 {' · '}
                 {new Date(lightbox.created_at).toLocaleString()}

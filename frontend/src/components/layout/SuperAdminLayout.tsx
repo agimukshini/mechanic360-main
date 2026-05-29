@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 import {
   Building2,
   Car,
@@ -14,16 +15,17 @@ import { logoutUser } from '@/store/authSlice'
 import type { AppDispatch, RootState } from '@/store'
 
 const NAV_ITEMS = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/tenants', label: 'Tenants', icon: Building2 },
-  { to: '/admin/onboarding', label: 'Onboarding', icon: ClipboardList },
-  { to: '/admin/global', label: 'Global registry', icon: Car },
-  { to: '/admin/transfers', label: 'Ownership transfers', icon: Repeat },
-  { to: '/admin/audit', label: 'Vehicle audit log', icon: FileText },
-  { to: '/admin/security/logins', label: 'Login log', icon: ShieldCheck },
+  { to: '/admin', tk: 'superAdminLayout.navDashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin/tenants', tk: 'superAdminLayout.navTenants', icon: Building2 },
+  { to: '/admin/onboarding', tk: 'superAdminLayout.navOnboarding', icon: ClipboardList },
+  { to: '/admin/global', tk: 'superAdminLayout.navGlobal', icon: Car },
+  { to: '/admin/transfers', tk: 'superAdminLayout.navTransfers', icon: Repeat },
+  { to: '/admin/audit', tk: 'superAdminLayout.navAudit', icon: FileText },
+  { to: '/admin/security/logins', tk: 'superAdminLayout.navLoginLog', icon: ShieldCheck },
 ]
 
 export default function SuperAdminLayout() {
+  const { t } = useTranslation()
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const { user } = useSelector((state: RootState) => state.auth)
@@ -42,8 +44,8 @@ export default function SuperAdminLayout() {
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-workshop-charcoal">Platform Admin</h1>
-              <p className="text-sm text-workshop-charcoal/60">Workshop360 superuser console</p>
+              <h1 className="text-lg font-semibold text-workshop-charcoal">{t('superAdminLayout.platformAdmin')}</h1>
+              <p className="text-sm text-workshop-charcoal/60">{t('superAdminLayout.consoleSubtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -52,7 +54,7 @@ export default function SuperAdminLayout() {
             </span>
             <button type="button" onClick={handleLogout} className="btn btn-secondary">
               <LogOut className="w-4 h-4 mr-2" />
-              Sign out
+              {t('superAdminLayout.signOut')}
             </button>
           </div>
         </div>
@@ -61,7 +63,7 @@ export default function SuperAdminLayout() {
       <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col lg:flex-row gap-6">
         <nav className="lg:w-56 shrink-0">
           <div className="card p-2 space-y-1">
-            {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+            {NAV_ITEMS.map(({ to, tk, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -75,7 +77,7 @@ export default function SuperAdminLayout() {
                 }
               >
                 <Icon className="w-4 h-4" />
-                {label}
+                {t(tk)}
               </NavLink>
             ))}
           </div>

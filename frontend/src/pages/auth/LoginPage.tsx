@@ -107,7 +107,7 @@ export default function LoginPage() {
           </div>
 
           <p className="mt-auto pt-10 text-sm text-gray-500">
-            © 2026 ScardusTech. All rights reserved.
+            {t('loginExtra.copyright')}
           </p>
         </div>
       </div>
@@ -322,9 +322,9 @@ export default function LoginPage() {
             </Link>
           </p>
           <p className="text-center mt-3 text-sm text-gray-600">
-            Vehicle owner?{' '}
+            {t('loginExtra.vehicleOwnerPrompt')}{' '}
             <Link to="/owner/register" className="text-brand-primary font-semibold hover:underline">
-              Create owner account
+              {t('loginExtra.createOwnerAccount')}
             </Link>
           </p>
         </div>

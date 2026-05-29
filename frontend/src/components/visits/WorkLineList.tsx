@@ -1,4 +1,5 @@
 import { Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { formatEuro } from '@/lib/money'
 
 export type WorkLineRow = {
@@ -24,6 +25,7 @@ export function WorkLineList({
   onDelete,
   canDeleteLine,
 }: WorkLineListProps) {
+  const { t } = useTranslation()
   if (lines.length === 0) {
     return (
       <p className="text-base text-secondary text-center py-10 border border-dashed border-gray-200 rounded-lg">
@@ -53,7 +55,7 @@ export function WorkLineList({
                 type="button"
                 onClick={() => onDelete(line.id)}
                 className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
-                aria-label="Remove line"
+                aria-label={t('visits.removeLine')}
               >
                 <Trash2 className="w-5 h-5" />
               </button>

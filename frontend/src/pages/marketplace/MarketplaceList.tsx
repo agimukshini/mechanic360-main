@@ -1,20 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { api } from '@/api'
 import {
   Store, Plus, Search, Filter, MapPin, Phone, Mail, MessageCircle,
-  Edit2, Trash2, Tag
+  Tag
 } from 'lucide-react'
 import { useState } from 'react'
 
 const CATEGORIES = [
-  { value: 'parts', label: 'Parts' },
-  { value: 'tools', label: 'Tools' },
-  { value: 'equipment', label: 'Equipment' },
-  { value: 'other', label: 'Other' },
+  { value: 'parts', tk: 'marketplaceList.categoryParts' },
+  { value: 'tools', tk: 'marketplaceList.categoryTools' },
+  { value: 'equipment', tk: 'marketplaceList.categoryEquipment' },
+  { value: 'other', tk: 'marketplaceList.categoryOther' },
 ]
 
 export default function MarketplaceList() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
@@ -42,28 +44,26 @@ export default function MarketplaceList() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-workshop-charcoal">Marketplace</h1>
+          <h1 className="text-2xl font-bold text-workshop-charcoal">{t('marketplaceList.title')}</h1>
           <p className="text-workshop-charcoal/60 mt-1">
-            Buy and sell parts with other workshops
+            {t('marketplaceList.subtitle')}
           </p>
         </div>
         <Link to="/marketplace/new" className="btn btn-primary">
           <Plus className="w-4 h-4 mr-2" />
-          Create Listing
+          {t('marketplaceList.createListing')}
         </Link>
       </div>
 
-      {/* Filters */}
       <div className="card p-4">
         <div className="flex gap-4 flex-wrap">
           <div className="flex-1 min-w-[200px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-workshop-charcoal/40" />
             <input
               type="text"
-              placeholder="Search listings..."
+              placeholder={t('marketplaceList.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input pl-10"
@@ -76,18 +76,17 @@ export default function MarketplaceList() {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="input pl-10"
             >
-              <option value="">All Categories</option>
+              <option value="">{t('marketplaceList.allCategories')}</option>
               {CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
+                <option key={cat.value} value={cat.value}>{t(cat.tk)}</option>
               ))}
             </select>
           </div>
         </div>
       </div>
 
-      {/* Listings Grid */}
       {isLoading ? (
-        <div className="text-center py-12 text-workshop-charcoal/40">Loading...</div>
+        <div className="text-center py-12 text-workshop-charcoal/40">{t('marketplaceList.loading')}</div>
       ) : listings.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {listings.map((listing: any) => (
@@ -104,7 +103,7 @@ export default function MarketplaceList() {
 
               <h3 className="font-semibold text-workshop-charcoal mb-2">{listing.title}</h3>
               <p className="text-sm text-workshop-charcoal/60 mb-4 line-clamp-2">
-                {listing.description || 'No description'}
+                {listing.description || t('marketplaceList.noDescription')}
               </p>
 
               <div className="flex items-center gap-2 text-sm text-workshop-charcoal/60 mb-4">
@@ -138,7 +137,7 @@ export default function MarketplaceList() {
                   )}
                 </div>
                 <span className="text-sm text-workshop-charcoal/40">
-                  Qty: {listing.quantity_available}
+                  {t('marketplaceList.qtyLabel', { count: listing.quantity_available })}
                 </span>
               </div>
             </div>
@@ -147,40 +146,39 @@ export default function MarketplaceList() {
       ) : (
         <div className="card p-12 text-center">
           <Store className="w-12 h-12 text-workshop-charcoal/20 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-workshop-charcoal mb-2">No listings found</h3>
+          <h3 className="text-lg font-medium text-workshop-charcoal mb-2">{t('marketplaceList.noListings')}</h3>
           <p className="text-workshop-charcoal/60 mb-4">
             {searchTerm || selectedCategory
-              ? 'Try adjusting your search or filters'
-              : 'Be the first to list a part for sale!'}
+              ? t('marketplaceList.tryAdjusting')
+              : t('marketplaceList.beTheFirst')}
           </p>
           <Link to="/marketplace/new" className="btn btn-primary">
             <Plus className="w-4 h-4 mr-2" />
-            Create Listing
+            {t('marketplaceList.createListing')}
           </Link>
         </div>
       )}
 
-      {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="card p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Delete Listing?</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('marketplaceList.deleteTitle')}</h3>
             <p className="text-workshop-charcoal/60 mb-6">
-              This will remove the listing from the marketplace.
+              {t('marketplaceList.deleteBody')}
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="btn btn-outline"
               >
-                Cancel
+                {t('marketplaceList.cancel')}
               </button>
               <button
                 onClick={() => deleteMutation.mutate(deleteConfirm)}
                 className="btn btn-danger"
                 disabled={deleteMutation.isPending}
               >
-                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                {deleteMutation.isPending ? t('marketplaceList.deleting') : t('marketplaceList.delete')}
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { api } from '@/api'
 import {
   ClipboardCheck,
@@ -15,6 +16,7 @@ import {
 import { useState } from 'react'
 
 export default function InspectionsList() {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
 
   const { data, isLoading } = useQuery({
@@ -52,22 +54,20 @@ export default function InspectionsList() {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inspections</h1>
-          <p className="text-sm text-gray-500 mt-0.5">360° vehicle inspection reports</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('inspectionsList.title')}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{t('inspectionsList.subtitle')}</p>
         </div>
       </div>
 
-      {/* Search */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by vehicle, VIN, or inspector..."
+              placeholder={t('inspectionsList.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input pl-12 bg-gray-50 border-0"
@@ -114,7 +114,7 @@ export default function InspectionsList() {
                       <div className="flex items-center gap-2 text-sm">
                         <User className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600">
-                          {inspection.inspector?.username || 'Unknown'}
+                          {inspection.inspector?.username || t('inspectionsList.unknown')}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
@@ -126,7 +126,7 @@ export default function InspectionsList() {
                       <div className="flex items-center gap-2 text-sm">
                         <ClipboardCheck className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600">
-                          {inspection.items?.length || 0} items checked
+                          {t('inspectionsList.itemsChecked', { count: inspection.items?.length || 0 })}
                         </span>
                       </div>
                     </div>
@@ -146,7 +146,7 @@ export default function InspectionsList() {
                       ))}
                       {inspection.items?.length > 5 && (
                         <span className="text-xs text-gray-500">
-                          +{inspection.items.length - 5} more
+                          {t('inspectionsList.moreItems', { count: inspection.items.length - 5 })}
                         </span>
                       )}
                     </div>
@@ -159,9 +159,11 @@ export default function InspectionsList() {
                     inspection.overall_status === 'warning' ? 'bg-yellow-100 text-yellow-700' :
                     'bg-red-100 text-red-700'
                   }`}>
-                    {inspection.overall_status === 'pass' ? 'Passed' :
-                     inspection.overall_status === 'warning' ? 'Attention' :
-                     'Failed'}
+                    {inspection.overall_status === 'pass'
+                      ? t('inspectionsList.statusPassed')
+                      : inspection.overall_status === 'warning'
+                        ? t('inspectionsList.statusAttention')
+                        : t('inspectionsList.statusFailed')}
                   </span>
                 </div>
               </div>
@@ -171,12 +173,12 @@ export default function InspectionsList() {
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
           <ClipboardCheck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No inspections found</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('inspectionsList.empty')}</h3>
           <p className="text-gray-500 mb-6">
-            Inspections are created from visit pages or the dashboard fast inspection
+            {t('inspectionsList.emptyHint')}
           </p>
           <Link to="/visits" className="btn btn-primary">
-            Go to Visits
+            {t('inspectionsList.goToVisits')}
           </Link>
         </div>
       )}

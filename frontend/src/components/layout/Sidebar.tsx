@@ -78,7 +78,7 @@ function SidebarContent({
           type="button"
           onClick={onClose}
           className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 lg:hidden"
-          aria-label="Close menu"
+          aria-label={t('a11y.closeMenu')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -169,19 +169,36 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   }, [mobileOpen])
 
   return (
+    <SidebarShell
+      navigation={navigation}
+      mobileOpen={mobileOpen}
+      onMobileClose={onMobileClose}
+    />
+  )
+}
+
+function SidebarShell({
+  navigation,
+  mobileOpen,
+  onMobileClose,
+}: {
+  navigation: NavItem[]
+  mobileOpen: boolean
+  onMobileClose?: () => void
+}) {
+  const { t } = useTranslation()
+  return (
     <>
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[200px] bg-primary z-40 flex-col py-8 px-2 rounded-r-[32px] shadow-float">
         <SidebarContent navigation={navigation} />
       </aside>
 
-      {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Navigation menu">
+        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={t('a11y.navigationMenu')}>
           <button
             type="button"
             className="absolute inset-0 bg-black/50"
-            aria-label="Close menu"
+            aria-label={t('a11y.closeMenu')}
             onClick={onMobileClose}
           />
           <aside className="absolute left-0 top-0 bottom-0 w-[min(280px,88vw)] bg-primary flex flex-col py-6 px-2 rounded-r-[24px] shadow-float">

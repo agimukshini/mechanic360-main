@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 
 export default function VisitForm() {
+  const { t } = useTranslation()
   const { id: visitId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const vehicleIdFromUrl = searchParams.get('vehicleId')
@@ -161,7 +162,7 @@ export default function VisitForm() {
     },
     onError: (error: unknown) => {
       creatingForVehicleRef.current = null
-      showToast(getApiErrorMessage(error, 'Failed to create visit'), 'error')
+      showToast(getApiErrorMessage(error, t('visits.createFailed')), 'error')
     },
   })
 
@@ -191,10 +192,10 @@ export default function VisitForm() {
       if (activeVehicleId) {
         queryClient.invalidateQueries({ queryKey: ['vehicle', activeVehicleId] })
       }
-      showToast('Visit saved', 'success')
+      showToast(t('visits.visitSaved'), 'success')
     },
     onError: (error: unknown) =>
-      showToast(getApiErrorMessage(error, 'Failed to save visit'), 'error'),
+      showToast(getApiErrorMessage(error, t('visits.saveFailed')), 'error'),
   })
 
   const finishMutation = useMutation({
@@ -221,7 +222,7 @@ export default function VisitForm() {
       }
       const alreadyDone = response.data?.already_completed
       showToast(
-        alreadyDone ? 'This visit was already completed.' : 'Visit completed',
+        alreadyDone ? t('visits.alreadyCompleted') : t('visits.visitCompleted'),
         alreadyDone ? 'info' : 'success',
       )
       navigate(`/visits/${visitId}`, { replace: true })
@@ -232,11 +233,11 @@ export default function VisitForm() {
         isAlreadyClosedVisitError(error)
       ) {
         queryClient.invalidateQueries({ queryKey: ['visit', visitId] })
-        showToast('This visit is already completed. Opening the visit summary.', 'info')
+        showToast(t('visits.alreadyCompletedNav'), 'info')
         navigate(`/visits/${visitId}`, { replace: true })
         return
       }
-      showToast(getApiErrorMessage(error, 'Failed to finish visit'), 'error')
+      showToast(getApiErrorMessage(error, t('visits.finishFailed')), 'error')
     },
   })
 
@@ -263,7 +264,7 @@ export default function VisitForm() {
       <div className="max-w-lg mx-auto space-y-6">
         <Link to="/visits" className="inline-flex items-center gap-2 text-workshop-charcoal/60 hover:text-workshop-charcoal">
           <ArrowLeft className="w-4 h-4" />
-          Back to visits
+          {t('visits.backToVisits')}
         </Link>
         <VehiclePickerCard
           vehicles={vehicles}
@@ -279,7 +280,7 @@ export default function VisitForm() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh]">
         <Loader2 className="w-8 h-8 animate-spin text-workshop-blue" />
-        <p className="text-workshop-charcoal/60 mt-3">Starting visit...</p>
+        <p className="text-workshop-charcoal/60 mt-3">{t('visits.startingVisit')}</p>
       </div>
     )
   }
@@ -288,7 +289,7 @@ export default function VisitForm() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh]">
         <Loader2 className="w-8 h-8 animate-spin text-workshop-blue" />
-        <p className="text-workshop-charcoal/60 mt-3">Loading visit...</p>
+        <p className="text-workshop-charcoal/60 mt-3">{t('visits.loadingVisit')}</p>
       </div>
     )
   }
@@ -338,16 +339,17 @@ function VehiclePickerCard({
   setPickVehicleId: (id: string) => void
   onContinue: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="card p-6 space-y-4">
-      <h1 className="text-xl font-bold text-workshop-charcoal">New service visit</h1>
-      <p className="text-sm text-workshop-charcoal/60">Select the vehicle for this visit.</p>
+      <h1 className="text-xl font-bold text-workshop-charcoal">{t('visits.newServiceVisit')}</h1>
+      <p className="text-sm text-workshop-charcoal/60">{t('visits.selectVehicleHint')}</p>
       <select
         value={pickVehicleId}
         onChange={(e) => setPickVehicleId(e.target.value)}
         className="input w-full"
       >
-        <option value="">Choose a vehicle...</option>
+        <option value="">{t('visits.chooseVehicle')}</option>
         {vehicles.map((v) => (
           <option key={v.id} value={v.id}>
             {v.license_plate} — {v.make} {v.model}
@@ -355,7 +357,7 @@ function VehiclePickerCard({
         ))}
       </select>
       <button type="button" onClick={onContinue} disabled={!pickVehicleId} className="btn btn-primary w-full">
-        Continue
+        {t('visits.continue')}
       </button>
     </div>
   )
@@ -434,7 +436,6 @@ function VisitEditor({
   finishMutation: { mutate: () => void; isPending: boolean }
 }) {
   const { t } = useTranslation()
-  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState<'details' | 'work' | 'inspection'>('work')
   const [workSegment, setWorkSegment] = useState<'services' | 'parts' | 'labor'>('services')
 
@@ -450,7 +451,7 @@ function VisitEditor({
 
   const materialRows: WorkLineRow[] = materialLines.map((l) => ({
     id: l.id,
-    label: l.inventory_item_detail?.name || 'Part',
+    label: l.inventory_item_detail?.name || t('visits.tabParts'),
     sub: `${l.quantity} ${MULTIPLY} ${formatEuro((l as { unit_price?: string | number }).unit_price)}`,
     total: l.total_price,
   }))
@@ -475,10 +476,10 @@ function VisitEditor({
     workSegment === 'services' ? serviceRows : workSegment === 'parts' ? materialRows : laborRows
   const activeWorkEmpty =
     workSegment === 'services'
-      ? 'No services added yet'
+      ? t('visits.noServicesYet')
       : workSegment === 'parts'
-        ? 'No parts added yet'
-        : 'No labor added yet'
+        ? t('visits.noPartsYet')
+        : t('visits.noLaborYet')
   const activeWorkDelete =
     workSegment === 'services'
       ? (lineId: string) => deleteServiceMutation.mutate(lineId)
@@ -514,14 +515,14 @@ function VisitEditor({
         active={activeTab}
         onChange={(id) => setActiveTab(id as typeof activeTab)}
         tabs={[
-          { id: 'details', label: 'Details', icon: Gauge },
+          { id: 'details', label: t('visits.tabDetails'), icon: Gauge },
           {
             id: 'work',
-            label: 'Work',
+            label: t('visits.tabWork'),
             icon: Wrench,
             badge: serviceLines.length + materialLines.length + laborLines.length || undefined,
           },
-          { id: 'inspection', label: 'Inspection', icon: ClipboardList },
+          { id: 'inspection', label: t('visits.tabInspection'), icon: ClipboardList },
         ]}
       />
 
@@ -529,7 +530,7 @@ function VisitEditor({
       <div className="card p-6 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Mileage (km)</label>
+            <label className="block text-sm font-medium mb-1">{t('visits.mileageKm')}</label>
             <input
               type="number"
               min={0}
@@ -540,7 +541,7 @@ function VisitEditor({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Hour meter (hrs)</label>
+            <label className="block text-sm font-medium mb-1">{t('visits.hourMeterHrs')}</label>
             <input
               type="number"
               min={0}
@@ -552,14 +553,14 @@ function VisitEditor({
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Notes</label>
+          <label className="block text-sm font-medium mb-1">{t('visits.notes')}</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             disabled={!isEditable}
             rows={3}
             className="input w-full"
-            placeholder="Customer requests, findings..."
+            placeholder={t('visits.notesPlaceholder')}
           />
         </div>
       </div>
@@ -572,15 +573,19 @@ function VisitEditor({
             active={workSegment}
             onChange={(id) => setWorkSegment(id as typeof workSegment)}
             tabs={[
-              { id: 'services', label: 'Services', badge: serviceLines.length || undefined },
-              { id: 'parts', label: 'Parts', badge: materialLines.length || undefined },
-              { id: 'labor', label: 'Labor', badge: laborLines.length || undefined },
+              { id: 'services', label: t('visits.tabServices'), badge: serviceLines.length || undefined },
+              { id: 'parts', label: t('visits.tabParts'), badge: materialLines.length || undefined },
+              { id: 'labor', label: t('visits.tabLabor'), badge: laborLines.length || undefined },
             ]}
           />
           {isEditable && (
             <button type="button" onClick={openAddForSegment} className="btn btn-primary shrink-0">
               <Plus className="w-4 h-4 mr-1" />
-              Add {workSegment === 'services' ? 'service' : workSegment === 'parts' ? 'part' : 'labor'}
+              {workSegment === 'services'
+                ? t('visits.addService')
+                : workSegment === 'parts'
+                  ? t('visits.addPart')
+                  : t('visits.addLabor')}
             </button>
           )}
         </div>
@@ -608,12 +613,12 @@ function VisitEditor({
               </div>
               <div>
                 <p className="font-semibold text-gray-900 group-hover:text-accent transition-colors">
-                  360{'\u00b0'} inspection
+                  {t('visits.inspection360')}
                 </p>
                 <p className="text-sm text-secondary mt-0.5">
                   {inspectionComplete
-                    ? 'Checklist completed'
-                    : 'Optional — open checklist to add one'}
+                    ? t('visits.checklistCompleted')
+                    : t('visits.checklistOptional')}
                 </p>
               </div>
             </div>
@@ -621,7 +626,7 @@ function VisitEditor({
           </Link>
         ) : (
           <p className="text-sm text-secondary">
-            {inspectionComplete ? 'Inspection recorded for this visit.' : 'No inspection on file.'}
+            {inspectionComplete ? t('visits.inspectionRecorded') : t('visits.inspectionMissing')}
           </p>
         )}
       </div>
@@ -631,7 +636,7 @@ function VisitEditor({
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur-sm px-4 py-3 lg:pl-[216px]">
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="text-sm text-secondary sm:pl-1">
-              Total <span className="font-bold text-gray-900 text-lg ml-1">{formatEuro(grandTotal)}</span>
+              {t('visits.totalLabel')} <span className="font-bold text-gray-900 text-lg ml-1">{formatEuro(grandTotal)}</span>
             </div>
             <div className="flex gap-2 justify-end">
               <button
@@ -640,7 +645,7 @@ function VisitEditor({
                 disabled={saveMutation.isPending}
                 className="btn btn-outline flex-1 sm:flex-none"
               >
-                {saveMutation.isPending ? 'Saving…' : 'Save'}
+                {saveMutation.isPending ? t('visits.savingShort') : t('visits.save')}
               </button>
               <button
                 type="button"
@@ -649,7 +654,7 @@ function VisitEditor({
                 className="btn btn-primary flex-1 sm:flex-none"
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
-                {finishMutation.isPending ? 'Finishing…' : 'Finish'}
+                {finishMutation.isPending ? t('visits.finishing') : t('visits.finish')}
               </button>
             </div>
           </div>
@@ -669,6 +674,7 @@ function VisitEditor({
 }
 
 function VisitFormHeader({ visitId, visit }: { visitId: string; visit: { status: string } }) {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-3 min-w-0">
@@ -676,7 +682,7 @@ function VisitFormHeader({ visitId, visit }: { visitId: string; visit: { status:
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </Link>
         <div className="min-w-0">
-          <h1 className="text-xl font-bold text-gray-900 truncate">Service visit</h1>
+          <h1 className="text-xl font-bold text-gray-900 truncate">{t('visits.serviceVisitTitle')}</h1>
           <p className="text-sm text-secondary">#{visitId.slice(0, 8)}</p>
         </div>
       </div>

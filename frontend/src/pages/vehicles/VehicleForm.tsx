@@ -20,17 +20,18 @@ import {
 import type { RootState } from '@/store'
 import { useTranslation } from 'react-i18next'
 
+// Zod produces literal error codes; the JSX runs them through `t(`vehicles.form.${code}`)`.
 const vehicleSchema = z.object({
   owner_id: z
     .string()
     .optional()
     .refine((value) => !value || z.string().uuid().safeParse(value).success, {
-      message: 'Invalid owner selected',
+      message: 'ownerInvalid',
     }),
-  vin: z.string().min(1, 'VIN is required'),
-  license_plate: z.string().min(1, 'License plate is required'),
-  make: z.string().min(1, 'Make is required'),
-  model: z.string().min(1, 'Model is required'),
+  vin: z.string().min(1, 'vinRequired'),
+  license_plate: z.string().min(1, 'plateRequired'),
+  make: z.string().min(1, 'makeRequired'),
+  model: z.string().min(1, 'modelRequired'),
   year: z.coerce.number().min(1900).max(new Date().getFullYear() + 1),
   engine_type: z.string().optional(),
   fuel_type: z.string().optional(),
@@ -202,7 +203,7 @@ export default function VehicleForm() {
         navigate('/vehicles')
       }
     },
-    onError: (error: unknown) => showError(error, 'Failed to create vehicle'),
+    onError: (error: unknown) => showError(error, t('vehicles.form.createFailed')),
   })
 
   const updateMutation = useMutation({
@@ -215,7 +216,7 @@ export default function VehicleForm() {
       queryClient.invalidateQueries({ queryKey: ['vehicles', 'vehicle'] })
       navigate('/vehicles')
     },
-    onError: (error: unknown) => showError(error, 'Failed to update vehicle'),
+    onError: (error: unknown) => showError(error, t('vehicles.form.updateFailed')),
   })
 
   const onSubmit = (data: VehicleFormValues) => {
@@ -246,6 +247,8 @@ export default function VehicleForm() {
     return full || mechanic.username
   }
 
+  const fieldError = (msg?: string) => (msg ? t(`vehicles.form.${msg}`) : '')
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
@@ -254,80 +257,72 @@ export default function VehicleForm() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {isEdit ? 'Edit Vehicle' : 'New Vehicle'}
+            {isEdit ? t('vehicles.form.editTitle') : t('vehicles.form.newTitle')}
           </h1>
           <p className="text-gray-500 mt-1">
-            {isEdit ? 'Update vehicle information' : 'Register a vehicle at this workshop (saved to the global registry)'}
+            {isEdit ? t('vehicles.form.editSubtitle') : t('vehicles.form.newSubtitle')}
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Owner */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Owner</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('vehicles.form.ownerLabel')}</label>
             <select {...register('owner_id')} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-              <option value="">No owner yet — assign later after paperwork check</option>
+              <option value="">{t('vehicles.form.ownerNoneOption')}</option>
               {clients.map((client: any) => (
                 <option key={client.id} value={client.id}>
                   {client.type === 'company' ? client.company_name : client.name}
                 </option>
               ))}
             </select>
-            {errors.owner_id && <p className="text-sm text-red-600 mt-1">{errors.owner_id.message}</p>}
+            {errors.owner_id && <p className="text-sm text-red-600 mt-1">{fieldError(errors.owner_id.message)}</p>}
           </div>
 
-          {/* VIN */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">VIN *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('vehicles.form.vinLabel')} *</label>
             <input {...register('vin')} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="1HGCM82633A123456" />
-            {errors.vin && <p className="text-sm text-red-600 mt-1">{errors.vin.message}</p>}
+            {errors.vin && <p className="text-sm text-red-600 mt-1">{fieldError(errors.vin.message)}</p>}
           </div>
 
-          {/* License Plate */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">License Plate *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('vehicles.form.plateLabel')} *</label>
             <input {...register('license_plate')} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="ABC-1234" />
-            {errors.license_plate && <p className="text-sm text-red-600 mt-1">{errors.license_plate.message}</p>}
+            {errors.license_plate && <p className="text-sm text-red-600 mt-1">{fieldError(errors.license_plate.message)}</p>}
           </div>
 
-          {/* Make */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Make *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('vehicles.form.makeLabel')} *</label>
             <input {...register('make')} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Toyota" />
-            {errors.make && <p className="text-sm text-red-600 mt-1">{errors.make.message}</p>}
+            {errors.make && <p className="text-sm text-red-600 mt-1">{fieldError(errors.make.message)}</p>}
           </div>
 
-          {/* Model */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Model *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('vehicles.form.modelLabel')} *</label>
             <input {...register('model')} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Camry" />
-            {errors.model && <p className="text-sm text-red-600 mt-1">{errors.model.message}</p>}
+            {errors.model && <p className="text-sm text-red-600 mt-1">{fieldError(errors.model.message)}</p>}
           </div>
 
-          {/* Year */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Year *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('vehicles.form.yearLabel')} *</label>
             <input {...register('year')} type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
             {errors.year && <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>}
           </div>
 
-          {/* Engine Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Engine Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('vehicles.form.engineTypeLabel')}</label>
             <input {...register('engine_type')} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="2.5L I4" />
           </div>
 
-          {/* Fuel Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fuel Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('vehicles.form.fuelTypeLabel')}</label>
             <select {...register('fuel_type')} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-              <option value="">Select...</option>
-              <option value="Gasoline">Gasoline</option>
-              <option value="Diesel">Diesel</option>
-              <option value="Electric">Electric</option>
-              <option value="Hybrid">Hybrid</option>
+              <option value="">{t('vehicles.form.fuelSelect')}</option>
+              <option value="Gasoline">{t('vehicles.form.fuelGasoline')}</option>
+              <option value="Diesel">{t('vehicles.form.fuelDiesel')}</option>
+              <option value="Electric">{t('vehicles.form.fuelElectric')}</option>
+              <option value="Hybrid">{t('vehicles.form.fuelHybrid')}</option>
             </select>
           </div>
 
@@ -399,13 +394,12 @@ export default function VehicleForm() {
           </div>
         </div>
 
-        {/* Photo Upload */}
         <div>
           <PhotoUpload
             onUpload={handlePhotoUpload}
             currentFile={photoFile}
             currentPreview={photoPreview}
-            label="Vehicle Photo"
+            label={t('vehicles.form.photoLabel')}
             objectFit="contain"
             previewHeightClass="h-72"
             enableCameraCapture
@@ -413,30 +407,28 @@ export default function VehicleForm() {
         </div>
 
         <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-100">
-          <Link to="/vehicles" className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">Cancel</Link>
+          <Link to="/vehicles" className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">{t('vehicles.form.cancel')}</Link>
           <button type="submit" disabled={isSubmitting || createMutation.isPending || updateMutation.isPending} className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
             {(isSubmitting || createMutation.isPending || updateMutation.isPending) ? (
-              <><Loader2 className="w-4 h-4 mr-2 inline animate-spin" />Saving...</>
+              <><Loader2 className="w-4 h-4 mr-2 inline animate-spin" />{t('vehicles.form.saving')}</>
             ) : (
-              isEdit ? 'Update Vehicle' : 'Create Vehicle'
+              isEdit ? t('vehicles.form.update') : t('vehicles.form.create')
             )}
           </button>
         </div>
       </form>
 
-      {/* QR Code Modal */}
       {showQRModal && qrCodeData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
-            {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                   <QrCode className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Owner claim QR</h3>
-                  <p className="text-xs text-gray-500">Give this to the vehicle owner to add it to their app</p>
+                  <h3 className="text-lg font-bold text-gray-900">{t('vehicles.form.qrTitle')}</h3>
+                  <p className="text-xs text-gray-500">{t('vehicles.form.qrHint')}</p>
                 </div>
               </div>
               <button
@@ -450,24 +442,22 @@ export default function VehicleForm() {
               </button>
             </div>
 
-            {/* QR Code */}
             <div className="p-6 flex flex-col items-center">
               <div className="bg-white p-4 rounded-xl border-2 border-gray-200 shadow-sm">
                 <img
                   src={qrCodeData}
-                  alt="Vehicle QR Code"
+                  alt={t('vehicles.form.qrAlt')}
                   className="w-48 h-48"
                 />
               </div>
               <p className="text-sm text-gray-600 mt-4 text-center">
-                Owner scans this QR to add the vehicle to their personal inventory
+                {t('vehicles.form.qrInstruction')}
               </p>
               <p className="text-xs text-gray-400 mt-1 font-mono">
-                ID: {createdVehicleId}
+                {t('vehicles.form.qrIdLabel')}: {createdVehicleId}
               </p>
             </div>
 
-            {/* Actions */}
             <div className="p-5 border-t border-gray-100 flex gap-3">
               <button
                 onClick={() => {
@@ -476,19 +466,22 @@ export default function VehicleForm() {
                 }}
                 className="flex-1 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
               >
-                Done
+                {t('vehicles.form.qrDone')}
               </button>
               <button
                 onClick={() => {
                   printQrCode({
                     qrCodeData,
-                    lines: [`Vehicle ID: ${createdVehicleId}`, 'Scan to look up vehicle'],
+                    lines: [
+                      t('vehicles.form.qrPrintLine', { id: createdVehicleId }),
+                      t('vehicles.form.qrPrintLookup'),
+                    ],
                   })
                 }}
                 className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <Printer className="w-4 h-4" />
-                Print
+                {t('vehicles.form.qrPrint')}
               </button>
             </div>
           </div>

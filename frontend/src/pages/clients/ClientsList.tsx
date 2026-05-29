@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { clientsApi } from '@/api'
 import { Plus, Edit2, Trash2, Search, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 export default function ClientsList() {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const queryClient = useQueryClient()
 
@@ -24,31 +26,28 @@ export default function ClientsList() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-workshop-charcoal">Clients</h1>
-          <p className="text-workshop-charcoal/60 mt-1">Manage your workshop clients</p>
+          <h1 className="text-2xl font-bold text-workshop-charcoal">{t('clients.title')}</h1>
+          <p className="text-workshop-charcoal/60 mt-1">{t('clients.subtitle')}</p>
         </div>
         <Link to="/clients/new" className="btn btn-primary">
           <Plus className="w-4 h-4 mr-2" />
-          Add Client
+          {t('clients.addClient')}
         </Link>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-workshop-charcoal/40" />
         <input
           type="text"
-          placeholder="Search clients..."
+          placeholder={t('clients.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="input pl-10 max-w-md"
         />
       </div>
 
-      {/* Table */}
       <div className="card overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center">
@@ -59,11 +58,11 @@ export default function ClientsList() {
             <table className="w-full">
               <thead className="bg-workshop-charcoal/5">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Name</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Type</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Email</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Phone</th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">Actions</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('clients.name')}</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('clients.type')}</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('clients.email')}</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('clients.phone')}</th>
+                  <th className="text-right px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">{t('clients.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-workshop-charcoal/10">
@@ -79,7 +78,7 @@ export default function ClientsList() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="badge badge-info">
-                        {client.type === 'company' ? 'Company' : 'Individual'}
+                        {client.type === 'company' ? t('clients.company') : t('clients.individual')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-workshop-charcoal/60">{client.email}</td>
@@ -94,7 +93,7 @@ export default function ClientsList() {
                         </Link>
                         <button
                           onClick={() => {
-                            if (confirm('Are you sure you want to delete this client?')) {
+                            if (confirm(t('clients.deleteConfirm'))) {
                               deleteMutation.mutate(client.id)
                             }
                           }}
@@ -111,7 +110,7 @@ export default function ClientsList() {
           </div>
         ) : (
           <div className="p-12 text-center text-workshop-charcoal/40">
-            No clients found
+            {t('clients.noResults')}
           </div>
         )}
       </div>

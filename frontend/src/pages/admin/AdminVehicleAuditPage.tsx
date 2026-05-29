@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Loader2, Search } from 'lucide-react'
 import { vehicleAuditApi } from '@/api'
 
@@ -33,6 +34,7 @@ const ENTITY_COLOR: Record<string, string> = {
 }
 
 export default function AdminVehicleAuditPage() {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [tenantSchema, setTenantSchema] = useState('')
   const [entity, setEntity] = useState('')
@@ -61,9 +63,9 @@ export default function AdminVehicleAuditPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-workshop-charcoal">Vehicle audit log</h2>
+        <h2 className="text-2xl font-bold text-workshop-charcoal">{t('adminVehicleAudit.title')}</h2>
         <p className="text-workshop-charcoal/60 mt-1">
-          Every vehicle, ownership, photo and billing change across the platform.
+          {t('adminVehicleAudit.subtitle')}
         </p>
       </div>
 
@@ -73,14 +75,14 @@ export default function AdminVehicleAuditPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search note / actor / tenant…"
+            placeholder={t('adminVehicleAudit.searchPlaceholder')}
             className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
         </div>
         <input
           value={tenantSchema}
           onChange={(e) => setTenantSchema(e.target.value)}
-          placeholder="Tenant schema"
+          placeholder={t('adminVehicleAudit.tenantSchemaPlaceholder')}
           className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
         />
         <select
@@ -88,39 +90,39 @@ export default function AdminVehicleAuditPage() {
           onChange={(e) => setEntity(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
         >
-          <option value="">All entities</option>
-          <option value="vehicle">Vehicle</option>
-          <option value="ownership">Ownership</option>
-          <option value="registration">Registration</option>
-          <option value="photo">Photo</option>
-          <option value="assignment">Assignment</option>
-          <option value="archive">Archive</option>
-          <option value="billing">Billing</option>
+          <option value="">{t('adminVehicleAudit.allEntities')}</option>
+          <option value="vehicle">{t('adminVehicleAudit.entityVehicle')}</option>
+          <option value="ownership">{t('adminVehicleAudit.entityOwnership')}</option>
+          <option value="registration">{t('adminVehicleAudit.entityRegistration')}</option>
+          <option value="photo">{t('adminVehicleAudit.entityPhoto')}</option>
+          <option value="assignment">{t('adminVehicleAudit.entityAssignment')}</option>
+          <option value="archive">{t('adminVehicleAudit.entityArchive')}</option>
+          <option value="billing">{t('adminVehicleAudit.entityBilling')}</option>
         </select>
         <select
           value={action}
           onChange={(e) => setAction(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
         >
-          <option value="">All actions</option>
-          <option value="created">Created</option>
-          <option value="updated">Updated</option>
-          <option value="deleted">Deleted</option>
-          <option value="archived">Archived</option>
-          <option value="restored">Restored</option>
-          <option value="transfer_initiated">Transfer initiated</option>
-          <option value="transfer_confirmed">Transfer confirmed</option>
-          <option value="transfer_cancelled">Transfer cancelled</option>
-          <option value="transfer_expired">Transfer expired</option>
-          <option value="transfer_disputed">Transfer disputed</option>
-          <option value="transfer_reversed">Transfer reversed</option>
-          <option value="claimed">Owner claimed</option>
-          <option value="billing_changed">Billing changed</option>
+          <option value="">{t('adminVehicleAudit.allActions')}</option>
+          <option value="created">{t('adminVehicleAudit.actionCreated')}</option>
+          <option value="updated">{t('adminVehicleAudit.actionUpdated')}</option>
+          <option value="deleted">{t('adminVehicleAudit.actionDeleted')}</option>
+          <option value="archived">{t('adminVehicleAudit.actionArchived')}</option>
+          <option value="restored">{t('adminVehicleAudit.actionRestored')}</option>
+          <option value="transfer_initiated">{t('adminVehicleAudit.actionTransferInitiated')}</option>
+          <option value="transfer_confirmed">{t('adminVehicleAudit.actionTransferConfirmed')}</option>
+          <option value="transfer_cancelled">{t('adminVehicleAudit.actionTransferCancelled')}</option>
+          <option value="transfer_expired">{t('adminVehicleAudit.actionTransferExpired')}</option>
+          <option value="transfer_disputed">{t('adminVehicleAudit.actionTransferDisputed')}</option>
+          <option value="transfer_reversed">{t('adminVehicleAudit.actionTransferReversed')}</option>
+          <option value="claimed">{t('adminVehicleAudit.actionClaimed')}</option>
+          <option value="billing_changed">{t('adminVehicleAudit.actionBillingChanged')}</option>
         </select>
         <input
           value={globalVehicleId}
           onChange={(e) => setGlobalVehicleId(e.target.value)}
-          placeholder="Global vehicle id"
+          placeholder={t('adminVehicleAudit.globalVehicleIdPlaceholder')}
           className="px-3 py-2 border border-gray-300 rounded-lg text-sm sm:col-span-5"
         />
       </div>
@@ -133,7 +135,7 @@ export default function AdminVehicleAuditPage() {
 
       {!query.isLoading && events.length === 0 && (
         <div className="card p-8 text-sm text-gray-500 text-center">
-          No audit events match the current filters.
+          {t('adminVehicleAudit.noResults')}
         </div>
       )}
 
@@ -144,22 +146,22 @@ export default function AdminVehicleAuditPage() {
               <thead className="bg-workshop-charcoal/5">
                 <tr>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    When
+                    {t('adminVehicleAudit.tableWhen')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Workshop
+                    {t('adminVehicleAudit.tableWorkshop')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Actor
+                    {t('adminVehicleAudit.tableActor')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Entity / Action
+                    {t('adminVehicleAudit.tableEntityAction')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Target
+                    {t('adminVehicleAudit.tableTarget')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Changes / Note
+                    {t('adminVehicleAudit.tableChangesNote')}
                   </th>
                 </tr>
               </thead>
@@ -190,7 +192,7 @@ export default function AdminVehicleAuditPage() {
                     </td>
                     <td className="px-3 py-3 text-xs">
                       <p className="font-medium text-gray-800">
-                        {e.actor_username || <span className="text-gray-400">system</span>}
+                        {e.actor_username || <span className="text-gray-400">{t('adminVehicleAudit.system')}</span>}
                       </p>
                       <p className="text-gray-500">{e.actor_role}</p>
                       {e.request_ip && (

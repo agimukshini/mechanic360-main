@@ -223,7 +223,7 @@ export default function Dashboard() {
                 navigate(`/vehicles?search=${encodeURIComponent(decodedText)}`)
               }
             } catch {
-              showToast('Vehicle not found. Add it from Vehicles.', 'info')
+              showToast(t('dashboardExtra.vehicleNotFound'), 'info')
               navigate('/vehicles/new')
             }
           }}

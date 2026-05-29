@@ -96,10 +96,10 @@ export default function VehicleDetail() {
     mutationFn: (file: File) => vehiclesApi.documents.upload(id!, file, file.name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicle-documents', id] })
-      showToast('Document uploaded', 'success')
+      showToast(t('vehicles.detail.documentUploadedToast'), 'success')
     },
     onError: (error: unknown) => {
-      showToast(getApiErrorMessage(error, 'Upload failed'), 'error')
+      showToast(getApiErrorMessage(error, t('vehicles.detail.uploadFailed')), 'error')
     },
   })
 
@@ -107,10 +107,10 @@ export default function VehicleDetail() {
     mutationFn: (docId: string) => vehiclesApi.documents.delete(docId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicle-documents', id] })
-      showToast('Document deleted', 'success')
+      showToast(t('vehicles.detail.documentDeletedToast'), 'success')
     },
     onError: (error: unknown) => {
-      showToast(getApiErrorMessage(error, 'Delete failed'), 'error')
+      showToast(getApiErrorMessage(error, t('vehicles.detail.deleteFailed')), 'error')
     },
   })
 
@@ -123,7 +123,7 @@ export default function VehicleDetail() {
       showToast(t('vehicles.archivedSuccess'), 'success')
     },
     onError: (error: unknown) => {
-      showToast(getApiErrorMessage(error, 'Archive failed'), 'error')
+      showToast(getApiErrorMessage(error, t('vehicles.detail.archiveFailed')), 'error')
     },
   })
 
@@ -136,7 +136,7 @@ export default function VehicleDetail() {
       showToast(t('vehicles.restoredSuccess'), 'success')
     },
     onError: (error: unknown) => {
-      showToast(getApiErrorMessage(error, 'Restore failed'), 'error')
+      showToast(getApiErrorMessage(error, t('vehicles.detail.restoreFailed')), 'error')
     },
   })
 
@@ -149,7 +149,7 @@ export default function VehicleDetail() {
       navigate('/vehicles')
     },
     onError: (error: unknown) => {
-      const msg = getApiErrorMessage(error, 'Delete failed')
+      const msg = getApiErrorMessage(error, t('vehicles.detail.deleteVehicleFailed'))
       showToast(
         msg.toLowerCase().includes('visit') ? t('vehicles.deleteBlocked') : msg,
         'error',
@@ -205,23 +205,21 @@ export default function VehicleDetail() {
       const response = await vehiclesApi.ownerClaimQr(id!)
       printQrCode({
         qrCodeData: response.data.qr_code,
-        title: 'Owner claim QR',
+        title: t('vehicles.detail.qrPrintTitle'),
         lines: [
           `${vehicle.make} ${vehicle.model}`,
-          `Plate: ${vehicle.license_plate}`,
-          'Owner scans to add vehicle to their app',
+          t('vehicles.detail.qrPrintPlate', { plate: vehicle.license_plate }),
+          t('vehicles.detail.qrPrintScan'),
         ],
       })
     } catch (error) {
-      showToast(getApiErrorMessage(error, 'Failed to generate QR code'), 'error')
+      showToast(getApiErrorMessage(error, t('vehicles.detail.qrCodeFailed')), 'error')
     }
   }
 
   const handlePrintSticker = async () => {
     if (!id) return
     try {
-      // Permanent vehicle door sticker: workshop branding + QR + plate.
-      // Independent of any service visit — generated from the vehicle itself.
       const response = await vehiclesApi.doorStickerPdf(id, 'attachment')
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
@@ -233,7 +231,7 @@ export default function VehicleDetail() {
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      showToast(getApiErrorMessage(error, 'Failed to generate door sticker'), 'error')
+      showToast(getApiErrorMessage(error, t('vehicles.detail.doorStickerFailed')), 'error')
     }
   }
 
@@ -243,10 +241,9 @@ export default function VehicleDetail() {
       const response = await vehiclesApi.doorStickerPdf(id, 'inline')
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
       window.open(url, '_blank', 'noopener')
-      // Revoke after a delay to give the new tab time to load.
       setTimeout(() => window.URL.revokeObjectURL(url), 30_000)
     } catch (error) {
-      showToast(getApiErrorMessage(error, 'Failed to open door sticker'), 'error')
+      showToast(getApiErrorMessage(error, t('vehicles.detail.doorStickerOpenFailed')), 'error')
     }
   }
 
@@ -281,7 +278,7 @@ export default function VehicleDetail() {
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </Link>
         <div>
-          <h1 className="text-base font-semibold text-gray-900">Vehicle Profile</h1>
+          <h1 className="text-base font-semibold text-gray-900">{t('vehicles.detail.profile')}</h1>
           <p className="text-xs text-gray-500">{vehicle.license_plate} • {vehicle.make} {vehicle.model}</p>
         </div>
       </div>
@@ -314,18 +311,18 @@ export default function VehicleDetail() {
                 )}
                 {visits.some((v: any) => v.status === 'in_progress') && (
                   <span className="px-2 py-0.5 bg-blue-500/30 border border-blue-400/50 rounded text-[10px] font-medium text-blue-100 whitespace-nowrap">
-                    In Service
+                    {t('vehicles.detail.inServiceLabel')}
                   </span>
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-300">
                 <span className="flex items-center gap-1 min-w-0">
                   <Gauge className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">VIN: {vehicle.vin?.substring(0, 12)}…</span>
+                  <span className="truncate">{t('vehicles.detail.vinPrefix')}: {vehicle.vin?.substring(0, 12)}…</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5 shrink-0" />
-                  Year: {vehicle.year}
+                  {t('vehicles.detail.yearPrefix')}: {vehicle.year}
                 </span>
                 {vehicle.odometer_km != null && (
                   <span className="flex items-center gap-1">
@@ -388,7 +385,7 @@ export default function VehicleDetail() {
               className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors flex items-center gap-1.5 text-sm"
             >
               <QrCode className="w-4 h-4" />
-              Show owner QR
+              {t('vehicles.detail.showOwnerQr')}
             </button>
             {vehicle.is_active !== false && canManage && (
               <Link
@@ -396,7 +393,7 @@ export default function VehicleDetail() {
                 className="px-3 py-2 bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-lg transition-colors flex items-center gap-1.5 text-sm shadow-lg shadow-blue-500/30"
               >
                 <ClipboardList className="w-4 h-4" />
-                Start Visit
+                {t('vehicles.detail.startVisit')}
               </Link>
             )}
           </div>
@@ -423,10 +420,10 @@ export default function VehicleDetail() {
       <div className="border-b border-gray-200">
         <nav className="flex gap-6 overflow-x-auto">
           {[
-            { id: 'overview', label: 'Overview' },
-            { id: 'history', label: 'Visit History' },
-            { id: 'inspections', label: 'Inspections' },
-            { id: 'documents', label: 'Documents' },
+            { id: 'overview', label: t('vehicles.detail.tabOverview') },
+            { id: 'history', label: t('vehicles.detail.tabHistory') },
+            { id: 'inspections', label: t('vehicles.detail.tabInspections') },
+            { id: 'documents', label: t('vehicles.detail.tabDocuments') },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -457,15 +454,15 @@ export default function VehicleDetail() {
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-amber-900 text-sm">Vehicle Currently In Service</h3>
+                  <h3 className="font-semibold text-amber-900 text-sm">{t('vehicles.detail.alertInService')}</h3>
                   <p className="text-xs text-amber-800 mt-0.5">
-                    This vehicle has an active service visit. View or continue the visit to see inspection details.
+                    {t('vehicles.detail.alertInServiceBody')}
                   </p>
                   <Link
                     to={`/visits/${visits.find((v: any) => v.status === 'in_progress')?.id}/edit`}
                     className="mt-2 inline-block px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg transition-colors"
                   >
-                    View Active Visit
+                    {t('vehicles.detail.viewActiveVisit')}
                   </Link>
                 </div>
               </div>
@@ -475,18 +472,18 @@ export default function VehicleDetail() {
           {/* Vehicle Specifications */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold text-gray-900">Vehicle Specifications</h3>
+              <h3 className="text-base font-semibold text-gray-900">{t('vehicles.detail.specifications')}</h3>
               {canManageVehiclesData && (
               <Link to={`/vehicles/${id}/edit`} className="text-brand-primary hover:text-brand-primary-dark text-xs font-medium flex items-center gap-1">
                 <Edit2 className="w-3.5 h-3.5" />
-                Edit
+                {t('vehicles.detail.edit')}
               </Link>
               )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Engine', value: vehicle.engine_type || 'N/A' },
-                { label: 'Fuel Type', value: vehicle.fuel_type || 'N/A' },
+                { label: t('vehicles.detail.specEngine'), value: vehicle.engine_type || t('vehicles.detail.notAvailable') },
+                { label: t('vehicles.detail.specFuel'), value: vehicle.fuel_type || t('vehicles.detail.notAvailable') },
                 { label: t('vehicles.odometer'), value: odometerLabel },
                 { label: t('vehicles.hourMeter'), value: hourMeterLabel },
                 {
@@ -532,9 +529,9 @@ export default function VehicleDetail() {
           {/* Recent Visits */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold text-gray-900">Recent Visits</h3>
+              <h3 className="text-base font-semibold text-gray-900">{t('vehicles.detail.recentVisits')}</h3>
               <Link to="/visits" className="text-brand-primary hover:text-brand-primary-dark text-xs font-medium flex items-center gap-1">
-                View All
+                {t('vehicles.detail.viewAll')}
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -556,7 +553,7 @@ export default function VehicleDetail() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900 text-sm">
-                          {visit.line_summary || 'Service visit'}
+                          {visit.line_summary || t('vehicles.detail.serviceVisitFallback')}
                         </p>
                         <p className="text-xs text-gray-500">
                           {new Date(visit.service_date).toLocaleDateString()} • {visit.mileage_km?.toLocaleString() || 0} km
@@ -570,9 +567,13 @@ export default function VehicleDetail() {
                         visit.status === 'draft' ? 'bg-gray-50 text-gray-700 border-gray-200' :
                         'bg-red-50 text-red-700 border-red-200'
                       }`}>
-                        {visit.status === 'in_progress' ? 'In Progress' : 
-                         visit.status === 'completed' ? 'Completed' :
-                         visit.status === 'draft' ? 'Draft' : 'Cancelled'}
+                        {visit.status === 'in_progress'
+                          ? t('vehicles.detail.visitStatusInProgress')
+                          : visit.status === 'completed'
+                            ? t('vehicles.detail.visitStatusCompleted')
+                            : visit.status === 'draft'
+                              ? t('vehicles.detail.visitStatusDraft')
+                              : t('vehicles.detail.visitStatusCancelled')}
                       </span>
                       <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
                     </div>
@@ -580,7 +581,7 @@ export default function VehicleDetail() {
                 ))
               ) : (
                 <div className="text-center py-6 text-gray-500 text-sm">
-                  No service history yet
+                  {t('vehicles.detail.noHistoryYet')}
                 </div>
               )}
             </div>
@@ -588,10 +589,9 @@ export default function VehicleDetail() {
             </>
           )}
 
-          {/* Visit History Tab Content */}
           {activeTab === 'history' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-              <h3 className="text-base font-semibold text-gray-900 mb-3">Complete Visit History</h3>
+              <h3 className="text-base font-semibold text-gray-900 mb-3">{t('vehicles.detail.completeHistory')}</h3>
               {visits.length > 0 ? (
                 <div className="space-y-2">
                   {visits.map((visit: any) => (
@@ -605,7 +605,7 @@ export default function VehicleDetail() {
                       className="flex items-center justify-between border border-gray-200 rounded-lg p-3 hover:bg-gray-50 hover:border-gray-300 transition-colors group"
                     >
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">{visit.line_summary || 'Service visit'}</p>
+                        <p className="font-medium text-gray-900 text-sm">{visit.line_summary || t('vehicles.detail.serviceVisitFallback')}</p>
                         <p className="text-xs text-gray-500">
                           {new Date(visit.service_date).toLocaleDateString()} •{' '}
                           {visit.mileage_km?.toLocaleString() ?? 0} km
@@ -618,9 +618,13 @@ export default function VehicleDetail() {
                           visit.status === 'draft' ? 'bg-gray-50 text-gray-700' :
                           'bg-red-50 text-red-700'
                         }`}>
-                          {visit.status === 'in_progress' ? 'In Progress' :
-                           visit.status === 'completed' ? 'Completed' :
-                           visit.status === 'draft' ? 'Draft' : 'Cancelled'}
+                          {visit.status === 'in_progress'
+                            ? t('vehicles.detail.visitStatusInProgress')
+                            : visit.status === 'completed'
+                              ? t('vehicles.detail.visitStatusCompleted')
+                              : visit.status === 'draft'
+                                ? t('vehicles.detail.visitStatusDraft')
+                                : t('vehicles.detail.visitStatusCancelled')}
                         </span>
                         <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
                       </div>
@@ -628,7 +632,7 @@ export default function VehicleDetail() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-6 text-sm">No visit history available</p>
+                <p className="text-gray-500 text-center py-6 text-sm">{t('vehicles.detail.noVisitHistory')}</p>
               )}
             </div>
           )}
@@ -636,7 +640,7 @@ export default function VehicleDetail() {
           {/* Inspections Tab Content */}
           {activeTab === 'inspections' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-              <h3 className="text-base font-semibold text-gray-900 mb-3">Inspection Reports</h3>
+              <h3 className="text-base font-semibold text-gray-900 mb-3">{t('vehicles.detail.inspectionReports')}</h3>
               {inspectionsLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
@@ -648,7 +652,7 @@ export default function VehicleDetail() {
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <p className="font-medium text-gray-900 text-sm">
-                            {inspection.vehicle_label || 'Vehicle Inspection'}
+                            {inspection.vehicle_label || t('vehicles.detail.inspectionFallbackName')}
                           </p>
                           <p className="text-xs text-gray-500">
                             {new Date(inspection.performed_at).toLocaleDateString('en-US', {
@@ -659,7 +663,7 @@ export default function VehicleDetail() {
                           </p>
                         </div>
                         <span className="px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                          {Object.keys(inspection.data || {}).length} sections
+                          {t('vehicles.detail.sectionsLabel', { count: Object.keys(inspection.data || {}).length })}
                         </span>
                       </div>
                       {/* Inspection summary */}
@@ -707,8 +711,8 @@ export default function VehicleDetail() {
               ) : (
                 <div className="text-center py-8">
                   <ClipboardList className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">No inspection reports available</p>
-                  <p className="text-gray-400 text-xs mt-1">Inspections are created during service visits</p>
+                  <p className="text-gray-500 text-sm">{t('vehicles.detail.noInspections')}</p>
+                  <p className="text-gray-400 text-xs mt-1">{t('vehicles.detail.inspectionsHint')}</p>
                 </div>
               )}
             </div>
@@ -718,14 +722,14 @@ export default function VehicleDetail() {
           {activeTab === 'documents' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-semibold text-gray-900">Documents</h3>
+                <h3 className="text-base font-semibold text-gray-900">{t('vehicles.detail.documents')}</h3>
                 <button
                   onClick={handleUploadDocument}
                   disabled={uploadDocMutation.isPending}
                   className="px-3 py-1.5 bg-brand-primary hover:bg-brand-primary-dark text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  Upload
+                  {t('vehicles.detail.uploadAction')}
                 </button>
                 <input
                   ref={fileInputRef}
@@ -760,7 +764,7 @@ export default function VehicleDetail() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 text-gray-400 hover:text-brand-primary transition-colors"
-                          title="View"
+                          title={t('vehicles.detail.viewTitle')}
                         >
                           <Eye className="w-4 h-4" />
                         </a>
@@ -768,7 +772,7 @@ export default function VehicleDetail() {
                           href={doc.file_url || doc.url}
                           download
                           className="p-2 text-gray-400 hover:text-green-600 transition-colors"
-                          title="Download"
+                          title={t('vehicles.detail.downloadTitle')}
                         >
                           <Download className="w-4 h-4" />
                         </a>
@@ -776,7 +780,7 @@ export default function VehicleDetail() {
                           onClick={() => handleDeleteDocument(doc.id)}
                           disabled={deleteDocMutation.isPending}
                           className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
-                          title="Delete"
+                          title={t('vehicles.detail.deleteTitle')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -787,12 +791,12 @@ export default function VehicleDetail() {
               ) : (
                 <div className="text-center py-8">
                   <FileText className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">No documents uploaded</p>
-                  <p className="text-gray-400 text-xs mt-1">Upload service records, receipts, or photos</p>
+                  <p className="text-gray-500 text-sm">{t('vehicles.detail.noDocuments')}</p>
+                  <p className="text-gray-400 text-xs mt-1">{t('vehicles.detail.documentsHint')}</p>
                 </div>
               )}
               {uploadDocMutation.isError && (
-                <p className="mt-2 text-xs text-red-600">Failed to upload document. Please try again.</p>
+                <p className="mt-2 text-xs text-red-600">{t('vehicles.detail.uploadFailedRetry')}</p>
               )}
             </div>
           )}
@@ -802,10 +806,10 @@ export default function VehicleDetail() {
         <div className="space-y-4">
           {/* Owner Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Owner Information</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-3">{t('vehicles.detail.ownerInformation')}</h3>
             {!vehicle.owner ? (
               <p className="text-sm text-gray-500">
-                No workshop client linked yet. Assign an owner from the vehicle edit form or use the owner QR below after verifying paperwork.
+                {t('vehicles.detail.ownerNotLinked')}
               </p>
             ) : (
             <div className="space-y-3">
@@ -815,10 +819,10 @@ export default function VehicleDetail() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 text-sm">
-                    {vehicle.owner?.company_name || vehicle.owner?.name || 'N/A'}
+                    {vehicle.owner?.company_name || vehicle.owner?.name || t('vehicles.detail.notAvailable')}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {vehicle.owner?.type === 'company' ? 'Corporate Fleet' : 'Private Individual'}
+                    {vehicle.owner?.type === 'company' ? t('vehicles.detail.ownerCorporate') : t('vehicles.detail.ownerPrivate')}
                   </p>
                 </div>
               </div>
@@ -827,33 +831,33 @@ export default function VehicleDetail() {
                 <div className="flex items-center gap-2.5 text-sm">
                   <User className="w-3.5 h-3.5 text-gray-400" />
                   <div>
-                    <p className="text-[10px] text-gray-500">Primary Contact</p>
-                    <p className="font-medium text-gray-900 text-sm">{vehicle.owner?.name || 'N/A'}</p>
+                    <p className="text-[10px] text-gray-500">{t('vehicles.detail.primaryContact')}</p>
+                    <p className="font-medium text-gray-900 text-sm">{vehicle.owner?.name || t('vehicles.detail.notAvailable')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 text-sm">
                   <Phone className="w-3.5 h-3.5 text-gray-400" />
                   <div>
-                    <p className="text-[10px] text-gray-500">Phone</p>
+                    <p className="text-[10px] text-gray-500">{t('vehicles.detail.phone')}</p>
                     {vehicle.owner?.phone ? (
                       <a href={`tel:${vehicle.owner.phone}`} className="font-medium text-brand-primary hover:underline text-sm">
                         {vehicle.owner.phone}
                       </a>
                     ) : (
-                      <p className="font-medium text-gray-900 text-sm">N/A</p>
+                      <p className="font-medium text-gray-900 text-sm">{t('vehicles.detail.notAvailable')}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 text-sm">
                   <Mail className="w-3.5 h-3.5 text-gray-400" />
                   <div>
-                    <p className="text-[10px] text-gray-500">Email</p>
+                    <p className="text-[10px] text-gray-500">{t('vehicles.detail.email')}</p>
                     {vehicle.owner?.email ? (
                       <a href={`mailto:${vehicle.owner.email}`} className="font-medium text-brand-primary hover:underline text-sm">
                         {vehicle.owner.email}
                       </a>
                     ) : (
-                      <p className="font-medium text-gray-900 text-sm">N/A</p>
+                      <p className="font-medium text-gray-900 text-sm">{t('vehicles.detail.notAvailable')}</p>
                     )}
                   </div>
                 </div>
@@ -861,7 +865,7 @@ export default function VehicleDetail() {
 
               <Link to={`/clients/${vehicle.owner.id}`} className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm">
                 <User className="w-3.5 h-3.5" />
-                View Client Profile
+                {t('vehicles.detail.viewClientProfile')}
               </Link>
             </div>
             )}
@@ -908,7 +912,7 @@ export default function VehicleDetail() {
 
           {/* Quick Actions */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Quick Actions</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-3">{t('vehicles.detail.quickActions')}</h3>
             <div className="grid grid-cols-2 gap-2">
               {canManage && (
                 <button
@@ -916,7 +920,7 @@ export default function VehicleDetail() {
                   className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center gap-1.5"
                 >
                   <FileText className="w-4 h-4 text-gray-600" />
-                  <span className="text-[11px] font-medium text-gray-700">New Visit</span>
+                  <span className="text-[11px] font-medium text-gray-700">{t('vehicles.detail.newVisit')}</span>
                 </button>
               )}
               <button
@@ -927,29 +931,29 @@ export default function VehicleDetail() {
                   if (openVisit) {
                     navigate(`/visits/${openVisit.id}/inspection/new`)
                   } else {
-                    showToast('Start a service visit first', 'info')
+                    showToast(t('vehicles.detail.noOpenVisitToast'), 'info')
                   }
                 }}
                 className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center gap-1.5"
               >
                 <ClipboardList className="w-4 h-4 text-gray-600" />
-                <span className="text-[11px] font-medium text-gray-700">Inspection</span>
+                <span className="text-[11px] font-medium text-gray-700">{t('vehicles.detail.inspection')}</span>
               </button>
               <button
                 onClick={handlePrintSticker}
-                title="Download printable vehicle door sticker (PDF)"
+                title={t('vehicles.detail.doorStickerTooltip')}
                 className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center gap-1.5"
               >
                 <Printer className="w-4 h-4 text-gray-600" />
-                <span className="text-[11px] font-medium text-gray-700">Door Sticker</span>
+                <span className="text-[11px] font-medium text-gray-700">{t('vehicles.detail.doorSticker')}</span>
               </button>
               <button
                 onClick={handlePreviewSticker}
-                title="Preview vehicle door sticker in a new tab"
+                title={t('vehicles.detail.previewQrTooltip')}
                 className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center gap-1.5"
               >
                 <QrCode className="w-4 h-4 text-gray-600" />
-                <span className="text-[11px] font-medium text-gray-700">Preview QR</span>
+                <span className="text-[11px] font-medium text-gray-700">{t('vehicles.detail.previewQr')}</span>
               </button>
               <button
                 type="button"
@@ -999,7 +1003,7 @@ export default function VehicleDetail() {
       <ConfirmDialog
         open={Boolean(docToDelete)}
         title={t('common.delete')}
-        message="Delete this document?"
+        message={t('vehicles.detail.deleteDocumentMessage')}
         confirmLabel={t('common.delete')}
         cancelLabel={t('common.cancel')}
         variant="danger"

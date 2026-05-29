@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react'
 
 type ToastType = 'success' | 'error' | 'info'
@@ -77,6 +78,7 @@ function ToastCard({
   Icon: typeof CheckCircle
   onDismiss: (id: number) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div
       className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl border shadow-lg ${STYLES[toast.type]}`}
@@ -87,7 +89,7 @@ function ToastCard({
         type="button"
         onClick={() => onDismiss(toast.id)}
         className="shrink-0 opacity-60 hover:opacity-100"
-        aria-label="Dismiss"
+        aria-label={t('a11y.dismiss')}
       >
         <X className="w-4 h-4" />
       </button>

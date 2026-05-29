@@ -7,7 +7,7 @@ import { Plus, Search, QrCode, Loader2, Car } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useApiToast } from '@/hooks/useApiToast'
 import { useSelector } from 'react-redux'
-import { canManageVehicles, canManageWorkshopData, normalizeRole } from '@/lib/roles'
+import { canManageVehicles, normalizeRole } from '@/lib/roles'
 import type { RootState } from '@/store'
 import {
   type VehicleRow,
@@ -71,18 +71,18 @@ export default function VehiclesList() {
           navigate(`/vehicles/${response.data.id}`)
         } else if (Array.isArray(response.data) && response.data.length === 1) {
           navigate(`/vehicles/${response.data[0].id}`)
-        } else if (Array.isArray(response.data) && response.data.length > 1) {
+        } else         if (Array.isArray(response.data) && response.data.length > 1) {
           setSearch(decodedText)
         } else {
-          showToast('Vehicle not found. Please check the QR code or enter details manually.', 'info')
+          showToast(t('vehicles.lookupNotFound'), 'info')
         }
       }
     } catch (error: unknown) {
       const err = error as { response?: { status?: number } }
       if (err.response?.status === 404) {
-        showToast('Vehicle not found. Please check the QR code or enter details manually.', 'info')
+        showToast(t('vehicles.lookupNotFound'), 'info')
       } else {
-        showError(error, 'Failed to look up vehicle')
+        showError(error, t('vehicles.lookupFailed'))
       }
     } finally {
       setIsLookingUp(false)
@@ -114,19 +114,19 @@ export default function VehiclesList() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Vehicle Check-In</h1>
-          <p className="text-sm text-secondary mt-0.5">Search and check-in vehicles</p>
+          <h1 className="text-xl font-bold text-gray-900">{t('vehicles.checkInTitle')}</h1>
+          <p className="text-sm text-secondary mt-0.5">{t('vehicles.checkInSubtitle')}</p>
         </div>
       </div>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
         <div className="bg-surface rounded-xl shadow-float p-4 border border-gray-100 flex flex-col justify-center h-full">
-          <h2 className="text-base font-bold text-gray-900 mb-2">Find Vehicle</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">{t('vehicles.findVehicle')}</h2>
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Enter Plate, VIN, or Client Name..."
+              placeholder={t('vehicles.findPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-24 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-colors outline-none text-gray-900 text-sm shadow-sm"
@@ -135,7 +135,7 @@ export default function VehiclesList() {
               type="button"
               className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-blue-600 transition-colors"
             >
-              Search
+              {t('vehicles.searchAction')}
             </button>
           </div>
         </div>
@@ -153,10 +153,10 @@ export default function VehiclesList() {
             </div>
             <div>
               <h2 className="text-base font-bold text-white">
-                {isLookingUp ? 'Looking Up...' : 'Scan QR Code'}
+                {isLookingUp ? t('vehicles.scanLookingUp') : t('vehicles.scanQrTitle')}
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">
-                {isLookingUp ? 'Finding vehicle...' : 'Tap to open camera and scan vehicle sticker'}
+                {isLookingUp ? t('vehicles.scanFinding') : t('vehicles.scanQrHint')}
               </p>
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function VehiclesList() {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-medium text-gray-500">Filters:</span>
+          <span className="text-xs font-medium text-gray-500">{t('vehicles.filtersLabel')}</span>
           {[
             { id: 'true' as ActiveFilter, label: t('vehicles.filterActive') },
             { id: 'false' as ActiveFilter, label: t('vehicles.filterArchived') },
@@ -186,10 +186,10 @@ export default function VehiclesList() {
           ))}
           <span className="text-gray-300 mx-1">|</span>
           {[
-            { id: 'all', label: 'All Vehicles' },
-            { id: 'in_service', label: 'In Service' },
-            { id: 'due_soon', label: 'Due Soon' },
-            { id: 'completed_today', label: 'Completed Today' },
+            { id: 'all', label: t('vehicles.filterAllVehicles') },
+            { id: 'in_service', label: t('vehicles.filterInService') },
+            { id: 'due_soon', label: t('vehicles.filterDueSoon') },
+            { id: 'completed_today', label: t('vehicles.filterCompletedToday') },
           ].map((filter) => (
             <button
               key={filter.id}
@@ -210,7 +210,7 @@ export default function VehiclesList() {
           {canManage && (
             <Link to="/vehicles/new" className="btn btn-primary text-sm py-2">
               <Plus className="w-3.5 h-3.5 mr-1.5" />
-              Add Vehicle
+              {t('vehicles.addVehicle')}
             </Link>
           )}
         </div>
@@ -218,7 +218,7 @@ export default function VehiclesList() {
 
       <div>
         <h2 className="text-base font-bold text-gray-900 mb-3">
-          Vehicles
+          {t('vehicles.vehiclesHeading')}
           {!isLoading && filteredVehicles.length > 0 && (
             <span className="ml-2 text-sm font-normal text-secondary">({filteredVehicles.length})</span>
           )}
@@ -237,12 +237,12 @@ export default function VehiclesList() {
         ) : (
           <div className="bg-surface rounded-xl shadow-float border border-gray-100 p-10 text-center">
             <Car className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-gray-900 mb-1">No vehicles found</h3>
-            <p className="text-secondary mb-4 text-sm">Get started by adding your first vehicle</p>
+            <h3 className="text-base font-bold text-gray-900 mb-1">{t('vehicles.noVehiclesFound')}</h3>
+            <p className="text-secondary mb-4 text-sm">{t('vehicles.getStartedBody')}</p>
             {canManage && (
               <Link to="/vehicles/new" className="btn btn-primary text-sm">
                 <Plus className="w-3.5 h-3.5 mr-1.5" />
-                Add Vehicle
+                {t('vehicles.addVehicle')}
               </Link>
             )}
           </div>

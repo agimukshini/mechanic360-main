@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Search,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { adminTransfersApi } from '@/api'
 import { useApiToast } from '@/hooks/useApiToast'
 
@@ -68,6 +69,7 @@ const PAYMENT_STYLES: Record<string, string> = {
 }
 
 export default function AdminTransfersPage() {
+  const { t: tr } = useTranslation()
   const queryClient = useQueryClient()
   const { showError, showToast } = useApiToast()
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
@@ -95,9 +97,9 @@ export default function AdminTransfersPage() {
       adminTransfersApi.dispute(id, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-transfers'] })
-      showToast('Transfer marked as disputed', 'success')
+      showToast(tr('adminTransfers.toastDisputed'), 'success')
     },
-    onError: (err) => showError(err, 'Failed to dispute transfer'),
+    onError: (err) => showError(err, tr('adminTransfers.errDispute')),
   })
 
   const reverseMutation = useMutation({
@@ -105,9 +107,9 @@ export default function AdminTransfersPage() {
       adminTransfersApi.reverse(id, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-transfers'] })
-      showToast('Transfer reversed', 'success')
+      showToast(tr('adminTransfers.toastReversed'), 'success')
     },
-    onError: (err) => showError(err, 'Failed to reverse transfer'),
+    onError: (err) => showError(err, tr('adminTransfers.errReverse')),
   })
 
   const billingMutation = useMutation({
@@ -126,9 +128,9 @@ export default function AdminTransfersPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-transfers'] })
-      showToast('Billing updated', 'success')
+      showToast(tr('adminTransfers.toastBillingUpdated'), 'success')
     },
-    onError: (err) => showError(err, 'Failed to update billing'),
+    onError: (err) => showError(err, tr('adminTransfers.errBilling')),
   })
 
   const transfers = transfersQuery.data ?? []
@@ -138,9 +140,9 @@ export default function AdminTransfersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-workshop-charcoal">Ownership transfers</h2>
+        <h2 className="text-2xl font-bold text-workshop-charcoal">{tr('adminTransfers.title')}</h2>
         <p className="text-workshop-charcoal/60 mt-1">
-          Cross-tenant transfer ledger. Mark disputed, reverse, or update billing.
+          {tr('adminTransfers.subtitle')}
         </p>
       </div>
 
@@ -150,7 +152,7 @@ export default function AdminTransfersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by VIN, plate, owner, workshop…"
+            placeholder={tr('adminTransfers.searchPlaceholder')}
             className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
         </div>
@@ -159,25 +161,25 @@ export default function AdminTransfersPage() {
           onChange={(e) => setStatusFilter(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
         >
-          <option value="">All statuses</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="cancelled">Cancelled</option>
-          <option value="expired">Expired</option>
-          <option value="disputed">Disputed</option>
-          <option value="reversed">Reversed</option>
+          <option value="">{tr('adminTransfers.allStatuses')}</option>
+          <option value="pending">{tr('adminTransfers.statusPending')}</option>
+          <option value="confirmed">{tr('adminTransfers.statusConfirmed')}</option>
+          <option value="cancelled">{tr('adminTransfers.statusCancelled')}</option>
+          <option value="expired">{tr('adminTransfers.statusExpired')}</option>
+          <option value="disputed">{tr('adminTransfers.statusDisputed')}</option>
+          <option value="reversed">{tr('adminTransfers.statusReversed')}</option>
         </select>
         <select
           value={paymentFilter}
           onChange={(e) => setPaymentFilter(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
         >
-          <option value="">All payments</option>
-          <option value="unpaid">Unpaid</option>
-          <option value="processing">Processing</option>
-          <option value="paid">Paid</option>
-          <option value="refunded">Refunded</option>
-          <option value="waived">Waived</option>
+          <option value="">{tr('adminTransfers.allPayments')}</option>
+          <option value="unpaid">{tr('adminTransfers.paymentUnpaid')}</option>
+          <option value="processing">{tr('adminTransfers.paymentProcessing')}</option>
+          <option value="paid">{tr('adminTransfers.paymentPaid')}</option>
+          <option value="refunded">{tr('adminTransfers.paymentRefunded')}</option>
+          <option value="waived">{tr('adminTransfers.paymentWaived')}</option>
         </select>
       </div>
 
@@ -189,7 +191,7 @@ export default function AdminTransfersPage() {
 
       {!transfersQuery.isLoading && transfers.length === 0 && (
         <div className="card p-8 text-sm text-gray-500 text-center">
-          No transfers match the current filters.
+          {tr('adminTransfers.noResults')}
         </div>
       )}
 
@@ -201,22 +203,22 @@ export default function AdminTransfersPage() {
                 <tr>
                   <th className="px-3 py-3 w-8"></th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Initiated
+                    {tr('adminTransfers.tableInitiated')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Vehicle
+                    {tr('adminTransfers.tableVehicle')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Tenant
+                    {tr('adminTransfers.tableTenant')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    From → To
+                    {tr('adminTransfers.tableFromTo')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Fee
+                    {tr('adminTransfers.tableFee')}
                   </th>
                   <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    Status
+                    {tr('adminTransfers.tableStatus')}
                   </th>
                 </tr>
               </thead>
@@ -283,7 +285,7 @@ export default function AdminTransfersPage() {
                         <td className="px-3 py-3 text-xs text-gray-700">
                           <p>{t.from_owner?.name || '—'}</p>
                           <p>↓</p>
-                          <p>{t.to_owner?.name || <span className="italic text-gray-400">pending</span>}</p>
+                          <p>{t.to_owner?.name || <span className="italic text-gray-400">{tr('adminTransfers.pendingTo')}</span>}</p>
                         </td>
                         <td className="px-3 py-3">
                           {t.billing ? (
@@ -357,6 +359,7 @@ function DetailPanel({
   onBilling: (payload: { payment_status?: string; invoice_reference?: string }) => void
   busy: boolean
 }) {
+  const { t: tr } = useTranslation()
   const [disputeNotes, setDisputeNotes] = useState('')
   const [reverseNotes, setReverseNotes] = useState('')
   const [invoiceRef, setInvoiceRef] = useState(transfer.billing?.invoice_reference ?? '')
@@ -365,38 +368,38 @@ function DetailPanel({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-sm">
       <div className="space-y-2">
-        <h4 className="font-semibold text-gray-900">Audit metadata</h4>
+        <h4 className="font-semibold text-gray-900">{tr('adminTransfers.auditMetadata')}</h4>
         <p>
-          <span className="text-gray-500">Initiator IP:</span>{' '}
+          <span className="text-gray-500">{tr('adminTransfers.initiatorIp')}</span>{' '}
           <code className="text-xs">{transfer.initiated_ip || '—'}</code>
         </p>
         <p className="text-xs text-gray-500 break-all">
-          UA: {transfer.initiated_user_agent || '—'}
+          {tr('adminTransfers.uaPrefix')} {transfer.initiated_user_agent || '—'}
         </p>
         {transfer.confirmed_at && (
           <>
             <p className="pt-2 border-t border-gray-200">
-              <span className="text-gray-500">Confirmed at:</span>{' '}
+              <span className="text-gray-500">{tr('adminTransfers.confirmedAt')}</span>{' '}
               {new Date(transfer.confirmed_at).toLocaleString()}
             </p>
             <p>
-              <span className="text-gray-500">Confirm IP:</span>{' '}
+              <span className="text-gray-500">{tr('adminTransfers.confirmIp')}</span>{' '}
               <code className="text-xs">{transfer.confirmed_ip || '—'}</code>
             </p>
             <p className="text-xs text-gray-500 break-all">
-              UA: {transfer.confirmed_user_agent || '—'}
+              {tr('adminTransfers.uaPrefix')} {transfer.confirmed_user_agent || '—'}
             </p>
           </>
         )}
         {transfer.initiator_notes && (
           <p className="pt-2 border-t border-gray-200">
-            <span className="text-gray-500">Initiator notes:</span>
+            <span className="text-gray-500">{tr('adminTransfers.initiatorNotes')}</span>
             <br />
             <span className="whitespace-pre-wrap">{transfer.initiator_notes}</span>
           </p>
         )}
         <p>
-          <span className="text-gray-500">Docs verified:</span>{' '}
+          <span className="text-gray-500">{tr('adminTransfers.docsVerified')}</span>{' '}
           {transfer.documents_verified ? (
             <CircleCheck className="inline w-4 h-4 text-emerald-600" />
           ) : (
@@ -408,17 +411,16 @@ function DetailPanel({
       <div className="space-y-2">
         <h4 className="font-semibold text-gray-900 flex items-center gap-1.5">
           <AlertTriangle className="w-4 h-4 text-red-600" />
-          Mark disputed
+          {tr('adminTransfers.markDisputed')}
         </h4>
         <p className="text-xs text-gray-500">
-          Freezes the vehicle's ownership changes until reviewed. Notes are
-          visible only to platform superadmins.
+          {tr('adminTransfers.disputedHint')}
         </p>
         <textarea
           value={disputeNotes}
           onChange={(e) => setDisputeNotes(e.target.value)}
           rows={3}
-          placeholder="Reason / evidence …"
+          placeholder={tr('adminTransfers.disputedPlaceholder')}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
         />
         <button
@@ -432,22 +434,22 @@ function DetailPanel({
           onClick={() => onDispute(disputeNotes.trim())}
           className="w-full py-2 bg-red-600 text-white rounded-lg disabled:opacity-50 text-sm"
         >
-          Mark disputed
+          {tr('adminTransfers.markDisputed')}
         </button>
 
         <div className="pt-3 mt-3 border-t border-gray-200 space-y-2">
           <h4 className="font-semibold text-gray-900 flex items-center gap-1.5">
             <RotateCcw className="w-4 h-4 text-purple-600" />
-            Reverse transfer
+            {tr('adminTransfers.reverseTransfer')}
           </h4>
           <p className="text-xs text-gray-500">
-            Appends a new ownership row restoring the previous owner. Never deletes history.
+            {tr('adminTransfers.reverseHint')}
           </p>
           <textarea
             value={reverseNotes}
             onChange={(e) => setReverseNotes(e.target.value)}
             rows={3}
-            placeholder="Reason / authority …"
+            placeholder={tr('adminTransfers.reversePlaceholder')}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
           <button
@@ -460,38 +462,38 @@ function DetailPanel({
             onClick={() => onReverse(reverseNotes.trim())}
             className="w-full py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50 text-sm"
           >
-            Reverse transfer
+            {tr('adminTransfers.reverseTransfer')}
           </button>
         </div>
       </div>
 
       <div className="space-y-2">
-        <h4 className="font-semibold text-gray-900">Billing</h4>
+        <h4 className="font-semibold text-gray-900">{tr('adminTransfers.billing')}</h4>
         {transfer.billing ? (
           <>
             <p>
-              <span className="text-gray-500">Fee:</span>{' '}
+              <span className="text-gray-500">{tr('adminTransfers.feeLabel')}</span>{' '}
               <strong>
                 {transfer.billing.fee_amount} {transfer.billing.fee_currency}
               </strong>
-              <span className="text-xs text-gray-400"> (immutable)</span>
+              <span className="text-xs text-gray-400"> {tr('adminTransfers.immutable')}</span>
             </p>
             <label className="block">
-              <span className="text-xs text-gray-500">Payment status</span>
+              <span className="text-xs text-gray-500">{tr('adminTransfers.paymentStatus')}</span>
               <select
                 value={paymentStatus}
                 onChange={(e) => setPaymentStatus(e.target.value)}
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
-                <option value="unpaid">Unpaid</option>
-                <option value="processing">Processing</option>
-                <option value="paid">Paid</option>
-                <option value="refunded">Refunded</option>
-                <option value="waived">Waived</option>
+                <option value="unpaid">{tr('adminTransfers.paymentUnpaid')}</option>
+                <option value="processing">{tr('adminTransfers.paymentProcessing')}</option>
+                <option value="paid">{tr('adminTransfers.paymentPaid')}</option>
+                <option value="refunded">{tr('adminTransfers.paymentRefunded')}</option>
+                <option value="waived">{tr('adminTransfers.paymentWaived')}</option>
               </select>
             </label>
             <label className="block">
-              <span className="text-xs text-gray-500">Invoice reference</span>
+              <span className="text-xs text-gray-500">{tr('adminTransfers.invoiceReference')}</span>
               <input
                 value={invoiceRef}
                 onChange={(e) => setInvoiceRef(e.target.value)}
@@ -509,16 +511,16 @@ function DetailPanel({
               }
               className="w-full py-2 bg-workshop-blue text-white rounded-lg disabled:opacity-50 text-sm"
             >
-              Update billing
+              {tr('adminTransfers.updateBilling')}
             </button>
             {transfer.billing.paid_at && (
               <p className="text-xs text-gray-500">
-                Paid at {new Date(transfer.billing.paid_at).toLocaleString()}
+                {tr('adminTransfers.paidAt', { date: new Date(transfer.billing.paid_at).toLocaleString() })}
               </p>
             )}
           </>
         ) : (
-          <p className="text-sm text-gray-500">No billing row.</p>
+          <p className="text-sm text-gray-500">{tr('adminTransfers.noBillingRow')}</p>
         )}
       </div>
     </div>

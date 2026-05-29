@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Car, ChevronRight, LayoutGrid, List, Table2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import VehiclePhoto from '@/components/vehicles/VehiclePhoto'
 import { formatOdometer, type OdometerUnit } from '@/lib/odometer'
 
@@ -37,42 +38,33 @@ function odometerLabel(vehicle: VehicleRow) {
   )
 }
 
-function lastServiceLabel(vehicle: VehicleRow) {
-  return vehicle.last_service_date
-    ? new Date(vehicle.last_service_date).toLocaleDateString()
-    : 'Never'
-}
-
-function InServiceBadge() {
-  return (
-    <span className="px-2 py-0.5 bg-blue-50 text-accent text-[10px] font-bold rounded-full border border-blue-200 shrink-0">
-      IN SERVICE
-    </span>
-  )
-}
-
-function ArchivedBadge() {
-  return (
-    <span className="px-2 py-0.5 bg-amber-50 text-amber-800 text-[10px] font-bold rounded-full border border-amber-200 shrink-0">
-      ARCHIVED
-    </span>
-  )
-}
-
-function DueSoonBadge() {
-  return (
-    <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200 shrink-0">
-      DUE SOON
-    </span>
-  )
+function useLastServiceLabel() {
+  const { t } = useTranslation()
+  return (vehicle: VehicleRow) =>
+    vehicle.last_service_date
+      ? new Date(vehicle.last_service_date).toLocaleDateString()
+      : t('vehicles.lastServiceNever')
 }
 
 function VehicleStatusBadges({ vehicle }: { vehicle: VehicleRow }) {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-wrap gap-1 justify-end">
-      {vehicle.is_active === false && <ArchivedBadge />}
-      {vehicleInService(vehicle) && <InServiceBadge />}
-      {vehicle.service_due_soon && !vehicleInService(vehicle) && <DueSoonBadge />}
+      {vehicle.is_active === false && (
+        <span className="px-2 py-0.5 bg-amber-50 text-amber-800 text-[10px] font-bold rounded-full border border-amber-200 shrink-0">
+          {t('vehicles.badgeArchived')}
+        </span>
+      )}
+      {vehicleInService(vehicle) && (
+        <span className="px-2 py-0.5 bg-blue-50 text-accent text-[10px] font-bold rounded-full border border-blue-200 shrink-0">
+          {t('vehicles.badgeInService')}
+        </span>
+      )}
+      {vehicle.service_due_soon && !vehicleInService(vehicle) && (
+        <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200 shrink-0">
+          {t('vehicles.badgeDueSoon')}
+        </span>
+      )}
     </div>
   )
 }
@@ -84,17 +76,18 @@ export function ViewModeToggle({
   viewMode: ViewMode
   onChange: (mode: ViewMode) => void
 }) {
+  const { t } = useTranslation()
   const modes: { id: ViewMode; icon: typeof LayoutGrid; label: string }[] = [
-    { id: 'grid', icon: LayoutGrid, label: 'Grid view' },
-    { id: 'list', icon: List, label: 'List view' },
-    { id: 'table', icon: Table2, label: 'Table view' },
+    { id: 'grid', icon: LayoutGrid, label: t('vehicles.viewModeGrid') },
+    { id: 'list', icon: List, label: t('vehicles.viewModeList') },
+    { id: 'table', icon: Table2, label: t('vehicles.viewModeTable') },
   ]
 
   return (
     <div
       className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm"
       role="group"
-      aria-label="View mode"
+      aria-label={t('vehicles.viewMode')}
     >
       {modes.map(({ id, icon: Icon, label }) => (
         <button
@@ -116,6 +109,8 @@ export function ViewModeToggle({
 }
 
 export function VehiclesGridView({ vehicles }: { vehicles: VehicleRow[] }) {
+  const { t } = useTranslation()
+  const lastServiceLabel = useLastServiceLabel()
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
       {vehicles.map((vehicle) => (
@@ -150,16 +145,16 @@ export function VehiclesGridView({ vehicles }: { vehicles: VehicleRow[] }) {
             </div>
             <div className="space-y-1.5 text-xs">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-gray-500">Owner</span>
+                <span className="text-gray-500">{t('vehicles.owner')}</span>
                 <span className="font-medium text-gray-900 truncate">{ownerLabel(vehicle)}</span>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-gray-500">Last service</span>
+                <span className="text-gray-500">{t('vehicles.lastService')}</span>
                 <span className="font-medium text-gray-900">{lastServiceLabel(vehicle)}</span>
               </div>
             </div>
             <div className="mt-3 w-full py-2 bg-gray-50 text-gray-700 font-medium rounded-lg flex items-center justify-center gap-1.5 text-xs">
-              View details
+              {t('vehicles.viewDetails')}
               <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -170,6 +165,8 @@ export function VehiclesGridView({ vehicles }: { vehicles: VehicleRow[] }) {
 }
 
 export function VehiclesListView({ vehicles }: { vehicles: VehicleRow[] }) {
+  const { t } = useTranslation()
+  const lastServiceLabel = useLastServiceLabel()
   return (
     <div className="space-y-2">
       {vehicles.map((vehicle) => (
@@ -198,15 +195,15 @@ export function VehiclesListView({ vehicles }: { vehicles: VehicleRow[] }) {
               <p className="text-sm text-secondary">{vehicle.license_plate}</p>
             </div>
             <div>
-              <p className="text-xs text-secondary">Owner</p>
+              <p className="text-xs text-secondary">{t('vehicles.owner')}</p>
               <p className="text-sm font-medium text-primary truncate">{ownerLabel(vehicle)}</p>
             </div>
             <div>
-              <p className="text-xs text-secondary">Last service</p>
+              <p className="text-xs text-secondary">{t('vehicles.lastService')}</p>
               <p className="text-sm font-medium text-primary">{lastServiceLabel(vehicle)}</p>
             </div>
             <div>
-              <p className="text-xs text-secondary">Odometer</p>
+              <p className="text-xs text-secondary">{t('vehicles.odometer.label')}</p>
               <p className="text-sm font-medium text-primary">
                 {odometerLabel(vehicle)}
               </p>
@@ -223,18 +220,20 @@ export function VehiclesListView({ vehicles }: { vehicles: VehicleRow[] }) {
 }
 
 export function VehiclesTableView({ vehicles }: { vehicles: VehicleRow[] }) {
+  const { t } = useTranslation()
+  const lastServiceLabel = useLastServiceLabel()
   return (
     <div className="card overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase">Vehicle</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase">Plate</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase hidden md:table-cell">Owner</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase hidden lg:table-cell">Odometer</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase hidden sm:table-cell">Last service</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase">Status</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase">{t('vehicles.vehicle')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase">{t('vehicles.plate')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase hidden md:table-cell">{t('vehicles.owner')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase hidden lg:table-cell">{t('vehicles.odometer.label')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase hidden sm:table-cell">{t('vehicles.lastService')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-secondary uppercase">{t('vehicles.status')}</th>
               <th className="text-right px-4 py-3 text-xs font-medium text-secondary uppercase"> </th>
             </tr>
           </thead>
@@ -256,7 +255,7 @@ export function VehiclesTableView({ vehicles }: { vehicles: VehicleRow[] }) {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Link to={`/vehicles/${vehicle.id}`} className="btn btn-outline btn-sm">
-                    View
+                    {t('vehicles.viewAction')}
                   </Link>
                 </td>
               </tr>

@@ -3,13 +3,15 @@ import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { inventoryApi } from '@/api'
 import { useApiToast } from '@/hooks/useApiToast'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 
+// Zod returns literal error codes; the JSX runs them through `t()`.
 const inventorySchema = z.object({
-  sku: z.string().min(1, 'SKU is required'),
-  name: z.string().min(1, 'Name is required'),
+  sku: z.string().min(1, 'skuRequired'),
+  name: z.string().min(1, 'nameRequired'),
   manufacturer: z.string().optional(),
   purchase_cost: z.coerce.number().min(0),
   sale_price: z.coerce.number().min(0),
@@ -21,6 +23,7 @@ const inventorySchema = z.object({
 type InventoryFormValues = z.infer<typeof inventorySchema>
 
 export default function InventoryForm() {
+  const { t } = useTranslation()
   const { showError } = useApiToast()
   const { id } = useParams()
   const navigate = useNavigate()
@@ -62,7 +65,7 @@ export default function InventoryForm() {
       queryClient.invalidateQueries({ queryKey: ['inventory'] })
       navigate('/inventory')
     },
-    onError: (error: unknown) => showError(error, 'Failed to create inventory item'),
+    onError: (error: unknown) => showError(error, t('inventory.createFailed')),
   })
 
   const updateMutation = useMutation({
@@ -71,7 +74,7 @@ export default function InventoryForm() {
       queryClient.invalidateQueries({ queryKey: ['inventory', 'inventory_item'] })
       navigate('/inventory')
     },
-    onError: (error: unknown) => showError(error, 'Failed to update inventory item'),
+    onError: (error: unknown) => showError(error, t('inventory.updateFailed')),
   })
 
   const onSubmit = (data: InventoryFormValues) => {
@@ -82,6 +85,8 @@ export default function InventoryForm() {
     }
   }
 
+  const fieldError = (msg?: string) => (msg ? t(`inventory.${msg}`) : '')
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
@@ -90,74 +95,66 @@ export default function InventoryForm() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-workshop-charcoal">
-            {isEdit ? 'Edit Inventory Item' : 'New Inventory Item'}
+            {isEdit ? t('inventory.editTitle') : t('inventory.newTitle')}
           </h1>
           <p className="text-workshop-charcoal/60 mt-1">
-            {isEdit ? 'Update item details' : 'Add a new part or material'}
+            {isEdit ? t('inventory.editSubtitle') : t('inventory.newSubtitle')}
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="card p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* SKU */}
           <div>
-            <label className="block text-sm font-medium text-workshop-charcoal mb-1">SKU *</label>
-            <input {...register('sku')} className="input" placeholder="OIL-001" />
-            {errors.sku && <p className="text-sm text-red-600 mt-1">{errors.sku.message}</p>}
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">{t('inventory.sku')} *</label>
+            <input {...register('sku')} className="input" placeholder={t('inventory.skuPlaceholder')} />
+            {errors.sku && <p className="text-sm text-red-600 mt-1">{fieldError(errors.sku.message)}</p>}
           </div>
 
-          {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-workshop-charcoal mb-1">Name *</label>
-            <input {...register('name')} className="input" placeholder="Engine Oil 5W-30" />
-            {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">{t('inventory.name')} *</label>
+            <input {...register('name')} className="input" placeholder={t('inventory.namePlaceholder')} />
+            {errors.name && <p className="text-sm text-red-600 mt-1">{fieldError(errors.name.message)}</p>}
           </div>
 
-          {/* Manufacturer */}
           <div>
-            <label className="block text-sm font-medium text-workshop-charcoal mb-1">Manufacturer</label>
-            <input {...register('manufacturer')} className="input" placeholder="Mobil" />
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">{t('inventory.manufacturer')}</label>
+            <input {...register('manufacturer')} className="input" placeholder={t('inventory.manufacturerPlaceholder')} />
           </div>
 
-          {/* Supplier */}
           <div>
-            <label className="block text-sm font-medium text-workshop-charcoal mb-1">Supplier</label>
-            <input {...register('supplier')} className="input" placeholder="AutoParts Inc" />
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">{t('inventory.supplier')}</label>
+            <input {...register('supplier')} className="input" placeholder={t('inventory.supplierPlaceholder')} />
           </div>
 
-          {/* Purchase Cost */}
           <div>
-            <label className="block text-sm font-medium text-workshop-charcoal mb-1">Purchase Cost</label>
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">{t('inventory.purchaseCost')}</label>
             <input {...register('purchase_cost')} type="number" step="0.01" className="input" />
           </div>
 
-          {/* Sale Price */}
           <div>
-            <label className="block text-sm font-medium text-workshop-charcoal mb-1">Sale Price</label>
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">{t('inventory.salePrice')}</label>
             <input {...register('sale_price')} type="number" step="0.01" className="input" />
           </div>
 
-          {/* Current Stock */}
           <div>
-            <label className="block text-sm font-medium text-workshop-charcoal mb-1">Current Stock</label>
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">{t('inventory.currentStock')}</label>
             <input {...register('current_stock')} type="number" className="input" />
           </div>
 
-          {/* Minimum Stock */}
           <div>
-            <label className="block text-sm font-medium text-workshop-charcoal mb-1">Minimum Stock Alert</label>
+            <label className="block text-sm font-medium text-workshop-charcoal mb-1">{t('inventory.minimumStock')}</label>
             <input {...register('minimum_stock')} type="number" className="input" />
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-4 pt-4 border-t border-workshop-charcoal/10">
-          <Link to="/inventory" className="btn btn-outline">Cancel</Link>
+          <Link to="/inventory" className="btn btn-outline">{t('inventory.cancel')}</Link>
           <button type="submit" disabled={isSubmitting || createMutation.isPending || updateMutation.isPending} className="btn btn-primary">
             {(isSubmitting || createMutation.isPending || updateMutation.isPending) ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('inventory.saving')}</>
             ) : (
-              isEdit ? 'Update Item' : 'Create Item'
+              isEdit ? t('inventory.update') : t('inventory.create')
             )}
           </button>
         </div>
