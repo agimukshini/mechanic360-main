@@ -514,6 +514,7 @@ export default function VehicleDetail() {
 
           <VehicleOwnerQrPanel
             vehicleId={id!}
+            globalVehicleId={vehicle.global_vehicle_id}
             licensePlate={vehicle.license_plate}
             make={vehicle.make}
             model={vehicle.model}

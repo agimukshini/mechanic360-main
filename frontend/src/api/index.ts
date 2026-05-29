@@ -162,6 +162,44 @@ export const ownerApi = {
       params: { disposition },
       responseType: 'blob',
     }),
+  /** List transfers the owner is the from/to of, or look up by QR token. */
+  listTransfers: (params?: { token?: string }) =>
+    api.get('/owner/transfers/', { params }),
+  getTransfer: (id: string) => api.get(`/owner/transfers/${id}/`),
+  confirmTransfer: (id: string) => api.post(`/owner/transfers/${id}/confirm/`, {}),
+}
+
+// Ownership-transfer API (workshop side)
+export const transfersApi = {
+  list: (params?: { vehicle?: string; status?: string }) =>
+    api.get('/global-vehicles/transfers/', { params }),
+  get: (id: string) => api.get(`/global-vehicles/transfers/${id}/`),
+  start: (data: {
+    vehicle_id: string
+    documents_verified: boolean
+    new_license_plate: string
+    notes?: string
+  }) => api.post('/global-vehicles/transfers/start/', data),
+  cancel: (id: string) => api.post(`/global-vehicles/transfers/${id}/cancel/`, {}),
+}
+
+// Platform-superadmin transfers + audit
+export const adminTransfersApi = {
+  list: (params?: object) => api.get('/tenants/transfers/', { params }),
+  get: (id: string) => api.get(`/tenants/transfers/${id}/`),
+  dispute: (id: string, notes: string) =>
+    api.post(`/tenants/transfers/${id}/dispute/`, { notes }),
+  reverse: (id: string, notes: string) =>
+    api.post(`/tenants/transfers/${id}/reverse/`, { notes }),
+  updateBilling: (
+    id: string,
+    data: { payment_status?: string; invoice_reference?: string },
+  ) => api.patch(`/tenants/transfers/${id}/billing/`, data),
+}
+
+export const vehicleAuditApi = {
+  list: (params?: object) => api.get('/tenants/vehicle-audit/', { params }),
+  get: (id: string) => api.get(`/tenants/vehicle-audit/${id}/`),
 }
 
 // Vehicles API

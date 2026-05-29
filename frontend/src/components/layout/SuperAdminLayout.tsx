@@ -4,8 +4,10 @@ import {
   Building2,
   Car,
   ClipboardList,
+  FileText,
   LayoutDashboard,
   LogOut,
+  Repeat,
   ShieldCheck,
 } from 'lucide-react'
 import { logoutUser } from '@/store/authSlice'
@@ -16,6 +18,8 @@ const NAV_ITEMS = [
   { to: '/admin/tenants', label: 'Tenants', icon: Building2 },
   { to: '/admin/onboarding', label: 'Onboarding', icon: ClipboardList },
   { to: '/admin/global', label: 'Global registry', icon: Car },
+  { to: '/admin/transfers', label: 'Ownership transfers', icon: Repeat },
+  { to: '/admin/audit', label: 'Vehicle audit log', icon: FileText },
   { to: '/admin/security/logins', label: 'Login log', icon: ShieldCheck },
 ]
 

@@ -11,6 +11,11 @@ from __future__ import annotations
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from global_vehicles.transfer_views import (
+    AdminTransferViewSet,
+    AdminVehicleAuditViewSet,
+)
+
 from .views import (
     SuperadminDashboardView,
     SuperadminGlobalRegistryView,
@@ -26,6 +31,8 @@ router.register(
     basename="admin-onboarding-applications",
 )
 router.register(r"admin/tenants", WorkshopTenantAdminViewSet, basename="admin-tenants")
+router.register(r"transfers", AdminTransferViewSet, basename="admin-transfers")
+router.register(r"vehicle-audit", AdminVehicleAuditViewSet, basename="admin-vehicle-audit")
 
 urlpatterns = [
     path("register/", TenantRegisterView.as_view(), name="tenant_register"),

@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { vehiclesApi } from '@/api'
+import { useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { transfersApi, vehiclesApi } from '@/api'
 import { useApiToast } from '@/hooks/useApiToast'
 import { getApiErrorMessage } from '@/lib/utils'
 import { printQrCode } from '@/lib/printQr'
-import { Printer, QrCode, UserCheck } from 'lucide-react'
+import { Ban, Printer, QrCode, ShieldCheck, UserCheck } from 'lucide-react'
 
 interface RegistrationRecord {
   license_plate: string
@@ -12,8 +12,20 @@ interface RegistrationRecord {
   is_current?: boolean
 }
 
+interface PendingTransfer {
+  id: string
+  status: string
+  new_license_plate: string
+  initiator_username: string
+  initiated_at: string
+  expires_at: string
+  qr_payload: string
+  billing?: { fee_amount: string; fee_currency: string; payment_status: string }
+}
+
 interface VehicleOwnerQrPanelProps {
   vehicleId: string
+  globalVehicleId?: string | null
   licensePlate: string
   make: string
   model: string
@@ -24,6 +36,7 @@ interface VehicleOwnerQrPanelProps {
 
 export default function VehicleOwnerQrPanel({
   vehicleId,
+  globalVehicleId,
   licensePlate,
   make,
   model,
@@ -38,10 +51,21 @@ export default function VehicleOwnerQrPanel({
   const [qrLines, setQrLines] = useState<string[]>([])
   const [documentsVerified, setDocumentsVerified] = useState(false)
   const [newLicensePlate, setNewLicensePlate] = useState('')
+  const [notes, setNotes] = useState('')
   const [editPlate, setEditPlate] = useState('')
 
   const hasGlobalOwner = Boolean(globalCurrentOwner?.name)
   const displayPlate = editPlate || licensePlate
+
+  // Pending / historical transfers for this vehicle (workshop view).
+  const transfersQuery = useQuery({
+    queryKey: ['transfers', 'vehicle', globalVehicleId],
+    queryFn: () =>
+      transfersApi
+        .list({ vehicle: globalVehicleId as string })
+        .then((r) => (r.data?.results ?? r.data) as PendingTransfer[]),
+    enabled: Boolean(globalVehicleId),
+  })
 
   const ownerClaimMutation = useMutation({
     mutationFn: () => vehiclesApi.ownerClaimQr(vehicleId),
@@ -59,19 +83,51 @@ export default function VehicleOwnerQrPanel({
   })
 
   const transferMutation = useMutation({
-    mutationFn: () => vehiclesApi.transferQr(vehicleId, documentsVerified, newLicensePlate),
+    mutationFn: () => {
+      if (!globalVehicleId) {
+        return Promise.reject(
+          new Error('Vehicle is not yet registered in the global registry.'),
+        )
+      }
+      return transfersApi.start({
+        vehicle_id: globalVehicleId,
+        documents_verified: documentsVerified,
+        new_license_plate: newLicensePlate,
+        notes,
+      })
+    },
     onSuccess: (res) => {
-      setQrData(res.data.qr_code)
+      const data = res.data
+      setQrData(data.qr.qr_code)
       setQrTitle('Ownership transfer QR')
       setQrLines([
-        `New registration: ${res.data.new_license_plate}`,
+        `New registration: ${data.new_license_plate}`,
         `${make} ${model} · VIN ${vin}`,
+        `Fee: ${data.billing?.fee_amount ?? '—'} ${data.billing?.fee_currency ?? ''}`.trim(),
         'New owner scans after document verification',
       ])
-      showToast('Transfer QR generated', 'success')
+      setNewLicensePlate('')
+      setNotes('')
+      setDocumentsVerified(false)
+      transfersQuery.refetch()
+      showToast('Transfer initiated — share the QR with the new owner', 'success')
     },
-    onError: (err) => showError(getApiErrorMessage(err, 'Failed to generate transfer QR')),
+    onError: (err) => showError(getApiErrorMessage(err, 'Failed to start transfer')),
   })
+
+  const cancelMutation = useMutation({
+    mutationFn: (id: string) => transfersApi.cancel(id),
+    onSuccess: () => {
+      transfersQuery.refetch()
+      showToast('Transfer cancelled', 'success')
+    },
+    onError: (err) => showError(getApiErrorMessage(err, 'Failed to cancel transfer')),
+  })
+
+  useEffect(() => {
+    // Clear stale QR when the vehicle changes.
+    setQrData(null)
+  }, [vehicleId])
 
   const registrationMutation = useMutation({
     mutationFn: (plate: string) => vehiclesApi.updateRegistration(vehicleId, plate),
@@ -133,6 +189,62 @@ export default function VehicleOwnerQrPanel({
         </div>
       )}
 
+      {transfersQuery.data && transfersQuery.data.length > 0 && (
+        <div className="pt-3 border-t border-gray-100">
+          <p className="text-sm font-medium text-gray-900 mb-2">Transfers</p>
+          <ul className="space-y-2">
+            {transfersQuery.data.map((t) => {
+              const statusLower = (t.status || '').toLowerCase()
+              const badgeClass = {
+                pending: 'bg-amber-50 text-amber-800 border-amber-200',
+                confirmed: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                cancelled: 'bg-gray-50 text-gray-700 border-gray-200',
+                expired: 'bg-gray-50 text-gray-500 border-gray-200',
+                disputed: 'bg-red-50 text-red-700 border-red-200',
+                reversed: 'bg-purple-50 text-purple-700 border-purple-200',
+              }[statusLower] || 'bg-gray-50 text-gray-700 border-gray-200'
+              return (
+                <li
+                  key={t.id}
+                  className="rounded-lg border border-gray-200 p-3 text-xs space-y-1"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase ${badgeClass}`}>
+                      {t.status}
+                    </span>
+                    <span className="text-gray-500">
+                      {new Date(t.initiated_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-gray-700">
+                    New plate <span className="font-semibold">{t.new_license_plate}</span>
+                    {' · by '}{t.initiator_username}
+                  </p>
+                  {t.billing && (
+                    <p className="text-gray-500">
+                      Fee: {t.billing.fee_amount} {t.billing.fee_currency} ({t.billing.payment_status})
+                    </p>
+                  )}
+                  {statusLower === 'pending' && (
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => cancelMutation.mutate(t.id)}
+                        disabled={cancelMutation.isPending}
+                        className="flex items-center gap-1 text-red-600 hover:text-red-700 disabled:opacity-50"
+                      >
+                        <Ban className="w-3.5 h-3.5" />
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
       {!hasGlobalOwner ? (
         <button
           type="button"
@@ -145,14 +257,22 @@ export default function VehicleOwnerQrPanel({
         </button>
       ) : (
         <div className="space-y-3 pt-2 border-t border-gray-100">
-          <p className="text-sm text-gray-600">
-            Transfer: verify documents, enter the buyer&apos;s new plate, then generate a transfer QR.
+          <p className="text-sm text-gray-600 flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-amber-600" />
+            Transfer: verify documents, enter the buyer&apos;s new plate, then start a tracked transfer.
           </p>
           <input
             value={newLicensePlate}
             onChange={(e) => setNewLicensePlate(e.target.value.toUpperCase())}
             placeholder="New registration plate"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg uppercase text-sm"
+          />
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Notes (optional) — visible to platform support"
+            rows={2}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
@@ -165,11 +285,16 @@ export default function VehicleOwnerQrPanel({
           <button
             type="button"
             onClick={() => transferMutation.mutate()}
-            disabled={!documentsVerified || !newLicensePlate.trim() || transferMutation.isPending}
+            disabled={!documentsVerified || !newLicensePlate.trim() || transferMutation.isPending || !globalVehicleId}
             className="w-full py-2.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 text-sm"
           >
-            Generate transfer QR
+            {transferMutation.isPending ? 'Starting…' : 'Start transfer & generate QR'}
           </button>
+          {!globalVehicleId && (
+            <p className="text-xs text-amber-700">
+              This vehicle is not yet registered in the global registry. Save it first.
+            </p>
+          )}
         </div>
       )}
 

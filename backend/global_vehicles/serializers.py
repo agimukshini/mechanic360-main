@@ -6,7 +6,15 @@ import base64
 import qrcode
 from rest_framework import serializers
 
-from .models import GlobalOwner, GlobalVehicle, VehicleClaimToken, VehicleOwnership
+from .models import (
+    GlobalOwner,
+    GlobalVehicle,
+    OwnershipTransfer,
+    TransferBilling,
+    VehicleAuditEvent,
+    VehicleClaimToken,
+    VehicleOwnership,
+)
 
 
 class GlobalOwnerSerializer(serializers.ModelSerializer):
@@ -191,6 +199,156 @@ class OwnerRegisterSerializer(serializers.Serializer):
 
 class ClaimVehicleSerializer(serializers.Serializer):
     token = serializers.CharField()
+
+
+# -----------------------------------------------------------------------------
+# Ownership transfer + billing
+# -----------------------------------------------------------------------------
+
+
+class TransferBillingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TransferBilling
+        fields = [
+            "id",
+            "fee_amount",
+            "fee_currency",
+            "payment_status",
+            "invoice_reference",
+            "paid_at",
+            "captured_by",
+            "snapshot",
+            "created_at",
+            "updated_at",
+        ]
+        # Fee is immutable; all editable fields are gated by the superadmin
+        # ViewSet, never by direct PATCH on this serializer.
+        read_only_fields = fields
+
+
+class OwnershipTransferSerializer(serializers.ModelSerializer):
+    from_owner = GlobalOwnerSerializer(read_only=True)
+    to_owner = GlobalOwnerSerializer(read_only=True)
+    billing = TransferBillingSerializer(read_only=True)
+    claim_token_id = serializers.UUIDField(source="claim_token.id", read_only=True)
+    qr_payload = serializers.CharField(source="claim_token.qr_payload", read_only=True)
+    expires_at = serializers.DateTimeField(source="claim_token.expires_at", read_only=True)
+    vehicle = GlobalVehicleSerializer(read_only=True)
+    tenant_name = serializers.CharField(source="initiated_by_tenant.name", read_only=True)
+    tenant_schema = serializers.CharField(
+        source="initiated_by_tenant.schema_name",
+        read_only=True,
+    )
+    initiator_username = serializers.CharField(
+        source="initiated_by_user.username",
+        read_only=True,
+    )
+
+    class Meta:
+        model = OwnershipTransfer
+        fields = [
+            "id",
+            "vehicle",
+            "from_owner",
+            "to_owner",
+            "tenant_name",
+            "tenant_schema",
+            "initiator_username",
+            "initiated_at",
+            "initiated_ip",
+            "initiated_user_agent",
+            "claim_token_id",
+            "qr_payload",
+            "expires_at",
+            "confirmed_at",
+            "confirmed_ip",
+            "confirmed_user_agent",
+            "status",
+            "initiator_notes",
+            "superadmin_notes",
+            "documents_verified",
+            "new_license_plate",
+            "billing",
+            "reversed_transfer",
+        ]
+        read_only_fields = fields
+
+
+class TenantOwnershipTransferSerializer(OwnershipTransferSerializer):
+    """
+    Workshop-side view — strips out IP / UA and superadmin-only fields.
+    Used for both the tenant-side list and the owner-portal pending list.
+    """
+
+    class Meta(OwnershipTransferSerializer.Meta):
+        fields = [
+            "id",
+            "vehicle",
+            "from_owner",
+            "to_owner",
+            "tenant_name",
+            "initiator_username",
+            "initiated_at",
+            "claim_token_id",
+            "qr_payload",
+            "expires_at",
+            "confirmed_at",
+            "status",
+            "initiator_notes",
+            "documents_verified",
+            "new_license_plate",
+            "billing",
+        ]
+        read_only_fields = fields
+
+
+class StartTransferSerializer(serializers.Serializer):
+    documents_verified = serializers.BooleanField(default=False)
+    new_license_plate = serializers.CharField(max_length=32)
+    notes = serializers.CharField(allow_blank=True, required=False, default="")
+
+
+class DisputeOrReverseSerializer(serializers.Serializer):
+    notes = serializers.CharField(min_length=3, max_length=2000)
+
+
+class UpdateBillingSerializer(serializers.Serializer):
+    payment_status = serializers.ChoiceField(
+        choices=TransferBilling.PaymentStatus.choices,
+        required=False,
+    )
+    invoice_reference = serializers.CharField(
+        max_length=64, allow_blank=True, required=False,
+    )
+
+
+# -----------------------------------------------------------------------------
+# Audit
+# -----------------------------------------------------------------------------
+
+
+class VehicleAuditEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VehicleAuditEvent
+        fields = [
+            "id",
+            "tenant_schema",
+            "tenant_name",
+            "vehicle_tenant_id",
+            "global_vehicle_id",
+            "entity",
+            "action",
+            "target_id",
+            "actor_user_id",
+            "actor_username",
+            "actor_role",
+            "request_ip",
+            "request_user_agent",
+            "changes",
+            "note",
+            "occurred_at",
+        ]
+        read_only_fields = fields
 
 
 def qr_code_response(*, payload: str, extra: dict | None = None) -> dict:
