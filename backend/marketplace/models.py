@@ -177,8 +177,21 @@ class SparePart(models.Model):
 
     part_number = models.CharField(max_length=64, db_index=True, blank=True)
     oem_number = models.CharField(max_length=64, blank=True, db_index=True)
+    # Aftermarket / supplier brand (Bosch, Mann, OEM take-off source, etc.)
+    brand = models.CharField(max_length=128, blank=True)
     # Cross-references / aliases — supports OEM ↔ aftermarket lookups.
     alternative_numbers = models.JSONField(default=list, blank=True)
+
+    class ListingType(models.TextChoices):
+        IDENTIFIED = "identified", "Catalog-identified (OEM / part number)"
+        GENERIC = "generic", "General listing (no part numbers)"
+
+    listing_type = models.CharField(
+        max_length=16,
+        choices=ListingType.choices,
+        default=ListingType.GENERIC,
+        help_text="Identified listings require OEM or supplier part number.",
+    )
 
     category = models.ForeignKey(PartCategory, on_delete=models.PROTECT)
     title = models.CharField(max_length=255)

@@ -1,9 +1,23 @@
 import { Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
-import { canManageWorkshopData, canManageServiceCatalog, canViewAnalytics, canViewMechanicKpis, isTenantAdmin, normalizeRole } from '@/lib/roles'
+import {
+  canBrowseMarketplace,
+  canManageWorkshopData,
+  canManageServiceCatalog,
+  canViewAnalytics,
+  canViewMechanicKpis,
+  isTenantAdmin,
+  normalizeRole,
+} from '@/lib/roles'
 
-type GuardMode = 'analytics' | 'catalog' | 'tenant_admin' | 'mechanics_kpi' | 'workshop_manage'
+type GuardMode =
+  | 'analytics'
+  | 'catalog'
+  | 'tenant_admin'
+  | 'mechanics_kpi'
+  | 'workshop_manage'
+  | 'marketplace_browse'
 
 export default function RoleGuard({
   mode,
@@ -24,7 +38,9 @@ export default function RoleGuard({
           ? isTenantAdmin(role)
           : mode === 'workshop_manage'
             ? canManageWorkshopData(role)
-            : canManageServiceCatalog(role)
+            : mode === 'marketplace_browse'
+              ? canBrowseMarketplace(role)
+              : canManageServiceCatalog(role)
 
   if (!allowed) {
     return <Navigate to="/dashboard" replace />

@@ -381,3 +381,76 @@ export const inventoryApi = {
   patch: (id: string, data: object) => api.patch(`/inventory/items/${id}/`, data),
   delete: (id: string) => api.delete(`/inventory/items/${id}/`),
 }
+
+export type SparePart = {
+  id: string
+  listing_type: 'identified' | 'generic'
+  listing_type_display?: string
+  title: string
+  description: string
+  part_number?: string
+  oem_number?: string
+  brand?: string
+  alternative_numbers?: string[]
+  category: number
+  category_slug: string
+  category_name: string
+  condition: string
+  quantity: number
+  price: string | number
+  currency: string
+  seller_name: string
+  seller_city?: string
+  seller_country?: string
+  is_sponsored: boolean
+  is_active?: boolean
+  is_own?: boolean
+  contact_phone?: string
+  contact_whatsapp?: string
+  contact_email?: string
+  compatibility_confirmed?: boolean
+}
+
+export type VehicleIssue = {
+  id: number
+  slug: string
+  name: string
+  description: string
+  mapped_category_slugs: string[]
+}
+
+export type PartCategory = {
+  id: number
+  slug: string
+  name: string
+}
+
+export type MarketplaceSeller = {
+  id: string
+  business_name: string
+  is_approved: boolean
+  location_city?: string
+  contact_phone?: string
+  contact_whatsapp?: string
+  contact_email?: string
+}
+
+export const marketplaceApi = {
+  listParts: (params?: Record<string, string | number | undefined>) =>
+    api.get('/marketplace/parts/', { params }),
+  getPart: (id: string) => api.get(`/marketplace/parts/${id}/`),
+  createPart: (data: object) => api.post('/marketplace/parts/', data),
+  updatePart: (id: string, data: object) => api.patch(`/marketplace/parts/${id}/`, data),
+  deletePart: (id: string) => api.delete(`/marketplace/parts/${id}/`),
+  listIssues: () => api.get('/marketplace/issues/'),
+  listCategories: () => api.get('/marketplace/categories/'),
+  getSellerMe: () => api.get('/marketplace/sellers/me/'),
+  createSellerMe: () => api.post('/marketplace/sellers/me/'),
+  updateSellerMe: (data: object) => api.patch('/marketplace/sellers/me/', data),
+  recommendations: (vehicleId: string, issueSlug: string) =>
+    api.get('/marketplace/recommendations/', { params: { vehicle: vehicleId, issue: issueSlug } }),
+  bannerClick: (eventId: string, partId: string) =>
+    api.post(`/marketplace/banner-events/${eventId}/click/`, { part_id: partId }),
+  bannerContact: (eventId: string) =>
+    api.post(`/marketplace/banner-events/${eventId}/contact/`),
+}

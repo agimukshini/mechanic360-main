@@ -42,6 +42,7 @@ import type { RootState } from '@/store'
 import { canLogVisitWork, canManageWorkshopData, isMechanic, normalizeRole } from '@/lib/roles'
 import { hasInspectionContent, pickInspectionForVisit } from '@/lib/inspection'
 import { isAlreadyClosedVisitError, isVisitOpen, visitQueryOptions } from '@/lib/visits'
+import MarketplaceBanner from '@/components/marketplace/MarketplaceBanner'
 
 export default function VisitDetail() {
   const { t } = useTranslation()
@@ -555,6 +556,10 @@ export default function VisitDetail() {
 
       {activeTab === 'work' && (
       <>
+      {visit.vehicle?.id && (
+        <MarketplaceBanner vehicleId={visit.vehicle.id} />
+      )}
+
       <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-sm">
         <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
           <Car className="w-5 h-5 text-accent" />

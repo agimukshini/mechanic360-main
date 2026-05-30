@@ -36,7 +36,8 @@ import ServiceCatalogForm from './pages/services/ServiceCatalogForm'
 import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard'
 import MechanicsAnalyticsPage from './pages/analytics/MechanicsAnalyticsPage'
 import MarketplaceList from './pages/marketplace/MarketplaceList'
-import MarketplaceForm from './pages/marketplace/MarketplaceForm'
+import SellerDashboard from './pages/marketplace/SellerDashboard'
+import SellerPartForm from './pages/marketplace/SellerPartForm'
 import SettingsPage from './pages/settings/SettingsPage'
 import WorkshopLoginAuditPage from './pages/settings/WorkshopLoginAuditPage'
 import TeamPage from './pages/settings/TeamPage'
@@ -330,16 +331,32 @@ function App() {
         <Route
           path="marketplace"
           element={
-            <RoleGuard mode="workshop_manage">
+            <RoleGuard mode="marketplace_browse">
               <MarketplaceList />
             </RoleGuard>
           }
         />
         <Route
-          path="marketplace/new"
+          path="marketplace/seller"
           element={
             <RoleGuard mode="workshop_manage">
-              <MarketplaceForm />
+              <SellerDashboard />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="marketplace/seller/new"
+          element={
+            <RoleGuard mode="workshop_manage">
+              <SellerPartForm />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="marketplace/seller/:id/edit"
+          element={
+            <RoleGuard mode="workshop_manage">
+              <SellerPartForm />
             </RoleGuard>
           }
         />

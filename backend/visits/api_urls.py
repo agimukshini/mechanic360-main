@@ -31,6 +31,7 @@ from .analytics_views import (
     maintenance_forecast,
     mechanics_analytics_summary,
     mechanics_analytics_detail,
+    mechanics_analytics_export,
 )
 from .pdf_views import (
     generate_service_report,
@@ -58,6 +59,7 @@ urlpatterns = router.urls + [
     path("analytics/parts-consumption/", parts_consumption, name="parts-consumption"),
     path("analytics/maintenance-forecast/", maintenance_forecast, name="maintenance-forecast"),
     path("analytics/mechanics/", mechanics_analytics_summary, name="analytics-mechanics"),
+    path("analytics/mechanics/export/", mechanics_analytics_export, name="analytics-mechanics-export"),
     path("analytics/mechanics/<uuid:user_id>/", mechanics_analytics_detail, name="analytics-mechanics-detail"),
     path("reports/service-report/<str:visit_id>/", generate_service_report, name="service-report"),
     path("reports/door-sticker/<str:visit_id>/", generate_door_sticker, name="door-sticker"),

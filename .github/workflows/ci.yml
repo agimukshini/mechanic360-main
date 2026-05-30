@@ -44,7 +44,9 @@ jobs:
       - name: Django checks
         run: python manage.py check
       - name: Run tests
-        run: python manage.py test accounts vehicles mechanic360 --verbosity=2
+        run: python manage.py test accounts vehicles mechanic360 marketplace visits --verbosity=2
+      - name: i18n coverage tests
+        run: python manage.py test --tag=i18n --verbosity=2
 
   frontend:
     runs-on: ubuntu-latest
@@ -62,3 +64,5 @@ jobs:
         run: npm ci
       - name: Typecheck and build
         run: npm run build
+      - name: i18n audit
+        run: npm run i18n

@@ -23,7 +23,7 @@ from inventory.models import InventoryItem
 
 from mechanic360.permissions import IsAdvisorOrAdmin, IsTenantUser
 
-from .mechanic_analytics import mechanic_detail, mechanics_summary
+from .mechanic_analytics import mechanic_detail, mechanics_export_csv, mechanics_summary
 
 
 @api_view(['GET'])
@@ -203,6 +203,12 @@ def maintenance_forecast(request):
     forecast.sort(key=lambda x: (0 if 'Overdue' in x['next_due'] else 1, x['next_due']))
 
     return Response(forecast)
+
+
+@api_view(["GET"])
+@permission_classes([IsTenantUser])
+def mechanics_analytics_export(request):
+    return mechanics_export_csv(request)
 
 
 @api_view(["GET"])

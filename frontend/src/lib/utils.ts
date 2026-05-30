@@ -13,11 +13,39 @@ export function escapeHtml(value: unknown): string {
 
 /** Unwrap DRF paginated or plain list responses from Axios. */
 export function unwrapList<T>(response: { data?: unknown } | undefined): T[] {
-  const data = response?.data as { results?: T[] } | T[] | undefined
-  if (!data) return []
-  if (Array.isArray(data)) return data
-  if (Array.isArray(data.results)) return data.results
-  return []
+  return parsePaginatedResponse<T>(response).results
+}
+
+export type PaginatedResult<T> = {
+  results: T[]
+  count: number
+  next: string | null
+  previous: string | null
+}
+
+/** Parse DRF paginated `{ count, next, previous, results }` or a plain array. */
+export function parsePaginatedResponse<T>(
+  response: { data?: unknown } | undefined,
+): PaginatedResult<T> {
+  const data = response?.data as
+    | { results?: T[]; count?: number; next?: string | null; previous?: string | null }
+    | T[]
+    | undefined
+  if (!data) {
+    return { results: [], count: 0, next: null, previous: null }
+  }
+  if (Array.isArray(data)) {
+    return { results: data, count: data.length, next: null, previous: null }
+  }
+  if (Array.isArray(data.results)) {
+    return {
+      results: data.results,
+      count: typeof data.count === 'number' ? data.count : data.results.length,
+      next: data.next ?? null,
+      previous: data.previous ?? null,
+    }
+  }
+  return { results: [], count: 0, next: null, previous: null }
 }
 
 /**

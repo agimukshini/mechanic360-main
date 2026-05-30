@@ -89,6 +89,47 @@ def mechanics_summary(request):
     return Response({"days": days, "mechanics": rows})
 
 
+def mechanics_export_csv(request):
+    """Download mechanic KPI summary as CSV."""
+    import csv
+    from django.http import HttpResponse
+
+    days = int(request.query_params.get("days", 30))
+    since = _period_start(days)
+    rows = [_stats_for_mechanic(mechanic, since) for mechanic in _mechanics_for_request(request)]
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="mechanic-kpis-{days}d.csv"'
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "username",
+            "first_name",
+            "last_name",
+            "visits_completed",
+            "service_lines",
+            "labor_hours",
+            "revenue_total",
+            "vehicles_touched",
+        ],
+    )
+    for row in rows:
+        user = row["user"]
+        writer.writerow(
+            [
+                user.get("username", ""),
+                user.get("first_name", ""),
+                user.get("last_name", ""),
+                row["visits_completed"],
+                row["service_lines"],
+                row["labor_hours"],
+                row["revenue_total"],
+                row["vehicles_touched"],
+            ],
+        )
+    return response
+
+
 def mechanic_detail(request, user_id: str):
     days = int(request.query_params.get("days", 30))
     since = _period_start(days)

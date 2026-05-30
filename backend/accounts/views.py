@@ -16,6 +16,8 @@ from rest_framework.views import APIView
 
 from mechanic360.permissions import IsTenantAdmin, IsAdvisorOrAdmin
 
+from accounts.invite_services import MAX_TENANT_USERS, _pending_invite_count
+
 from .serializers import (
     RegisterSerializer,
     TenantUserManageSerializer,
@@ -134,6 +136,26 @@ class TenantUserViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         return User.objects.filter(tenant=user.tenant).exclude(role=User.Role.OWNER)
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        tenant = request.user.tenant
+        count = User.objects.filter(tenant=tenant).count()
+        pending = _pending_invite_count(tenant)
+        payload = response.data
+        if isinstance(payload, list):
+            results = payload
+        else:
+            results = payload.get("results", payload)
+        return Response(
+            {
+                "results": results,
+                "limit": MAX_TENANT_USERS,
+                "count": count,
+                "pending_invites": pending,
+                "remaining": max(0, MAX_TENANT_USERS - count - pending),
+            },
+        )
 
     def perform_destroy(self, instance):
         if instance.id == self.request.user.id:

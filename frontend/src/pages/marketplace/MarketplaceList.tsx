@@ -1,189 +1,189 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { api } from '@/api'
+import { marketplaceApi, type SparePart } from '@/api'
+import { Store, Search, Filter, Settings } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { parsePaginatedResponse } from '@/lib/utils'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/store'
+import { canManageWorkshopData, normalizeRole } from '@/lib/roles'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import {
-  Store, Plus, Search, Filter, MapPin, Phone, Mail, MessageCircle,
-  Tag
-} from 'lucide-react'
-import { useState } from 'react'
+  PartsGridView,
+  PartsListView,
+  PartsTableView,
+  MarketplacePagination,
+  ViewModeToggle,
+  readStoredMarketplaceView,
+  MARKETPLACE_VIEW_STORAGE_KEY,
+  type ViewMode,
+} from '@/components/marketplace/MarketplaceListViews'
 
-const CATEGORIES = [
-  { value: 'parts', tk: 'marketplaceList.categoryParts' },
-  { value: 'tools', tk: 'marketplaceList.categoryTools' },
-  { value: 'equipment', tk: 'marketplaceList.categoryEquipment' },
-  { value: 'other', tk: 'marketplaceList.categoryOther' },
-]
+const DEFAULT_PAGE_SIZE = 12
 
 export default function MarketplaceList() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
+  const user = useSelector((state: RootState) => state.auth.user)
+  const isAdmin = canManageWorkshopData(normalizeRole(user?.role))
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [viewMode, setViewMode] = useState<ViewMode>(readStoredMarketplaceView)
 
-  const { data: listingsData, isLoading } = useQuery({
-    queryKey: ['marketplace', searchTerm, selectedCategory],
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm, selectedCategory, pageSize])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(MARKETPLACE_VIEW_STORAGE_KEY, viewMode)
+    } catch {
+      /* ignore */
+    }
+  }, [viewMode])
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ['marketplace-categories'],
+    queryFn: () => marketplaceApi.listCategories(),
+  })
+
+  const categories = parsePaginatedResponse<{ slug: string; name: string }>(categoriesData).results
+
+  const { data: partsData, isLoading, isFetching } = useQuery({
+    queryKey: ['marketplace-parts', searchTerm, selectedCategory, page, pageSize],
     queryFn: () => {
-      const params: any = {}
+      const params: Record<string, string | number> = {
+        page,
+        page_size: pageSize,
+      }
       if (searchTerm) params.search = searchTerm
       if (selectedCategory) params.category = selectedCategory
-      return api.get('/marketplace/', { params })
+      return marketplaceApi.listParts(params)
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/marketplace/${id}/`),
+    mutationFn: (id: string) => marketplaceApi.deletePart(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['marketplace'] })
-      setDeleteConfirm(null)
+      queryClient.invalidateQueries({ queryKey: ['marketplace-parts'] })
+      queryClient.invalidateQueries({ queryKey: ['marketplace-my-parts'] })
+      setDeleteId(null)
     },
   })
 
-  const listings = listingsData?.data?.results || listingsData?.data || []
+  const { results: parts, count: totalCount } = parsePaginatedResponse<SparePart>(partsData)
+
+  const viewProps = {
+    parts,
+    canManage: isAdmin,
+    onDelete: setDeleteId,
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-workshop-charcoal">{t('marketplaceList.title')}</h1>
-          <p className="text-workshop-charcoal/60 mt-1">
-            {t('marketplaceList.subtitle')}
-          </p>
+          <h1 className="text-2xl font-bold text-workshop-charcoal flex items-center gap-2">
+            <Store className="w-7 h-7 text-accent" />
+            {t('marketplaceList.title')}
+          </h1>
+          <p className="text-workshop-charcoal/60 mt-1">{t('marketplaceCatalog.subtitle')}</p>
         </div>
-        <Link to="/marketplace/new" className="btn btn-primary">
-          <Plus className="w-4 h-4 mr-2" />
-          {t('marketplaceList.createListing')}
-        </Link>
+        {isAdmin && (
+          <div className="flex flex-wrap gap-2">
+            <Link to="/marketplace/seller/new" className="btn btn-outline">
+              {t('marketplaceSeller.addPart')}
+            </Link>
+            <Link to="/marketplace/seller" className="btn btn-primary">
+              <Settings className="w-4 h-4 mr-2" />
+              {t('marketplaceCatalog.manageListings')}
+            </Link>
+          </div>
+        )}
       </div>
 
-      <div className="card p-4">
+      <div className="card p-4 space-y-4">
         <div className="flex gap-4 flex-wrap">
           <div className="flex-1 min-w-[200px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-workshop-charcoal/40" />
             <input
               type="text"
-              placeholder={t('marketplaceList.searchPlaceholder')}
+              placeholder={t('marketplaceCatalog.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input pl-10"
             />
           </div>
-          <div className="relative">
+          <div className="relative min-w-[180px]">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-workshop-charcoal/40" />
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="input pl-10"
+              className="input pl-10 w-full"
             >
               <option value="">{t('marketplaceList.allCategories')}</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>{t(cat.tk)}</option>
+              {categories.map((cat) => (
+                <option key={cat.slug} value={cat.slug}>{cat.name}</option>
               ))}
             </select>
           </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-workshop-charcoal/10">
+          <p className="text-sm text-workshop-charcoal/60">
+            {t('marketplaceCatalog.viewMode')}
+          </p>
+          <ViewModeToggle viewMode={viewMode} onChange={setViewMode} />
         </div>
       </div>
 
       {isLoading ? (
         <div className="text-center py-12 text-workshop-charcoal/40">{t('marketplaceList.loading')}</div>
-      ) : listings.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {listings.map((listing: any) => (
-            <div key={listing.id} className="card p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-workshop-blue" />
-                  <span className="badge badge-info">{listing.category}</span>
-                </div>
-                <span className="text-lg font-bold text-workshop-blue">
-                  ${listing.price}
-                </span>
-              </div>
-
-              <h3 className="font-semibold text-workshop-charcoal mb-2">{listing.title}</h3>
-              <p className="text-sm text-workshop-charcoal/60 mb-4 line-clamp-2">
-                {listing.description || t('marketplaceList.noDescription')}
-              </p>
-
-              <div className="flex items-center gap-2 text-sm text-workshop-charcoal/60 mb-4">
-                <Store className="w-4 h-4" />
-                <span>{listing.tenant_name}</span>
-              </div>
-
-              {listing.tenant_address && (
-                <div className="flex items-center gap-2 text-sm text-workshop-charcoal/60 mb-4">
-                  <MapPin className="w-4 h-4" />
-                  <span className="line-clamp-1">{listing.tenant_address}</span>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between pt-4 border-t border-workshop-charcoal/10">
-                <div className="flex gap-2">
-                  {listing.contact_phone && (
-                    <a href={`tel:${listing.contact_phone}`} className="p-2 text-workshop-charcoal/40 hover:text-workshop-blue">
-                      <Phone className="w-4 h-4" />
-                    </a>
-                  )}
-                  {listing.contact_whatsapp && (
-                    <a href={`https://wa.me/${listing.contact_whatsapp}`} target="_blank" rel="noopener noreferrer" className="p-2 text-workshop-charcoal/40 hover:text-green-600">
-                      <MessageCircle className="w-4 h-4" />
-                    </a>
-                  )}
-                  {listing.contact_email && (
-                    <a href={`mailto:${listing.contact_email}`} className="p-2 text-workshop-charcoal/40 hover:text-workshop-blue">
-                      <Mail className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
-                <span className="text-sm text-workshop-charcoal/40">
-                  {t('marketplaceList.qtyLabel', { count: listing.quantity_available })}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
+      ) : parts.length === 0 ? (
         <div className="card p-12 text-center">
           <Store className="w-12 h-12 text-workshop-charcoal/20 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-workshop-charcoal mb-2">{t('marketplaceList.noListings')}</h3>
-          <p className="text-workshop-charcoal/60 mb-4">
-            {searchTerm || selectedCategory
-              ? t('marketplaceList.tryAdjusting')
-              : t('marketplaceList.beTheFirst')}
-          </p>
-          <Link to="/marketplace/new" className="btn btn-primary">
-            <Plus className="w-4 h-4 mr-2" />
-            {t('marketplaceList.createListing')}
-          </Link>
+          <h3 className="text-lg font-medium text-workshop-charcoal mb-2">{t('marketplaceCatalog.noParts')}</h3>
+          <p className="text-workshop-charcoal/60 mb-4">{t('marketplaceCatalog.noPartsHint')}</p>
+          {isAdmin && (
+            <Link to="/marketplace/seller" className="btn btn-primary">
+              {t('marketplaceCatalog.manageListings')}
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className={isFetching ? 'opacity-60 pointer-events-none transition-opacity' : ''}>
+          {viewMode === 'grid' && <PartsGridView {...viewProps} />}
+          {viewMode === 'list' && <PartsListView {...viewProps} />}
+          {viewMode === 'table' && <PartsTableView {...viewProps} />}
         </div>
       )}
 
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="card p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">{t('marketplaceList.deleteTitle')}</h3>
-            <p className="text-workshop-charcoal/60 mb-6">
-              {t('marketplaceList.deleteBody')}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="btn btn-outline"
-              >
-                {t('marketplaceList.cancel')}
-              </button>
-              <button
-                onClick={() => deleteMutation.mutate(deleteConfirm)}
-                className="btn btn-danger"
-                disabled={deleteMutation.isPending}
-              >
-                {deleteMutation.isPending ? t('marketplaceList.deleting') : t('marketplaceList.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+      {totalCount > 0 && (
+        <MarketplacePagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+        />
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteId)}
+        title={t('marketplaceSeller.deleteTitle')}
+        message={t('marketplaceSeller.deleteBody')}
+        confirmLabel={t('marketplaceList.delete')}
+        variant="danger"
+        onConfirm={() => deleteId && deleteMutation.mutate(deleteId)}
+        onCancel={() => setDeleteId(null)}
+        loading={deleteMutation.isPending}
+      />
     </div>
   )
 }

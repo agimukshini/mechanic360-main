@@ -56,7 +56,12 @@ export function isTenantAdmin(role: AppRole | null): boolean {
   return role === 'admin'
 }
 
+/** Browse cross-workshop spare parts (read-only for mechanics). */
+export function canBrowseMarketplace(role: AppRole | null): boolean {
+  return canManageWorkshopData(role) || role === 'mechanic'
+}
+
 /** Sidebar entries for mechanic-focused workflow. */
 export function mechanicNavigationIds(): string[] {
-  return ['dashboard', 'vehicles', 'visits', 'mechanics']
+  return ['dashboard', 'vehicles', 'visits', 'marketplace', 'mechanics']
 }

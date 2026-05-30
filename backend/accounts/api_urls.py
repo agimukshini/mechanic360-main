@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+from mechanic360.i18n_views import TranslationCoverageView
 from .auth_views import LogoutView, ThrottledTokenObtainPairView, ThrottledTokenRefreshView
 from .login_audit_views import SuperadminLoginAuditListView, TenantLoginAuditListView
 from .invite_views import (
@@ -59,6 +60,11 @@ urlpatterns = [
     ),
     path("login-audit/", TenantLoginAuditListView.as_view(), name="auth_login_audit"),
     path("admin/login-audit/", SuperadminLoginAuditListView.as_view(), name="auth_admin_login_audit"),
+    path(
+        "admin/translation-coverage/",
+        TranslationCoverageView.as_view(),
+        name="auth_admin_translation_coverage",
+    ),
 
     # Notifications
     path("notifications/", NotificationListView.as_view(), name="notifications-list"),
