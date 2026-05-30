@@ -525,6 +525,7 @@
           "assignee": "Full Stack Developer",
           "tasks": [
             "Persist theme and notification preferences",
+            "Ensure the whole frontend follows the user's preferred theme",
             "Fix SettingsPage error mapping and i18n",
             "Split profile vs workshop settings by role",
             "Add backend tests for password and PIN change"
