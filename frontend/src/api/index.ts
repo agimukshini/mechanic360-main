@@ -121,6 +121,11 @@ export const tenantsApi = {
   delete: (id: string) => api.delete(`/tenants/admin/tenants/${id}/`),
 }
 
+export const platformIssuerApi = {
+  get: () => api.get('/tenants/admin/platform-issuer/'),
+  update: (data: object) => api.patch('/tenants/admin/platform-issuer/', data),
+}
+
 // Clients API
 export const clientsApi = {
   list: (params?: object) => api.get('/clients/', { params }),

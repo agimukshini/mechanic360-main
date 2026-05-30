@@ -11,6 +11,7 @@ from .models import (
     GlobalVehicle,
     OwnershipTransfer,
     PlatformInvoice,
+    PlatformIssuerProfile,
     TenantPlatformBilling,
     TransferBilling,
     VehicleAuditEvent,
@@ -425,6 +426,50 @@ class VehicleRegistrationChargeSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = fields
+
+
+class PlatformIssuerProfileSerializer(serializers.ModelSerializer):
+    updated_by_username = serializers.CharField(
+        source="updated_by.username",
+        read_only=True,
+    )
+    display_name = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = PlatformIssuerProfile
+        fields = [
+            "company_name",
+            "trade_name",
+            "display_name",
+            "address_line1",
+            "address_line2",
+            "city",
+            "postal_code",
+            "country",
+            "vat_number",
+            "company_registration_number",
+            "email",
+            "phone",
+            "website",
+            "bank_name",
+            "iban",
+            "vat_rate_percent",
+            "amounts_include_vat",
+            "invoice_footer",
+            "updated_by_username",
+            "updated_at",
+        ]
+        read_only_fields = ["display_name", "updated_by_username", "updated_at"]
+
+    def validate_vat_rate_percent(self, value):
+        if value < 0 or value > 100:
+            raise serializers.ValidationError("VAT rate must be between 0 and 100.")
+        return value
+
+    def validate_iban(self, value):
+        if value and len(value.replace(" ", "")) < 8:
+            raise serializers.ValidationError("IBAN looks too short.")
+        return (value or "").replace(" ", "").upper()
 
 
 class PlatformInvoiceSerializer(serializers.ModelSerializer):

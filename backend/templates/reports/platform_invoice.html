@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ L.doc_title }} — {{ invoice_number }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm 11mm 12mm 11mm;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "DejaVu Sans", Helvetica, Arial, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.28;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .letterhead {
+            display: table;
+            width: 100%;
+            border-bottom: 2px solid #0077b6;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        .letterhead-left,
+        .letterhead-right {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .letterhead-right {
+            text-align: right;
+            width: 44%;
+        }
+
+        .workshop-name {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #0077b6;
+            margin: 0 0 2px 0;
+        }
+
+        .workshop-meta {
+            font-size: 7.5pt;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.25;
+        }
+
+        .doc-title {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 0 0 3px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .doc-meta {
+            font-size: 7.5pt;
+            color: #475569;
+            margin: 1px 0;
+        }
+
+        .doc-ref {
+            display: inline-block;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 8pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin-top: 3px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 1px 7px;
+            border-radius: 999px;
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 4px;
+            border: 1px solid transparent;
+        }
+
+        .status-badge.ok {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .status-badge.bad {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        .status-badge.warn {
+            background: #fef9c3;
+            color: #854d0e;
+            border-color: #fde047;
+        }
+
+        .status-badge.neutral {
+            background: #f1f5f9;
+            color: #475569;
+            border-color: #cbd5e1;
+        }
+
+        h2.section-title {
+            font-size: 8.5pt;
+            font-weight: bold;
+            color: #0077b6;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 3px;
+            margin: 10px 0 5px 0;
+        }
+
+        table.compact-meta {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4px;
+            font-size: 8pt;
+        }
+
+        table.compact-meta td {
+            width: 25%;
+            vertical-align: top;
+            padding: 2px 6px 4px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 6.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 1px;
+        }
+
+        .field-value {
+            font-size: 9pt;
+            font-weight: bold;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .field-sub {
+            font-size: 7pt;
+            color: #64748b;
+            line-height: 1.2;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+            font-size: 8pt;
+        }
+
+        table.data-table thead th {
+            background: #0077b6;
+            color: #fff;
+            font-weight: bold;
+            text-align: left;
+            padding: 4px 6px;
+            font-size: 6.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        table.data-table tbody td {
+            padding: 3px 6px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        table.data-table tbody tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        table.data-table .num {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .totals-wrap {
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .totals-wrap table {
+            width: 48%;
+            margin-left: auto;
+            border-collapse: collapse;
+            border: 1px solid #1b263b;
+            font-size: 8pt;
+        }
+
+        .totals-wrap td {
+            padding: 3px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .totals-wrap tr:last-child td {
+            border-bottom: none;
+            background: #1b263b;
+            color: #fff;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+
+        .totals-wrap .label { color: #475569; }
+        .totals-wrap .amount { text-align: right; font-weight: bold; }
+        .totals-wrap tr:last-child .label { color: #e2e8f0; }
+
+        .notes-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 4px;
+            padding: 6px 8px;
+            font-size: 8pt;
+            color: #78350f;
+            white-space: pre-wrap;
+            margin-top: 8px;
+        }
+
+        .notes-box.payment {
+            background: #f0f9ff;
+            border-color: #bae6fd;
+            color: #0c4a6e;
+        }
+
+        .footer-legal {
+            margin-top: 12px;
+            padding-top: 6px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 6.5pt;
+            color: #94a3b8;
+            text-align: center;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="letterhead">
+        <div class="letterhead-left">
+            <p class="workshop-name">{{ issuer_display_name }}</p>
+            {% if issuer_company_name and issuer_trade_name and issuer_company_name != issuer_trade_name %}
+            <p class="workshop-meta">{{ issuer_company_name }}</p>
+            {% endif %}
+            {% if issuer_street %}<p class="workshop-meta">{{ issuer_street }}</p>{% endif %}
+            {% if issuer_city_line or issuer_country %}
+            <p class="workshop-meta">
+                {% if issuer_city_line %}{{ issuer_city_line }}{% endif %}
+                {% if issuer_city_line and issuer_country %}, {% endif %}
+                {% if issuer_country %}{{ issuer_country }}{% endif %}
+            </p>
+            {% endif %}
+            {% if issuer_vat_number or issuer_reg_number %}
+            <p class="workshop-meta">
+                {% if issuer_vat_number %}{{ L.label_vat_no }}: {{ issuer_vat_number }}{% endif %}
+                {% if issuer_vat_number and issuer_reg_number %} · {% endif %}
+                {% if issuer_reg_number %}{{ L.label_reg_no }}: {{ issuer_reg_number }}{% endif %}
+            </p>
+            {% endif %}
+            {% if issuer_phone or issuer_email or issuer_website %}
+            <p class="workshop-meta">
+                {% if issuer_phone %}{{ L.tel_prefix }}: {{ issuer_phone }}{% endif %}
+                {% if issuer_phone and issuer_email %} · {% endif %}
+                {% if issuer_email %}{{ L.email_prefix }}: {{ issuer_email }}{% endif %}
+                {% if issuer_website %}{% if issuer_phone or issuer_email %} · {% endif %}{{ issuer_website }}{% endif %}
+            </p>
+            {% endif %}
+        </div>
+        <div class="letterhead-right">
+            <p class="doc-title">{{ L.doc_title }}</p>
+            <p class="doc-meta">
+                {% if issued_at %}{{ L.label_issued }}: {{ issued_at|date:"d M Y" }}{% endif %}
+                {% if issued_at %} · {% endif %}
+                {{ L.printed_label }}: {{ generated_at|date:"d M Y, H:i" }}
+            </p>
+            <span class="doc-ref">{{ L.ref_label }}: {{ invoice_number }}</span>
+            <span class="status-badge {{ payment_status_class }}">{{ payment_status }}</span>
+        </div>
+    </div>
+
+    <h2 class="section-title">{{ L.section_bill_to }}</h2>
+    <table class="compact-meta">
+        <tr>
+            <td colspan="2">
+                <span class="field-label">{{ L.section_bill_to }}</span>
+                <span class="field-value">{{ tenant_name }}</span>
+                {% if tenant_address %}
+                <span class="field-sub">{{ tenant_address|linebreaksbr }}</span>
+                {% endif %}
+            </td>
+            <td colspan="2">
+                {% if tenant_phone or tenant_email %}
+                <span class="field-label">{{ L.email_prefix }}</span>
+                <span class="field-sub">
+                    {% if tenant_phone %}{{ tenant_phone }}{% endif %}
+                    {% if tenant_phone and tenant_email %} · {% endif %}
+                    {% if tenant_email %}{{ tenant_email }}{% endif %}
+                </span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <h2 class="section-title">{{ L.section_details }}</h2>
+    <table class="compact-meta">
+        <tr>
+            <td>
+                <span class="field-label">{{ L.label_issued }}</span>
+                <span class="field-value">{% if issued_at %}{{ issued_at|date:"d M Y" }}{% else %}—{% endif %}</span>
+            </td>
+            <td>
+                <span class="field-label">{{ L.label_due }}</span>
+                <span class="field-value">{% if due_at %}{{ due_at|date:"d M Y" }}{% else %}—{% endif %}</span>
+            </td>
+            <td>
+                <span class="field-label">{{ L.label_period }}</span>
+                <span class="field-value">
+                    {% if period_start and period_end %}
+                    {{ period_start|date:"d M Y" }} — {{ period_end|date:"d M Y" }}
+                    {% else %}—{% endif %}
+                </span>
+            </td>
+            <td>
+                <span class="field-label">{{ L.label_kind }}</span>
+                <span class="field-value">{{ invoice_kind }}</span>
+            </td>
+        </tr>
+        {% if invoice_reference %}
+        <tr>
+            <td colspan="4">
+                <span class="field-label">{{ L.label_payment_ref }}</span>
+                <span class="field-value">{{ invoice_reference }}</span>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+
+    <h2 class="section-title">{{ L.section_lines }}</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>{{ L.col_description }}</th>
+                <th class="num" style="width: 22%;">{{ L.col_amount }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in line_items %}
+            <tr>
+                <td>{{ line.description }}</td>
+                <td class="num">{{ currency_symbol }}{{ line.amount|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals-wrap">
+        <table>
+            <tr>
+                <td class="label">{{ L.subtotal_net }}</td>
+                <td class="amount">{{ currency_symbol }}{{ totals.net|floatformat:2 }}</td>
+            </tr>
+            {% if show_vat %}
+            <tr>
+                <td class="label">{{ L.vat }} ({{ totals.rate_percent|floatformat:0 }}%)</td>
+                <td class="amount">{{ currency_symbol }}{{ totals.vat|floatformat:2 }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td class="label">{{ L.total }}</td>
+                <td class="amount">{{ currency_symbol }}{{ totals.gross|floatformat:2 }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {% if bank_name or iban %}
+    <div class="notes-box payment">
+        <strong>{{ L.section_payment }}</strong><br>
+        {% if bank_name %}{{ bank_name }}<br>{% endif %}
+        {% if iban %}{{ L.label_iban }}: {{ iban }}{% endif %}
+    </div>
+    {% endif %}
+
+    {% if invoice_footer %}
+    <div class="notes-box">{{ invoice_footer|linebreaksbr }}</div>
+    {% endif %}
+
+    <p class="footer-legal">
+        {{ L.footer_generated }} · {{ invoice_number }}
+        {% if currency_code %} · {{ currency_code }}{% endif %}
+    </p>
+
+</body>
+</html>

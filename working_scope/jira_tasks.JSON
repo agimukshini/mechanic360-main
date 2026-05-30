@@ -627,6 +627,21 @@
             "Subscription period timeline on tenants list and detail",
             "Workshop Settings platform invoices panel"
           ]
+        },
+        {
+          "key": "MECH-46",
+          "summary": "Platform issuer profile and invoice PDF layout",
+          "description": "Admin company/VAT settings; issuer frozen on invoice; subscription PDF aligned with visit service report styling",
+          "status": "Done",
+          "priority": "High",
+          "estimate": "2 days",
+          "assignee": "Full Stack Developer",
+          "tasks": [
+            "PlatformIssuerProfile model and GET/PATCH admin API",
+            "AdminCompanyPage (/admin/company)",
+            "VAT breakdown on PDF; templates/reports/platform_invoice.html",
+            "global_vehicles.tests.test_platform_issuer"
+          ]
         }
       ]
     }

@@ -54,6 +54,7 @@ import AdminTransfersPage from './pages/admin/AdminTransfersPage'
 import AdminVehicleAuditPage from './pages/admin/AdminVehicleAuditPage'
 import AdminTranslationCoveragePage from './pages/admin/AdminTranslationCoveragePage'
 import AdminInvoicesPage from './pages/admin/AdminInvoicesPage'
+import AdminCompanyPage from './pages/admin/AdminCompanyPage'
 import AdminSubscriptionsPage from './pages/admin/AdminSubscriptionsPage'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -161,6 +162,7 @@ function App() {
         <Route path="security/logins" element={<AdminLoginAuditPage />} />
         <Route path="translation-coverage" element={<AdminTranslationCoveragePage />} />
         <Route path="invoices" element={<AdminInvoicesPage />} />
+        <Route path="company" element={<AdminCompanyPage />} />
         <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
       </Route>
 

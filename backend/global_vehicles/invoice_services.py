@@ -15,6 +15,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .audit import log_vehicle_event
+from .issuer_services import issuer_snapshot_dict
 from .models import PlatformInvoice, TenantPlatformBilling, TransferBilling, VehicleAuditEvent
 
 logger = logging.getLogger(__name__)
@@ -132,6 +133,7 @@ def issue_subscription_invoice(
             "tenant_id": str(billing.tenant_id),
             "tenant_name": billing.tenant.name,
             "captured_at": as_of.isoformat(),
+            "issuer": issuer_snapshot_dict(),
         },
     )
 

@@ -49,7 +49,7 @@ Full scope: **`working_scope/USER_PROFILE_MECHANICS_AND_AUDIT.md`**.
 | Mechanic work attribution | Implemented — line-level `performed_by` on service/labor lines |
 | Mechanic KPI dashboard | Implemented — `/analytics/mechanics`, charts, CSV/PDF export |
 | Platform admin console | Implemented — tenants, onboarding, audit, transfers, translation health (mobile-friendly) |
-| Platform subscription billing | Implemented — per-tenant pricing, invoices, PDF, reminders, grace suspension, period timeline — see **`PLATFORM_SUBSCRIPTION_BILLING.md`** |
+| Platform subscription billing | Implemented — per-tenant pricing, invoices, service-report-style PDF, company/VAT issuer profile, reminders, grace suspension, period timeline — see **`PLATFORM_SUBSCRIPTION_BILLING.md`** |
 
 ## Forbidden
 

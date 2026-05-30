@@ -16,6 +16,7 @@ from global_vehicles.invoice_views import (
     IssueSubscriptionInvoiceView,
     WorkshopPlatformInvoiceViewSet,
 )
+from global_vehicles.issuer_views import AdminPlatformIssuerView
 from global_vehicles.transfer_views import (
     AdminRegistrationChargeViewSet,
     AdminTenantPlatformBillingViewSet,
@@ -56,6 +57,11 @@ urlpatterns = [
     path("register/", TenantRegisterView.as_view(), name="tenant_register"),
     path("admin/dashboard/", SuperadminDashboardView.as_view(), name="admin-dashboard"),
     path("admin/global/", SuperadminGlobalRegistryView.as_view(), name="admin-global"),
+    path(
+        "admin/platform-issuer/",
+        AdminPlatformIssuerView.as_view(),
+        name="admin-platform-issuer",
+    ),
     path(
         "platform-billing/<uuid:tenant_id>/issue-subscription-invoice/",
         IssueSubscriptionInvoiceView.as_view(),

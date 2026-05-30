@@ -23,8 +23,21 @@ Workshop admins see open platform invoices in Settings and billing alert banners
 | `TenantPlatformBilling` | Per-tenant fee config; `subscription_next_charge_at` drives billing cron |
 | `PlatformInvoice` | Issued invoices (`kind=subscription`, `period_start`, `period_end`, `due_at`, payment status) |
 | `PlatformInvoiceReminder` | Idempotent reminder log (due / period-end / overdue / deactivation) |
+| `PlatformIssuerProfile` | Singleton — our company legal details, VAT, bank info for invoice PDFs |
 
 `WorkshopTenant.subscription_plan` is a legacy label only (`none` default). UI uses `subscription_display_key`: `free` \| `trial` (explicit only) \| `paid`.
+
+---
+
+## Company & VAT on invoices
+
+Configure at **Admin → Company / VAT** (`/admin/company`). Stored in `PlatformIssuerProfile` (singleton).
+
+Fields: legal name, trading name, address, VAT number, company registration (NIPT), contact, bank/IBAN, VAT rate %, whether subscription amounts include VAT, invoice footer.
+
+When a subscription invoice is issued, issuer details are frozen in `invoice.snapshot.issuer`. PDF uses the same layout as visit **service reports** (`templates/reports/platform_invoice.html`): letterhead, bill-to section, line items table, net/VAT/total box, payment details (IBAN), and footer. Labels follow tenant language (`sq` / `en`).
+
+API: `GET/PATCH /api/v1/tenants/admin/platform-issuer/`
 
 ---
 
@@ -63,6 +76,7 @@ Reactivation: marking the invoice paid re-enables `tenant.is_active` when no oth
 |-------|---------|
 | `/admin/subscriptions` | Per-workshop price/period; grid or table view |
 | `/admin/invoices` | List, filter, mark paid, PDF export |
+| `/admin/company` | Our company legal details, VAT rate, bank info for PDFs |
 | `/admin/tenants` | Plan + **period timeline** per row |
 | `/admin/tenants/:id` | Billing panel + period progress |
 
@@ -98,6 +112,7 @@ Workshop: **Settings → Platform invoices** + billing alert in dashboard layout
 ## Tests
 
 - `global_vehicles.tests.test_platform_invoices`
+- `global_vehicles.tests.test_platform_issuer` — issuer profile API, VAT breakdown, PDF template
 - `global_vehicles.tests.test_subscription_reminders`
 - `tenancy.tests.test_subscription_period`
 - `tenancy.tests.test_dashboard`

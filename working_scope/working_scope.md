@@ -22,7 +22,7 @@ Mobile/tablet friendly interface for mechanics.
 ## 2. Tenant (Workshop) Management
 Each workshop has:
 - Business name, logo, address, contact info
-- Subscription / billing plan — **platform subscription** configured by superadmin (`TenantPlatformBilling`); membership period start/end on admin tenant views — see **[PLATFORM_SUBSCRIPTION_BILLING.md](PLATFORM_SUBSCRIPTION_BILLING.md)**
+- Subscription / billing plan — **platform subscription** configured by superadmin (`TenantPlatformBilling`); issuer company/VAT for PDFs at Admin → Company; membership period start/end on admin tenant views — see **[PLATFORM_SUBSCRIPTION_BILLING.md](PLATFORM_SUBSCRIPTION_BILLING.md)**
 - Staff accounts with roles:
   - Admin
   - Service Advisor

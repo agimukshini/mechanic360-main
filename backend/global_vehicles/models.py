@@ -747,6 +747,82 @@ class VehicleRegistrationCharge(models.Model):
         return f"Reg charge {self.fee_amount} {self.fee_currency} — {self.payment_status}"
 
 
+class PlatformIssuerProfile(models.Model):
+    """
+    Singleton — legal entity details shown as the issuer on platform invoices.
+    """
+
+    singleton_id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+
+    company_name = models.CharField(max_length=255, blank=True)
+    trade_name = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Optional trading name (e.g. Workshop360) shown on invoices.",
+    )
+    address_line1 = models.CharField(max_length=255, blank=True)
+    address_line2 = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=128, blank=True)
+    postal_code = models.CharField(max_length=32, blank=True)
+    country = models.CharField(max_length=64, blank=True, default="Albania")
+    vat_number = models.CharField(max_length=64, blank=True)
+    company_registration_number = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text="Business / company registration (e.g. NIPT).",
+    )
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=64, blank=True)
+    website = models.URLField(blank=True)
+    bank_name = models.CharField(max_length=128, blank=True)
+    iban = models.CharField(max_length=64, blank=True)
+    vat_rate_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        help_text="VAT rate applied on subscription invoices (0 = no VAT line).",
+    )
+    amounts_include_vat = models.BooleanField(
+        default=True,
+        help_text="When true, invoice amounts include VAT; PDF shows net + VAT breakdown.",
+    )
+    invoice_footer = models.TextField(
+        blank=True,
+        help_text="Optional footer text on PDF invoices (payment terms, legal note).",
+    )
+
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="updated_platform_issuer_profiles",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Platform issuer profile"
+        verbose_name_plural = "Platform issuer profile"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(singleton_id=1),
+                name="platform_issuer_singleton",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return self.display_name or "Platform issuer"
+
+    @property
+    def display_name(self) -> str:
+        return (self.trade_name or self.company_name or "").strip()
+
+    @classmethod
+    def load(cls) -> "PlatformIssuerProfile":
+        profile, _ = cls.objects.get_or_create(singleton_id=1)
+        return profile
+
+
 class PlatformInvoice(models.Model):
     """
     Unified platform → tenant invoice.
