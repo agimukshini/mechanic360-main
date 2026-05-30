@@ -1,0 +1,54 @@
+# =========================================================
+# Cursor Indexing Ignore
+# Purpose: reduce indexed context size aggressively.
+# =========================================================
+
+node_modules/
+.venv/
+venv/
+env/
+__pycache__/
+dist/
+build/
+.next/
+.cache/
+.turbo/
+coverage/
+logs/
+media/
+uploads/
+staticfiles/
+data/
+postgres-data/
+mysql-data/
+redis-data/
+mongo-data/
+.git/
+
+*.log
+*.sqlite3
+*.db
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.mp4
+*.zip
+*.pdf
+*.docx
+*.xlsx
+*.pptx
+
+.env
+.env.*
+secrets/
+credentials/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+credentials.json
+token.json
+google-service-account*.json

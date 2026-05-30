@@ -1,0 +1,35 @@
+# Cursor Project Rules
+
+Always read `working_scope/` before suggesting changes.
+
+Do not patch symptoms randomly. First identify:
+1. intended architecture
+2. affected module
+3. exact files needed
+4. minimal change set
+
+Never scan or reference:
+- node_modules
+- build/dist folders
+- media/uploads
+- logs
+- generated reports
+- secrets/env files
+- database dumps
+
+Prefer small, targeted edits over full-project rewrites.
+
+For Django:
+- keep business logic in services/selectors where applicable
+- keep views thin
+- respect existing app boundaries
+- do not create duplicate models without checking existing models
+
+For React:
+- follow existing component structure
+- do not introduce new UI libraries unless already used
+- keep API calls in existing service/client layer
+
+For Docker:
+- do not change ports, volumes, or environment variables unless explicitly requested
+- explain deployment impact before changing compose files
