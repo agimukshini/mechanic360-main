@@ -526,6 +526,10 @@
           "tasks": [
             "Persist theme and notification preferences",
             "Ensure the whole frontend follows the user's preferred theme",
+            "Load the saved theme preference from authenticated user settings on app start",
+            "Apply light, dark, and system theme modes globally via the document root",
+            "Keep SettingsPage saves, auth state, and local theme storage synchronized",
+            "Add frontend regression coverage for theme persistence across refresh and navigation",
             "Fix SettingsPage error mapping and i18n",
             "Split profile vs workshop settings by role",
             "Add backend tests for password and PIN change"
