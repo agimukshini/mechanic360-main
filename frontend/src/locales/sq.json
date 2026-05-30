@@ -239,7 +239,15 @@
     "cancelBtn": "Anulo",
     "unitPriceEuro": "Çmimi për njësi (€)",
     "totalEuro": "Totali (€)",
-    "removeLine": "Hiq rreshtin"
+    "removeLine": "Hiq rreshtin",
+    "pmPanelTitle": "Shërbime të planifikuara të hapura",
+    "pmPanelHint": "Zgjidhni çdo PM për të shtuar një rresht mbylljeje me çmim zero, pastaj shtoni punën me pagesë (vaj, filtra, diagnostikë, etj.) te Puna.",
+    "pmPanelLoading": "Duke ngarkuar shërbimet e planifikuara…",
+    "pmAddClosure": "Shto mbylljen e PM",
+    "pmClosureAdded": "Mbyllja e PM u shtua",
+    "pmClosureCatalogLine": "Artikulli i mbylljes në katalog",
+    "pmClosureMissingCatalog": "Nuk ka artikull mbylljeje PM në katalog për këtë lloj. Shtoni një te Shërbimet.",
+    "pmClosureAddFailed": "Mbyllja e PM nuk u shtua"
   },
   "analytics": {
     "title": "Paneli i analitikës",
@@ -729,7 +737,7 @@
     "dueDate": "Afati",
     "dueKm": "Afati në {{km}} km",
     "contactOwnerHint": "Kontaktoni pronarin e automjetit para se të caktoni vizitën.",
-    "autoCompleteHint": "Urdhërat PM mbyllen automatikisht kur automjeti regjistrohet dhe vizita përfundon me shërbime përkatëse nga katalogu.",
+    "autoCompleteHint": "Urdhërat PM mbyllen kur përfundoni vizitën me një rresht mbylljeje PM me çmim zero nga katalogu, plus çdo punë me pagesë që keni kryer.",
     "markCompleted": "Shëno si përfunduar",
     "catalogFilterHint": "Vetëm punëtoritë me shërbime përkatëse në katalog shohin këto shërbime të planifikuara.",
     "ownerSectionTitle": "Mirëmbajtje e ardhshme",

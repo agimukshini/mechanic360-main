@@ -50,6 +50,13 @@ class ServiceCatalogItem(models.Model):
         default="",
         help_text="When set, this catalog service counts toward preventive maintenance offers.",
     )
+    is_pm_closure = models.BooleanField(
+        default=False,
+        help_text=(
+            "When true, adding this catalog line to a visit closes the matching open PM "
+            "order on finish. Closure lines are always priced at zero."
+        ),
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -324,7 +324,7 @@ export const visitsApi = {
     api.post(`/visits/${id}/finish/`, data ?? {}),
   cancelVisit: (id: string) => api.post(`/visits/${id}/cancel/`),
   catalog: {
-    list: () => api.get('/visits/catalog/'),
+    list: (params?: Record<string, string>) => api.get('/visits/catalog/', { params }),
     get: (id: string) => api.get(`/visits/catalog/${id}/`),
     create: (data: object) => api.post('/visits/catalog/', data),
     update: (id: string, data: object) => api.put(`/visits/catalog/${id}/`, data),

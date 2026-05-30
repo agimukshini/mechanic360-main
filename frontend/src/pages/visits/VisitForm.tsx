@@ -9,6 +9,7 @@ import { isAlreadyClosedVisitError, isVisitClosed, isVisitOpen, visitQueryOption
 import ServiceLineForm from './ServiceLineForm'
 import LaborLineForm from './LaborLineForm'
 import MaterialLineForm from './MaterialLineForm'
+import VisitPmPanel from '@/components/visits/VisitPmPanel'
 import { PageTabs, SegmentTabs } from '@/components/ui/PageTabs'
 import VisitStatusBadge from '@/components/ui/VisitStatusBadge'
 import { WorkLineList, type WorkLineRow } from '@/components/visits/WorkLineList'
@@ -344,7 +345,13 @@ function VisitEditor({
 }: {
   visitId: string
   visit: { status: string }
-  selectedVehicle?: { make: string; model: string; license_plate: string; owner?: { name: string } }
+  selectedVehicle?: {
+    make: string
+    model: string
+    license_plate: string
+    global_vehicle_id?: string | null
+    owner?: { name: string }
+  }
   mileage: number
   setMileage: (n: number) => void
   hourMeter: number
@@ -355,6 +362,7 @@ function VisitEditor({
   isEditable: boolean
   serviceLines: {
     id: string
+    catalog_item?: string | null
     description: string
     quantity: number
     total_price: string | number
@@ -460,6 +468,15 @@ function VisitEditor({
             {formatEuro(grandTotal)}
           </span>
         </div>
+      )}
+
+      {visitId && selectedVehicle && (
+        <VisitPmPanel
+          visitId={visitId}
+          globalVehicleId={selectedVehicle.global_vehicle_id}
+          serviceLines={serviceLines}
+          isEditable={isEditable}
+        />
       )}
 
       <PageTabs

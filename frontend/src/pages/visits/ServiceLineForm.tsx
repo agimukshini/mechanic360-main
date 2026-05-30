@@ -40,8 +40,8 @@ export default function ServiceLineForm({ isOpen, onClose }: ServiceLineFormProp
   })
 
   const { data: catalogData } = useQuery({
-    queryKey: ['service-catalog'],
-    queryFn: () => visitsApi.catalog.list(),
+    queryKey: ['service-catalog', { exclude_pm_closure: true }],
+    queryFn: () => visitsApi.catalog.list({ exclude_pm_closure: 'true' }),
     enabled: useCatalog && isOpen,
   })
 

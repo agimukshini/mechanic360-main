@@ -242,6 +242,7 @@ class ServiceCatalogItemSerializer(serializers.ModelSerializer):
             "default_duration_hours",
             "default_price",
             "pm_kind",
+            "is_pm_closure",
             "is_active",
             "created_at",
             "updated_at",
@@ -290,6 +291,14 @@ class ServiceVisitSummarySerializer(serializers.ModelSerializer):
         return f"{v.license_plate} - {v.make} {v.model}"
 
 
+def _apply_pm_closure_pricing(validated_data: dict) -> None:
+    """PM closure catalog lines are always zero-priced."""
+    catalog_item = validated_data.get("catalog_item")
+    if catalog_item is not None and getattr(catalog_item, "is_pm_closure", False):
+        validated_data["unit_price"] = 0
+        validated_data["total_price"] = 0
+
+
 class VisitServiceLineSerializer(serializers.ModelSerializer):
     visit = ServiceVisitSummarySerializer(read_only=True)
     visit_id = serializers.UUIDField(write_only=True)
@@ -320,11 +329,16 @@ class VisitServiceLineSerializer(serializers.ModelSerializer):
             catalog_item = validated_data.get("catalog_item")
             if catalog_item is not None:
                 validated_data["description"] = catalog_item.name
+        _apply_pm_closure_pricing(validated_data)
         apply_performed_by_to_validated_data(self, validated_data)
         return VisitServiceLine.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         validated_data.pop("visit_id", None)
+        catalog_item = validated_data.get("catalog_item", instance.catalog_item)
+        if catalog_item is not None and getattr(catalog_item, "is_pm_closure", False):
+            validated_data["unit_price"] = 0
+            validated_data["total_price"] = 0
         apply_performed_by_to_validated_data(self, validated_data)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

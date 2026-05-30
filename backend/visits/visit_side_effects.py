@@ -99,7 +99,11 @@ def resolve_pm_on_visit_completed(visit, *, tenant) -> int:
 
     pm_kinds = {
         row
-        for row in VisitServiceLine.objects.filter(visit=visit, catalog_item__isnull=False)
+        for row in VisitServiceLine.objects.filter(
+            visit=visit,
+            catalog_item__isnull=False,
+            catalog_item__is_pm_closure=True,
+        )
         .exclude(catalog_item__pm_kind="")
         .values_list("catalog_item__pm_kind", flat=True)
         .distinct()

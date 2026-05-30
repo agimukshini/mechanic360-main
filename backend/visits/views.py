@@ -222,6 +222,19 @@ class ServiceCatalogViewSet(AdvisorWriteMixin, viewsets.ModelViewSet):
     ordering_fields = ["name", "created_at"]
     ordering = ["name"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        is_pm_closure = self.request.query_params.get("is_pm_closure")
+        if is_pm_closure is not None:
+            if is_pm_closure.lower() in {"1", "true", "yes"}:
+                queryset = queryset.filter(is_pm_closure=True)
+            elif is_pm_closure.lower() in {"0", "false", "no"}:
+                queryset = queryset.filter(is_pm_closure=False)
+        exclude_pm_closure = self.request.query_params.get("exclude_pm_closure")
+        if exclude_pm_closure is not None and exclude_pm_closure.lower() in {"1", "true", "yes"}:
+            queryset = queryset.filter(is_pm_closure=False)
+        return queryset
+
 
 class VisitServiceLineViewSet(MechanicOwnWorkLineMixin, viewsets.ModelViewSet):
     """

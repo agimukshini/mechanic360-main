@@ -239,7 +239,15 @@
     "cancelBtn": "Cancel",
     "unitPriceEuro": "Unit price (€)",
     "totalEuro": "Total (€)",
-    "removeLine": "Remove line"
+    "removeLine": "Remove line",
+    "pmPanelTitle": "Open planned maintenance",
+    "pmPanelHint": "Select each PM to add a zero-price closure line, then add billable work (oil, filters, diagnosis, etc.) under Work.",
+    "pmPanelLoading": "Loading planned maintenance…",
+    "pmAddClosure": "Add PM closure",
+    "pmClosureAdded": "PM closure added",
+    "pmClosureCatalogLine": "Closure catalog item",
+    "pmClosureMissingCatalog": "No PM closure item in your catalog for this type. Add one under Services.",
+    "pmClosureAddFailed": "Failed to add PM closure line"
   },
   "analytics": {
     "title": "Analytics dashboard",
@@ -729,7 +737,7 @@
     "dueDate": "Due by",
     "dueKm": "Due at {{km}} km",
     "contactOwnerHint": "Contact the vehicle owner to confirm timing before booking a visit.",
-    "autoCompleteHint": "PM orders close automatically when you check the vehicle in and finish the visit with matching catalog services.",
+    "autoCompleteHint": "PM orders close when you finish the visit with a zero-price PM closure line from your catalog, plus any billable work you performed.",
     "markCompleted": "Mark completed",
     "catalogFilterHint": "Only shops with matching services in their catalog see these orders.",
     "ownerSectionTitle": "Upcoming maintenance",

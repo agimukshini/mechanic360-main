@@ -68,11 +68,18 @@ class VisitPmSideEffectsTests(TestCase):
             )
 
         connection.set_schema(self.tenant.schema_name)
-        self.catalog = ServiceCatalogItem.objects.create(
+        self.billable_catalog = ServiceCatalogItem.objects.create(
             name="Oil Change Side Effect Test",
             pm_kind=PMKind.REGULAR,
             is_active=True,
             default_price=45,
+        )
+        self.closure_catalog = ServiceCatalogItem.objects.create(
+            name="PM — Regular service",
+            pm_kind=PMKind.REGULAR,
+            is_pm_closure=True,
+            is_active=True,
+            default_price=0,
         )
         self.local_vehicle = Vehicle.objects.create(
             global_vehicle_id=self.global_vehicle.id,
@@ -117,7 +124,7 @@ class VisitPmSideEffectsTests(TestCase):
             ).exists(),
         )
 
-    def test_finish_visit_closes_pm_order(self):
+    def test_finish_visit_closes_pm_order_with_closure_line(self):
         visit = ServiceVisit.objects.create(
             vehicle=self.local_vehicle,
             mileage_km=102_500,
@@ -127,7 +134,15 @@ class VisitPmSideEffectsTests(TestCase):
         )
         VisitServiceLine.objects.create(
             visit=visit,
-            catalog_item=self.catalog,
+            catalog_item=self.closure_catalog,
+            description="PM closure",
+            quantity=1,
+            unit_price=0,
+            total_price=0,
+        )
+        VisitServiceLine.objects.create(
+            visit=visit,
+            catalog_item=self.billable_catalog,
             description="Oil change",
             quantity=1,
             unit_price=45,
@@ -151,3 +166,34 @@ class VisitPmSideEffectsTests(TestCase):
         connection.set_schema(self.tenant.schema_name)
         plan = PreventiveMaintenancePlan.objects.get(vehicle=self.local_vehicle)
         self.assertEqual(plan.last_mileage_km, 102_500)
+
+    def test_billable_pm_service_alone_does_not_close_order(self):
+        visit = ServiceVisit.objects.create(
+            vehicle=self.local_vehicle,
+            mileage_km=102_500,
+            service_date=timezone.now(),
+            status=ServiceVisit.Status.DRAFT,
+            created_by=self.admin,
+        )
+        VisitServiceLine.objects.create(
+            visit=visit,
+            catalog_item=self.billable_catalog,
+            description="Oil change",
+            quantity=1,
+            unit_price=45,
+            total_price=45,
+        )
+
+        response = self.api.post(
+            f"/api/v1/visits/{visit.id}/finish/",
+            {"mileage_km": 102_500},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.data)
+
+        with public_schema():
+            order = PreventiveMaintenanceOrder.objects.get(
+                global_vehicle=self.global_vehicle,
+                pm_kind=PMKind.REGULAR,
+            )
+            self.assertEqual(order.status, PreventiveMaintenanceOrder.Status.OPEN)
