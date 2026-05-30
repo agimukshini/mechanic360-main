@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ImagePlus, Loader2, Pencil, Trash2, X } from 'lucide-react'
 import { vehiclePhotosApi } from '@/api'
 import { useApiToast } from '@/hooks/useApiToast'
+import { resolveMediaUrl } from '@/lib/utils'
 
 interface Photo {
   id: string
@@ -15,11 +16,11 @@ interface Photo {
 }
 
 interface Props {
-  vehicleId: string
+  globalVehicleId: string | null | undefined
   canEdit: boolean
 }
 
-export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
+export function VehiclePhotoGallery({ globalVehicleId, canEdit }: Props) {
   const queryClient = useQueryClient()
   const { showError, showSuccess } = useApiToast()
   const { t } = useTranslation()
@@ -29,24 +30,25 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
   const [draftCaption, setDraftCaption] = useState('')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['vehicle-photos', vehicleId],
+    queryKey: ['vehicle-photos', globalVehicleId],
     queryFn: () =>
-      vehiclePhotosApi.list(vehicleId).then((r) => {
+      vehiclePhotosApi.list(globalVehicleId!).then((r) => {
         const items = Array.isArray(r.data) ? r.data : r.data.results || []
         return items as Photo[]
       }),
-    enabled: Boolean(vehicleId),
+    enabled: Boolean(globalVehicleId),
   })
 
   const uploadMutation = useMutation({
     mutationFn: async (files: FileList) => {
+      if (!globalVehicleId) return
       const list = Array.from(files)
       for (const file of list) {
-        await vehiclePhotosApi.upload(vehicleId, file, '', (data?.length || 0))
+        await vehiclePhotosApi.upload(globalVehicleId, file, '', (data?.length || 0))
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicle-photos', vehicleId] })
+      queryClient.invalidateQueries({ queryKey: ['vehicle-photos', globalVehicleId] })
       showSuccess(t('photoGallery.uploadedToast'))
     },
     onError: (err) => showError(err, t('photoGallery.uploadError')),
@@ -56,7 +58,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
     mutationFn: ({ id, caption }: { id: string; caption: string }) =>
       vehiclePhotosApi.update(id, { caption }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicle-photos', vehicleId] })
+      queryClient.invalidateQueries({ queryKey: ['vehicle-photos', globalVehicleId] })
       setEditingId(null)
     },
     onError: (err) => showError(err, t('photoGallery.captionError')),
@@ -65,7 +67,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => vehiclePhotosApi.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicle-photos', vehicleId] })
+      queryClient.invalidateQueries({ queryKey: ['vehicle-photos', globalVehicleId] })
       setLightbox(null)
       showSuccess(t('photoGallery.deletedToast'))
     },
@@ -73,6 +75,14 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
   })
 
   const photos = data || []
+
+  if (!globalVehicleId) {
+    return (
+      <div className="card p-6">
+        <p className="text-sm text-workshop-charcoal/60">{t('photoGallery.unlinkedVehicle')}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="card p-6 space-y-4">
@@ -126,7 +136,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
                 onClick={() => setLightbox(photo)}
               >
                 <img
-                  src={photo.image_url}
+                  src={resolveMediaUrl(photo.image_url)}
                   alt={photo.caption || t('photoGallery.title')}
                   className="w-full h-32 object-cover transition-transform group-hover:scale-105"
                 />
@@ -203,7 +213,7 @@ export function VehiclePhotoGallery({ vehicleId, canEdit }: Props) {
             <X className="w-8 h-8" />
           </button>
           <div onClick={(e) => e.stopPropagation()} className="max-w-5xl max-h-full">
-            <img src={lightbox.image_url} alt={lightbox.caption} className="max-h-[80vh] w-auto rounded-lg" />
+            <img src={resolveMediaUrl(lightbox.image_url)} alt={lightbox.caption} className="max-h-[80vh] w-auto rounded-lg" />
             <div className="text-white text-sm mt-3 flex items-center justify-between">
               <div>
                 <p className="font-semibold">{lightbox.caption || '—'}</p>

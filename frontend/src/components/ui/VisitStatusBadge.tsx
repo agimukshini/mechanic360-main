@@ -16,8 +16,8 @@ export function visitStatusLabel(status: string, t?: (key: string) => string): s
   return status.replace(/_/g, ' ')
 }
 
-export default function VisitStatusBadge({ status }: { status: string }) {
+export default function VisitStatusBadge({ status, className = '' }: { status: string; className?: string }) {
   const { t } = useTranslation()
   const style = STATUS_STYLES[status] ?? 'badge-neutral'
-  return <span className={`badge ${style}`}>{visitStatusLabel(status, t)}</span>
+  return <span className={`badge ${style} ${className}`.trim()}>{visitStatusLabel(status, t)}</span>
 }

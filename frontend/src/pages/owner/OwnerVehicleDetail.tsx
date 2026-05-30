@@ -14,7 +14,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ownerApi, ownerPhotosApi, type PMOrder } from '@/api'
-import { getApiErrorMessage } from '@/lib/utils'
+import { getApiErrorMessage, resolveMediaUrl } from '@/lib/utils'
 import OwnerLayout from '@/components/layout/OwnerLayout'
 
 interface OwnerVehicle {
@@ -301,7 +301,29 @@ export default function OwnerVehicleDetail() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto -mx-5 sm:mx-0">
+              <div className="sm:hidden space-y-3">
+                {visits.map((v) => (
+                  <div key={v.visit_id} className="rounded-xl border border-gray-200 p-4 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 text-gray-900 text-sm font-medium min-w-0">
+                        <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className="truncate">{formatDate(v.service_date)}</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 tabular-nums shrink-0">
+                        {formatMoney(v.grand_total)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700">{v.tenant_name || v.tenant_schema}</p>
+                    {v.mileage_km != null && (
+                      <p className="text-xs text-gray-500 tabular-nums">
+                        {v.mileage_km.toLocaleString()} km
+                      </p>
+                    )}
+                    {v.notes && <p className="text-xs text-gray-500 line-clamp-3">{v.notes}</p>}
+                  </div>
+                ))}
+              </div>
+              <div className="hidden sm:block table-scroll-mobile">
                 <table className="w-full text-sm min-w-[480px]">
                   <thead>
                     <tr className="text-left text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
@@ -402,7 +424,7 @@ function OwnerVehiclePhotoGallery({ vehicleId }: { vehicleId: string }) {
             onClick={() => setLightbox(p)}
           >
             <img
-              src={p.image_url}
+              src={resolveMediaUrl(p.image_url)}
               alt={p.caption || 'Vehicle'}
               className="w-full h-32 object-cover transition-transform group-hover:scale-105"
             />
@@ -420,7 +442,7 @@ function OwnerVehiclePhotoGallery({ vehicleId }: { vehicleId: string }) {
           onClick={() => setLightbox(null)}
         >
           <div onClick={(e) => e.stopPropagation()} className="max-w-5xl max-h-full">
-            <img src={lightbox.image_url} alt={lightbox.caption} className="max-h-[80vh] w-auto rounded-lg" />
+            <img src={resolveMediaUrl(lightbox.image_url)} alt={lightbox.caption} className="max-h-[80vh] w-auto rounded-lg" />
             <div className="text-white text-sm mt-3 space-y-1">
               <p className="font-semibold">{lightbox.caption || '—'}</p>
               <p className="text-white/70 text-xs">

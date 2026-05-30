@@ -224,7 +224,7 @@ export function VehiclesTableView({ vehicles }: { vehicles: VehicleRow[] }) {
   const lastServiceLabel = useLastServiceLabel()
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="table-scroll-mobile">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>

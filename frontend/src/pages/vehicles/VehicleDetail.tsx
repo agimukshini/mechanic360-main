@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux'
 import { vehiclesApi, visitsApi, inspectionsApi, api } from '@/api'
 import { useToast } from '@/components/ui/Toast'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import { UnderlineTabs } from '@/components/ui/PageTabs'
 import VehiclePhoto from '@/components/vehicles/VehiclePhoto'
 import VehicleOwnerQrPanel from '@/components/vehicles/VehicleOwnerQrPanel'
 import { VehiclePhotoGallery } from '@/components/vehicles/VehiclePhotoGallery'
@@ -417,29 +418,16 @@ export default function VehicleDetail() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-6 overflow-x-auto">
-          {[
-            { id: 'overview', label: t('vehicles.detail.tabOverview') },
-            { id: 'history', label: t('vehicles.detail.tabHistory') },
-            { id: 'inspections', label: t('vehicles.detail.tabInspections') },
-            { id: 'documents', label: t('vehicles.detail.tabDocuments') },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'border-brand-primary text-brand-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <UnderlineTabs
+        active={activeTab}
+        onChange={setActiveTab}
+        tabs={[
+          { id: 'overview', label: t('vehicles.detail.tabOverview') },
+          { id: 'history', label: t('vehicles.detail.tabHistory') },
+          { id: 'inspections', label: t('vehicles.detail.tabInspections') },
+          { id: 'documents', label: t('vehicles.detail.tabDocuments') },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Content */}
@@ -523,7 +511,7 @@ export default function VehicleDetail() {
           />
 
           <VehiclePhotoGallery
-            vehicleId={id!}
+            globalVehicleId={vehicle.global_vehicle_id}
             canEdit={canManageVehicles(normalizeRole(user?.role))}
           />
 

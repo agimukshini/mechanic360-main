@@ -260,7 +260,7 @@ export function PartsTableView({ parts, canManage, onDelete }: PartViewProps) {
 
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="table-scroll-mobile">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
             <tr>

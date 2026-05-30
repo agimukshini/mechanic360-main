@@ -39,8 +39,8 @@ export default function DashboardLayout() {
           onOpenMobileNav={openMobileNav}
         />
 
-        <main className="flex-1 overflow-y-auto hide-scrollbar">
-          <div className="px-6 lg:px-8 py-4 lg:py-6 max-w-[1600px] mx-auto">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar min-w-0">
+          <div className="page-shell px-4 sm:px-6 lg:px-8 py-4 lg:py-6 max-w-[1600px] mx-auto">
             <Outlet />
           </div>
         </main>

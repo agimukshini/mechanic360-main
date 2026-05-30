@@ -16,14 +16,14 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-clip">
       <header className="bg-slate-900 text-white shadow-md">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Car className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-lg">Workshop360 — {t('ownerLayout.myVehicles')}</span>
+        <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <Car className="w-6 h-6 text-blue-400 shrink-0" />
+            <span className="font-bold text-lg truncate">Workshop360 — {t('ownerLayout.myVehicles')}</span>
           </div>
-          <nav className="flex items-center gap-4">
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <NavLink
               to="/owner/vehicles"
               className={({ isActive }) =>
@@ -52,7 +52,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
           </nav>
         </div>
       </header>
-      <main className="max-w-5xl mx-auto px-4 py-8">{children}</main>
+      <main className="page-shell max-w-5xl mx-auto px-4 py-8">{children}</main>
     </div>
   )
 }

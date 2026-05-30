@@ -101,7 +101,7 @@ export default function InventoryList() {
             <Loader2 className="w-8 h-8 animate-spin mx-auto text-workshop-blue" />
           </div>
         ) : items.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="table-scroll-mobile">
             <table className="w-full">
               <thead className="bg-workshop-charcoal/5">
                 <tr>

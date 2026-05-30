@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { clientsApi, vehiclesApi } from '@/api'
+import { UnderlineTabs } from '@/components/ui/PageTabs'
 import {
   ArrowLeft,
   Edit2,
@@ -118,26 +119,14 @@ export default function ClientDetail() {
         </div>
       </div>
 
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-6 overflow-x-auto">
-          {[
-            { id: 'overview', label: t('clients.tabOverview') },
-            { id: 'vehicles', label: t('clients.tabVehicles') },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'border-brand-primary text-brand-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <UnderlineTabs
+        active={activeTab}
+        onChange={setActiveTab}
+        tabs={[
+          { id: 'overview', label: t('clients.tabOverview') },
+          { id: 'vehicles', label: t('clients.tabVehicles') },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">

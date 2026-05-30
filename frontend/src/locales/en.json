@@ -636,7 +636,8 @@
     "editCaption": "Edit caption",
     "uploadedAt": "Uploaded {{when}}",
     "uploadedBy": "by {{user}}",
-    "ownerSubtitle": "Uploaded by the workshops that have serviced this vehicle."
+    "ownerSubtitle": "Uploaded by the workshops that have serviced this vehicle.",
+    "unlinkedVehicle": "Photo gallery is unavailable until this vehicle is linked to the global registry."
   },
   "landing": {
     "tagline": "Smart maintenance. Real mechanics.",

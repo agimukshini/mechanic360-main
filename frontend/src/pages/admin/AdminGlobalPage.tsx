@@ -52,7 +52,7 @@ export default function AdminGlobalPage() {
         <div className="px-6 py-4 border-b border-workshop-charcoal/10">
           <h3 className="font-semibold text-workshop-charcoal">{t('adminGlobal.recentVehicles')}</h3>
         </div>
-        <div className="overflow-x-auto">
+        <div className="table-scroll-mobile">
           <table className="w-full">
             <thead className="bg-workshop-charcoal/5">
               <tr>

@@ -91,7 +91,7 @@ export default function Dashboard() {
   const alertCount = lowStockAlerts + overdueMaintenance
 
   return (
-    <div className="space-y-4">
+    <div className="page-shell space-y-4">
       <section className="card p-4 lg:p-5">
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
@@ -112,7 +112,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="grid grid-cols-3 gap-3">
+      <section className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-3">
         <StatPill
           to="/visits"
           icon={Calendar}
@@ -144,13 +144,13 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-1 px-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
           {activeVisits.length > 0 ? (
             activeVisits.slice(0, 8).map((visit) => (
               <Link
                 key={visit.id}
                 to={`/visits/${visit.id}/edit`}
-                className="min-w-[260px] bg-gray-50 rounded-xl p-4 border border-gray-200 flex flex-col gap-3 hover:shadow-md hover:border-accent/30 transition-all"
+                className="w-full bg-gray-50 rounded-xl p-4 border border-gray-200 flex flex-col gap-3 hover:shadow-md hover:border-accent/30 transition-all"
               >
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">

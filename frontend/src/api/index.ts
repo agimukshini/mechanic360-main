@@ -234,23 +234,21 @@ export const platformBillingApi = {
 }
 
 export const vehiclePhotosApi = {
-  list: (vehicleId: string) =>
-    api.get('/vehicles/photos/', { params: { vehicle: vehicleId } }),
-  upload: (vehicleId: string, file: File, caption = '', sortOrder = 0) => {
+  list: (globalVehicleId: string) =>
+    api.get('/global-vehicles/photos/', { params: { vehicle: globalVehicleId } }),
+  upload: (globalVehicleId: string, file: File, caption = '', sortOrder = 0) => {
     const fd = new FormData()
-    fd.append('vehicle_id', vehicleId)
+    fd.append('vehicle_id', globalVehicleId)
     fd.append('image', file)
     fd.append('caption', caption)
     fd.append('sort_order', String(sortOrder))
-    return api.post('/vehicles/photos/', fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/global-vehicles/photos/', fd)
   },
   update: (
     id: string,
     data: { caption?: string; sort_order?: number },
-  ) => api.patch(`/vehicles/photos/${id}/`, data),
-  remove: (id: string) => api.delete(`/vehicles/photos/${id}/`),
+  ) => api.patch(`/global-vehicles/photos/${id}/`, data),
+  remove: (id: string) => api.delete(`/global-vehicles/photos/${id}/`),
 }
 
 export const ownerPhotosApi = {

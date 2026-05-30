@@ -11,6 +11,7 @@ import { setWorkshopLanguage as setWorkshopLanguageInStore } from '@/store/authS
 import type { AppDispatch, RootState } from '@/store'
 import { isTenantAdmin, normalizeRole } from '@/lib/roles'
 import StaffInviteModal from '@/components/settings/StaffInviteModal'
+import { UnderlineTabs } from '@/components/ui/PageTabs'
 
 interface SettingsFormData {
   first_name: string
@@ -295,30 +296,16 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-8 overflow-x-auto">
-          {[
-            { id: 'profile', label: t('settings.profile'), icon: Settings },
-            { id: 'notifications', label: t('settings.notifications'), icon: Bell },
-            { id: 'appearance', label: t('settings.appearance'), icon: Palette },
-            { id: 'security', label: t('settings.security'), icon: Shield },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'border-brand-primary text-brand-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <UnderlineTabs
+        active={activeTab}
+        onChange={setActiveTab}
+        tabs={[
+          { id: 'profile', label: t('settings.profile'), icon: Settings },
+          { id: 'notifications', label: t('settings.notifications'), icon: Bell },
+          { id: 'appearance', label: t('settings.appearance'), icon: Palette },
+          { id: 'security', label: t('settings.security'), icon: Shield },
+        ]}
+      />
 
       <div className="max-w-2xl">
         {activeTab === 'profile' && (

@@ -343,23 +343,23 @@ export default function VisitDetail() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-shell space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/visits" className="p-2 text-workshop-charcoal/40 hover:text-workshop-charcoal transition-colors">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3 min-w-0">
+          <Link to="/visits" className="p-2 text-workshop-charcoal/40 hover:text-workshop-charcoal transition-colors shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-workshop-charcoal">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-workshop-charcoal truncate">
               {t('visits.visitNumber', { id: id?.slice(0, 8) })}
             </h1>
-            <p className="text-workshop-charcoal/60">
+            <p className="text-sm sm:text-base text-workshop-charcoal/60 truncate">
               {visit.vehicle?.license_plate} - {visit.vehicle?.make} {visit.vehicle?.model}
             </p>
           </div>
         </div>
-        <VisitStatusBadge status={visit.status} />
+        <VisitStatusBadge status={visit.status} className="self-start sm:self-auto shrink-0" />
       </div>
 
       <PageTabs
@@ -589,10 +589,11 @@ export default function VisitDetail() {
       </div>
 
       <div className="card p-6 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <SegmentTabs
             active={workSegment}
             onChange={(id) => setWorkSegment(id as typeof workSegment)}
+            className="w-full sm:w-auto"
             tabs={[
               { id: 'services', label: t('visits.tabServices'), badge: serviceLines.length || undefined },
               ...(canManageVisit
@@ -601,7 +602,7 @@ export default function VisitDetail() {
               { id: 'labor', label: t('visits.tabLabor'), badge: laborLines.length || undefined },
             ]}
           />
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
             <span className="text-base font-semibold text-gray-900 tabular-nums">
               {formatEuro(activeSegmentTotal)}
             </span>
@@ -653,12 +654,12 @@ export default function VisitDetail() {
         </div>
       ) : (
         <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <ClipboardList className="w-5 h-5 text-workshop-blue" />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <ClipboardList className="w-5 h-5 text-workshop-blue shrink-0" />
               <h2 className="font-semibold">{t('visits.inspectionTitle')}</h2>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 shrink-0">
               <span className="text-sm text-workshop-charcoal/40">
                 {inspection.performed_at
                   ? t('visits.inspectionPerformed', { date: new Date(inspection.performed_at).toLocaleString() })
@@ -666,7 +667,7 @@ export default function VisitDetail() {
               </span>
               <Link
                 to={`/inspections/${inspection.id}`}
-                className="btn btn-outline btn-sm"
+                className="btn btn-outline btn-sm self-start sm:self-auto"
               >
                 {t('visits.viewFull')}
               </Link>

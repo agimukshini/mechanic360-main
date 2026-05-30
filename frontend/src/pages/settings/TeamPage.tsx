@@ -325,7 +325,7 @@ export default function TeamPage() {
         ) : users.length === 0 ? (
           <p className="p-8 text-center text-workshop-charcoal/60">{t('team.empty')}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="table-scroll-mobile">
             <table className="w-full">
               <thead className="bg-workshop-charcoal/5">
                 <tr>

@@ -9,6 +9,7 @@ from __future__ import annotations
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from django.db.models import Q
 
@@ -31,6 +32,7 @@ from tenancy.views import public_schema
 
 from .global_sync import get_global_vehicle_or_sync, sync_vehicle_to_global
 from .models import Vehicle, VehicleDocument, VehicleGalleryPhoto
+from .photo_sync import delete_global_gallery_photo, sync_gallery_photo_to_global
 from .serializers import (
     VehicleDocumentSerializer,
     VehicleGalleryPhotoSerializer,
@@ -577,6 +579,7 @@ class VehicleGalleryPhotoViewSet(viewsets.ModelViewSet):
 
     serializer_class = VehicleGalleryPhotoSerializer
     permission_classes = [IsTenantUser]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
         qs = VehicleGalleryPhoto.objects.select_related("vehicle", "uploaded_by")
@@ -592,6 +595,19 @@ class VehicleGalleryPhotoViewSet(viewsets.ModelViewSet):
             raise ValidationError({"vehicle_id": "Required."})
         vehicle = Vehicle.objects.get(id=vehicle_id)
         instance = serializer.save(vehicle=vehicle, uploaded_by=self.request.user)
+        sync_gallery_photo_to_global(
+            tenant_photo=instance,
+            user=self.request.user,
+            tenant=getattr(self.request.user, "tenant", None),
+        )
+        if not vehicle.photo:
+            vehicle.photo.name = instance.image.name
+            vehicle.save(update_fields=["photo"])
+            sync_vehicle_to_global(
+                vehicle=vehicle,
+                user=self.request.user,
+                tenant=getattr(self.request.user, "tenant", None),
+            )
         log_vehicle_event(
             entity=VehicleAuditEvent.Entity.PHOTO,
             action=VehicleAuditEvent.Action.CREATED,
@@ -607,6 +623,11 @@ class VehicleGalleryPhotoViewSet(viewsets.ModelViewSet):
             "sort_order": self.get_object().sort_order,
         }
         instance = serializer.save()
+        sync_gallery_photo_to_global(
+            tenant_photo=instance,
+            user=self.request.user,
+            tenant=getattr(self.request.user, "tenant", None),
+        )
         after = {"caption": instance.caption, "sort_order": instance.sort_order}
         diff = vehicle_diff(before, after, fields=["caption", "sort_order"])
         if diff:
@@ -624,6 +645,7 @@ class VehicleGalleryPhotoViewSet(viewsets.ModelViewSet):
         photo_id = str(instance.id)
         caption = instance.caption
         instance.delete()
+        delete_global_gallery_photo(photo_id=photo_id)
         log_vehicle_event(
             entity=VehicleAuditEvent.Entity.PHOTO,
             action=VehicleAuditEvent.Action.DELETED,

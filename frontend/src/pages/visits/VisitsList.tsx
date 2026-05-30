@@ -367,7 +367,7 @@ export default function VisitsList() {
           </div>
 
           <div className="card overflow-hidden hidden md:block">
-            <div className="overflow-x-auto">
+            <div className="table-scroll-mobile">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>

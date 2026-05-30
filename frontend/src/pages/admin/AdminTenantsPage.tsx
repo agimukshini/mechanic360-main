@@ -60,7 +60,7 @@ export default function AdminTenantsPage() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="table-scroll-mobile">
           <table className="w-full">
             <thead className="bg-workshop-charcoal/5">
               <tr>

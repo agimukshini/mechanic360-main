@@ -124,7 +124,7 @@ export default function MechanicsAnalyticsPage() {
         ) : mechanics.length === 0 ? (
           <p className="p-8 text-center text-secondary">{t('analytics.mechanics.empty')}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="table-scroll-mobile">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>

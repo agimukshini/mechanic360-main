@@ -536,10 +536,11 @@ function VisitEditor({
 
       {activeTab === 'work' && (
       <div className="card p-6 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <SegmentTabs
             active={workSegment}
             onChange={(id) => setWorkSegment(id as typeof workSegment)}
+            className="w-full sm:w-auto"
             tabs={[
               { id: 'services', label: t('visits.tabServices'), badge: serviceLines.length || undefined },
               { id: 'parts', label: t('visits.tabParts'), badge: materialLines.length || undefined },
@@ -547,7 +548,7 @@ function VisitEditor({
             ]}
           />
           {isEditable && (
-            <button type="button" onClick={openAddForSegment} className="btn btn-primary shrink-0">
+            <button type="button" onClick={openAddForSegment} className="btn btn-primary shrink-0 self-start sm:self-auto">
               <Plus className="w-4 h-4 mr-1" />
               {workSegment === 'services'
                 ? t('visits.addService')

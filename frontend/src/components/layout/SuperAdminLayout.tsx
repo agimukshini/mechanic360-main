@@ -36,7 +36,7 @@ export default function SuperAdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-workshop-gray">
+    <div className="min-h-screen bg-workshop-gray overflow-x-clip">
       <header className="bg-white border-b border-workshop-charcoal/10 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -60,7 +60,7 @@ export default function SuperAdminLayout() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col lg:flex-row gap-6">
+      <div className="page-shell max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
         <nav className="lg:w-56 shrink-0">
           <div className="card p-2 space-y-1">
             {NAV_ITEMS.map(({ to, tk, icon: Icon, end }) => (

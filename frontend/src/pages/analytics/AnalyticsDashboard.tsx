@@ -226,7 +226,7 @@ export default function AnalyticsDashboard() {
           <h2 className="font-semibold text-workshop-charcoal">{t('analytics.maintenanceForecast')}</h2>
         </div>
         {forecast.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="table-scroll-mobile">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-workshop-charcoal/10">

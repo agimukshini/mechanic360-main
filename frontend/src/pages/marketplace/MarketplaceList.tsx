@@ -106,9 +106,9 @@ export default function MarketplaceList() {
         )}
       </div>
 
-      <div className="card p-4 space-y-4">
-        <div className="flex gap-4 flex-wrap">
-          <div className="flex-1 min-w-[200px] relative">
+      <div className="card p-4 space-y-4 min-w-0">
+        <div className="flex flex-col sm:flex-row gap-3 w-full min-w-0">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-workshop-charcoal/40" />
             <input
               type="text"
@@ -118,7 +118,7 @@ export default function MarketplaceList() {
               className="input pl-10"
             />
           </div>
-          <div className="relative min-w-[180px]">
+          <div className="relative w-full sm:w-48 min-w-0 shrink-0">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-workshop-charcoal/40" />
             <select
               value={selectedCategory}

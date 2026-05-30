@@ -636,7 +636,8 @@
     "editCaption": "Ndrysho titullin",
     "uploadedAt": "Ngarkuar {{when}}",
     "uploadedBy": "nga {{user}}",
-    "ownerSubtitle": "Ngarkuar nga punëtoritë që e kanë shërbyer këtë automjet."
+    "ownerSubtitle": "Ngarkuar nga punëtoritë që e kanë shërbyer këtë automjet.",
+    "unlinkedVehicle": "Galeria e fotove nuk është e disponueshme derisa automjeti të lidhet me regjistrin global."
   },
   "landing": {
     "tagline": "Mirëmbajtje e zgjuar. Mekanikë të vërtetë.",

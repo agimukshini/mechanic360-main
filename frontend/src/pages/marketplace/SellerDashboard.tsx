@@ -122,7 +122,7 @@ export default function SellerDashboard() {
         ) : parts.length === 0 ? (
           <p className="p-8 text-center text-secondary">{t('marketplaceSeller.noParts')}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="table-scroll-mobile">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>

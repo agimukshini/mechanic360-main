@@ -19,6 +19,7 @@ from global_vehicles.serializers import GlobalOwnerSerializer, VehicleOwnershipS
 
 from .global_sync import get_global_vehicle, sync_vehicle_to_global
 from .models import Vehicle, VehicleDocument, VehicleGalleryPhoto
+from .photo_sync import sync_hero_photo_to_gallery
 
 User = get_user_model()
 
@@ -263,6 +264,8 @@ class VehicleSerializer(serializers.ModelSerializer):
         tenant = getattr(user, "tenant", None) if user else None
         sync_vehicle_to_global(vehicle=vehicle, user=user, tenant=tenant)
         vehicle.refresh_from_db()
+        if validated_data.get("photo"):
+            sync_hero_photo_to_gallery(vehicle=vehicle, user=user, tenant=tenant)
         return vehicle
 
     def update(self, instance, validated_data):
@@ -284,6 +287,8 @@ class VehicleSerializer(serializers.ModelSerializer):
         tenant = getattr(user, "tenant", None) if user else None
         sync_vehicle_to_global(vehicle=instance, user=user, tenant=tenant)
         instance.refresh_from_db()
+        if "photo" in validated_data and instance.photo:
+            sync_hero_photo_to_gallery(vehicle=instance, user=user, tenant=tenant)
         return instance
 
 

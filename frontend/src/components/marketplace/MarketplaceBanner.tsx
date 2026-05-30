@@ -89,11 +89,11 @@ export default function MarketplaceBanner({ vehicleId }: Props) {
               {t('marketplaceBanner.categoryFallback')}
             </p>
           )}
-          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {parts.map((part) => (
               <article
                 key={part.id}
-                className="min-w-[240px] max-w-[260px] snap-start card p-4 flex flex-col gap-3 shrink-0"
+                className="w-full card p-4 flex flex-col gap-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-medium text-sm leading-snug line-clamp-2">{part.title}</h3>

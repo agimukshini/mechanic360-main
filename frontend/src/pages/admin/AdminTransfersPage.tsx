@@ -197,7 +197,7 @@ export default function AdminTransfersPage() {
 
       {transfers.length > 0 && (
         <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="table-scroll-mobile">
             <table className="w-full text-sm">
               <thead className="bg-workshop-charcoal/5">
                 <tr>

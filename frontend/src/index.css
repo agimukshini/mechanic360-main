@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  html,
+  body,
+  #root {
+    @apply overflow-x-clip max-w-full;
+  }
+
   body {
     @apply bg-background text-primary antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -141,5 +147,18 @@
 
   .badge-neutral {
     @apply bg-gray-100 text-gray-700 border border-gray-200;
+  }
+
+  /* Page shell — prevents flex children from forcing horizontal overflow */
+  .page-shell {
+    @apply min-w-0 max-w-full w-full;
+  }
+
+  /*
+   * Wide tables on small screens: clip to card width, scroll inside if needed,
+   * but hide the scrollbar per mobile UX guidelines.
+   */
+  .table-scroll-mobile {
+    @apply w-full max-w-full min-w-0 overflow-x-auto hide-scrollbar;
   }
 }
