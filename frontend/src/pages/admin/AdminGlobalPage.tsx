@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
 import { tenantsApi } from '@/api'
+import { AdminField, AdminMobileCard, AdminResponsiveTable } from '@/components/admin/AdminMobile'
 
 export default function AdminGlobalPage() {
   const { t } = useTranslation()
@@ -48,59 +49,87 @@ export default function AdminGlobalPage() {
         ))}
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-workshop-charcoal/10">
+      <div className="card overflow-hidden min-w-0">
+        <div className="px-4 sm:px-6 py-4 border-b border-workshop-charcoal/10">
           <h3 className="font-semibold text-workshop-charcoal">{t('adminGlobal.recentVehicles')}</h3>
         </div>
-        <div className="table-scroll-mobile">
-          <table className="w-full">
-            <thead className="bg-workshop-charcoal/5">
-              <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminGlobal.tablePlate')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminGlobal.tableVin')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminGlobal.tableVehicle')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminGlobal.tableRegisteredBy')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminGlobal.tableRegistered')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-workshop-charcoal/10">
-              {recent_vehicles.map((vehicle: {
-                id: string
-                license_plate: string
-                vin: string
-                make: string
-                model: string
-                year: number
-                registered_by_tenant_name: string | null
-                created_at: string
-              }) => (
-                <tr key={vehicle.id}>
-                  <td className="px-6 py-4 font-medium">{vehicle.license_plate}</td>
-                  <td className="px-6 py-4 text-sm font-mono">{vehicle.vin}</td>
-                  <td className="px-6 py-4 text-sm">
-                    {vehicle.make} {vehicle.model} ({vehicle.year})
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    {vehicle.registered_by_tenant_name || '—'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-workshop-charcoal/70">
-                    {new Date(vehicle.created_at).toLocaleString()}
-                  </td>
+        <AdminResponsiveTable
+          desktop={
+            <table className="w-full">
+              <thead className="bg-workshop-charcoal/5">
+                <tr>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminGlobal.tablePlate')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminGlobal.tableVin')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminGlobal.tableVehicle')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminGlobal.tableRegisteredBy')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminGlobal.tableRegistered')}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-workshop-charcoal/10">
+                {recent_vehicles.map((vehicle: {
+                  id: string
+                  license_plate: string
+                  vin: string
+                  make: string
+                  model: string
+                  year: number
+                  registered_by_tenant_name: string | null
+                  created_at: string
+                }) => (
+                  <tr key={vehicle.id}>
+                    <td className="px-6 py-4 font-medium">{vehicle.license_plate}</td>
+                    <td className="px-6 py-4 text-sm font-mono break-all">{vehicle.vin}</td>
+                    <td className="px-6 py-4 text-sm">
+                      {vehicle.make} {vehicle.model} ({vehicle.year})
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      {vehicle.registered_by_tenant_name || '—'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-workshop-charcoal/70">
+                      {new Date(vehicle.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          }
+          mobile={recent_vehicles.map((vehicle: {
+            id: string
+            license_plate: string
+            vin: string
+            make: string
+            model: string
+            year: number
+            registered_by_tenant_name: string | null
+            created_at: string
+          }) => (
+            <AdminMobileCard
+              key={vehicle.id}
+              title={vehicle.license_plate}
+              subtitle={`${vehicle.make} ${vehicle.model} (${vehicle.year})`}
+            >
+              <AdminField label={t('adminGlobal.tableVin')}>
+                <span className="font-mono text-xs break-all">{vehicle.vin}</span>
+              </AdminField>
+              <AdminField label={t('adminGlobal.tableRegisteredBy')}>
+                {vehicle.registered_by_tenant_name || '—'}
+              </AdminField>
+              <AdminField label={t('adminGlobal.tableRegistered')}>
+                {new Date(vehicle.created_at).toLocaleString()}
+              </AdminField>
+            </AdminMobileCard>
+          ))}
+        />
       </div>
     </div>
   )

@@ -107,17 +107,17 @@ export default function AdminTenantDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link to="/admin/tenants" className="text-workshop-charcoal/60 hover:text-workshop-blue">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
+        <Link to="/admin/tenants" className="text-workshop-charcoal/60 hover:text-workshop-blue shrink-0 self-start">
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-workshop-charcoal">{tenant.name}</h2>
-          <p className="text-workshop-charcoal/60 mt-1">{tenant.schema_name}</p>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-workshop-charcoal break-words">{tenant.name}</h2>
+          <p className="text-workshop-charcoal/60 mt-1 break-all">{tenant.schema_name}</p>
         </div>
         <button
           type="button"
-          className="btn btn-secondary"
+          className="btn btn-secondary w-full sm:w-auto shrink-0"
           disabled={toggleMutation.isPending}
           onClick={() => toggleMutation.mutate(!tenant.is_active)}
         >
@@ -137,9 +137,9 @@ export default function AdminTenantDetailPage() {
               <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.status')}</dt>
               <dd>{tenant.is_active ? t('adminTenantDetail.active') : t('adminTenantDetail.inactive')}</dd>
             </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.email')}</dt>
-              <dd>{tenant.contact_email || '—'}</dd>
+            <div className="flex justify-between gap-4 min-w-0">
+              <dt className="text-workshop-charcoal/60 shrink-0">{t('adminTenantDetail.email')}</dt>
+              <dd className="text-right break-all">{tenant.contact_email || '—'}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.phone')}</dt>
@@ -257,10 +257,10 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
 
   return (
     <div className="card p-6 space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="font-semibold text-workshop-charcoal flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-workshop-blue" />
+            <CreditCard className="w-5 h-5 text-workshop-blue shrink-0" />
             {t('platformBilling.title')}
           </h3>
           <p className="text-xs text-workshop-charcoal/60 mt-1">
@@ -268,7 +268,7 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
           </p>
         </div>
         {billing?.updated_by_username && (
-          <p className="text-xs text-workshop-charcoal/50 text-right shrink-0">
+          <p className="text-xs text-workshop-charcoal/50 sm:text-right break-words">
             {t('platformBilling.lastUpdatedBy')} <strong>{billing.updated_by_username}</strong>
             <br />
             {new Date(billing.updated_at).toLocaleString()}
@@ -349,7 +349,7 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
         />
       </div>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
         <button
           type="button"
           onClick={() =>
@@ -366,7 +366,7 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
               notes: billing.notes,
             })
           }
-          className="btn btn-secondary inline-flex items-center gap-1.5 text-sm"
+          className="btn btn-secondary inline-flex items-center justify-center gap-1.5 text-sm w-full sm:w-auto"
         >
           <RefreshCcw className="w-4 h-4" />
           {t('platformBilling.reset')}
@@ -375,7 +375,7 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
           type="button"
           onClick={() => onSave(form)}
           disabled={isSaving}
-          className="btn btn-primary inline-flex items-center gap-1.5 text-sm disabled:opacity-50"
+          className="btn btn-primary inline-flex items-center justify-center gap-1.5 text-sm w-full sm:w-auto disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
           {isSaving ? t('platformBilling.saving') : t('platformBilling.save')}

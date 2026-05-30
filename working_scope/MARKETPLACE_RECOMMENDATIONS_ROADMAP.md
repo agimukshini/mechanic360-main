@@ -1,7 +1,7 @@
 # Marketplace + Issue-Based Recommendation Engine — Implementation Roadmap
 
-Status: planned, not started.
-Target: pick up after the ownership-transfer roadmap.
+Status: **Phases A–C implemented** (catalog, recommendations, banner, seller dashboard — 2026-05). Phases D–F (admin analytics, monetisation, full acceptance tests) remain.
+Target: Phase D next after compatibility ingest (Phase B).
 
 ## Goal
 

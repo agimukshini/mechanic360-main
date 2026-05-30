@@ -123,7 +123,7 @@ just a `[NOT TRANSLATED]` marker the QA team can search for.
 |---|---|---|
 | **P1** | Frontend static audit + missing-key warning + i18n-allowlist | 1 day |
 | **P2** | Backend coverage tests for service catalog + inspections | 0.5 day |
-| **P3** | Translation-coverage admin endpoint + dashboard panel | 0.5 day |
+| **P3** | Translation-coverage admin endpoint + dashboard panel | **Done** — API + `/admin/translation-coverage` |
 | **P4** | Email + notification copy migrated to translation tables | 1 day |
 | **P5** | Audit / TextChoices labels translated | 0.5 day |
 | **P6** | i18n_seed_pending + production backfill | 0.5 day |

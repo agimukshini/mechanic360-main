@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Building2, Car, ClipboardList, Loader2, Users } from 'lucide-react'
 import { tenantsApi } from '@/api'
+import { AdminField, AdminMobileCard, AdminResponsiveTable } from '@/components/admin/AdminMobile'
 
 interface PlatformStats {
   tenants_total: number
@@ -117,73 +118,107 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-workshop-charcoal/10 flex items-center justify-between">
+      <div className="card overflow-hidden min-w-0">
+        <div className="px-4 sm:px-6 py-4 border-b border-workshop-charcoal/10 flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-semibold text-workshop-charcoal">{t('adminDashboard.tenants')}</h3>
           <Link to="/admin/tenants" className="text-sm text-workshop-blue hover:underline">
             {t('adminDashboard.viewAll')}
           </Link>
         </div>
-        <div className="table-scroll-mobile">
-          <table className="w-full">
-            <thead className="bg-workshop-charcoal/5">
-              <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminDashboard.tableWorkshop')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminDashboard.tablePlan')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminDashboard.tableUsers')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminDashboard.tableClients')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminDashboard.tableVehicles')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminDashboard.tableVisits')}
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
-                  {t('adminDashboard.tableStatus')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-workshop-charcoal/10">
-              {tenants.map((tenant) => (
-                <tr key={tenant.id} className="hover:bg-workshop-charcoal/5">
-                  <td className="px-6 py-4">
-                    <Link
-                      to={`/admin/tenants/${tenant.id}`}
-                      className="font-medium text-workshop-charcoal hover:text-workshop-blue"
-                    >
-                      {tenant.name}
-                    </Link>
-                    <div className="text-xs text-workshop-charcoal/50">{tenant.schema_name}</div>
-                  </td>
-                  <td className="px-6 py-4 text-sm">{tenant.subscription_plan}</td>
-                  <td className="px-6 py-4 text-sm">{tenant.stats.users}</td>
-                  <td className="px-6 py-4 text-sm">{tenant.stats.clients}</td>
-                  <td className="px-6 py-4 text-sm">{tenant.stats.vehicles}</td>
-                  <td className="px-6 py-4 text-sm">{tenant.stats.visits}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                        tenant.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {tenant.is_active ? t('adminDashboard.active') : t('adminDashboard.inactive')}
-                    </span>
-                  </td>
+        <AdminResponsiveTable
+          desktop={
+            <table className="w-full">
+              <thead className="bg-workshop-charcoal/5">
+                <tr>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminDashboard.tableWorkshop')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminDashboard.tablePlan')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminDashboard.tableUsers')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminDashboard.tableClients')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminDashboard.tableVehicles')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminDashboard.tableVisits')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminDashboard.tableStatus')}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-workshop-charcoal/10">
+                {tenants.map((tenant) => (
+                  <tr key={tenant.id} className="hover:bg-workshop-charcoal/5">
+                    <td className="px-6 py-4">
+                      <Link
+                        to={`/admin/tenants/${tenant.id}`}
+                        className="font-medium text-workshop-charcoal hover:text-workshop-blue"
+                      >
+                        {tenant.name}
+                      </Link>
+                      <div className="text-xs text-workshop-charcoal/50">{tenant.schema_name}</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm">{tenant.subscription_plan}</td>
+                    <td className="px-6 py-4 text-sm">{tenant.stats.users}</td>
+                    <td className="px-6 py-4 text-sm">{tenant.stats.clients}</td>
+                    <td className="px-6 py-4 text-sm">{tenant.stats.vehicles}</td>
+                    <td className="px-6 py-4 text-sm">{tenant.stats.visits}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          tenant.is_active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {tenant.is_active ? t('adminDashboard.active') : t('adminDashboard.inactive')}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          }
+          mobile={tenants.map((tenant) => (
+            <AdminMobileCard
+              key={tenant.id}
+              title={
+                <Link
+                  to={`/admin/tenants/${tenant.id}`}
+                  className="hover:text-workshop-blue"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {tenant.name}
+                </Link>
+              }
+              subtitle={tenant.schema_name}
+              badge={
+                <span
+                  className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                    tenant.is_active
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}
+                >
+                  {tenant.is_active ? t('adminDashboard.active') : t('adminDashboard.inactive')}
+                </span>
+              }
+            >
+              <AdminField label={t('adminDashboard.tablePlan')}>{tenant.subscription_plan}</AdminField>
+              <AdminField label={t('adminDashboard.tableUsers')}>{tenant.stats.users}</AdminField>
+              <AdminField label={t('adminDashboard.tableClients')}>{tenant.stats.clients}</AdminField>
+              <AdminField label={t('adminDashboard.tableVehicles')}>{tenant.stats.vehicles}</AdminField>
+              <AdminField label={t('adminDashboard.tableVisits')}>{tenant.stats.visits}</AdminField>
+            </AdminMobileCard>
+          ))}
+        />
       </div>
     </div>
   )

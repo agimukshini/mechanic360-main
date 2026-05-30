@@ -291,7 +291,14 @@
       "empty": "No mechanic activity in this period",
       "last7": "Last 7 days",
       "last30": "Last 30 days",
-      "last90": "Last 90 days"
+      "last90": "Last 90 days",
+      "exportCsv": "Export CSV",
+      "exportPdf": "Export PDF",
+      "teamVisitsChart": "Completed visits by mechanic",
+      "visitsOverTime": "Visits over time",
+      "topServices": "Top services",
+      "serviceCount": "Count",
+      "noChartData": "Not enough data for this period"
     }
   },
   "settings": {
@@ -1193,6 +1200,25 @@
     "errInvalidQr": "Invalid QR code",
     "errAddVehicle": "Failed to add vehicle"
   },
+  "adminTranslationCoverage": {
+    "title": "Translation health",
+    "subtitle": "Coverage for database content and shipping locales (EN / SQ).",
+    "loadFailed": "Could not load translation coverage.",
+    "statusHealthy": "All tracked database strings are fully translated.",
+    "statusGaps": "Some database strings are missing translations.",
+    "statusHint": "Frontend static keys are audited in CI via npm run i18n. Fix gaps in service catalog or locale JSON files.",
+    "serviceCatalog": "Service catalog",
+    "inspectionItems": "Inspection checklist",
+    "inspectionNote": "Checklist labels live in frontend locale files (inspection.* keys).",
+    "frontendLocales": "Shipping locales",
+    "frontendHint": "React UI strings must exist in every locale file under frontend/src/locales/. CI fails when keys are missing.",
+    "missingTitle": "Missing translations (sample)",
+    "missingCount": "{{count}} shown (max 50 per area)",
+    "noMissing": "No missing service catalog translations in the sample.",
+    "colArea": "Area",
+    "colLabel": "Label",
+    "colId": "ID"
+  },
   "superAdminLayout": {
     "platformAdmin": "Platform Admin",
     "consoleSubtitle": "Workshop360 superuser console",
@@ -1203,7 +1229,9 @@
     "navGlobal": "Global registry",
     "navTransfers": "Ownership transfers",
     "navAudit": "Vehicle audit log",
-    "navLoginLog": "Login log"
+    "navLoginLog": "Login log",
+    "navTranslation": "Translation health",
+    "navMenu": "Admin menu"
   },
   "a11y": {
     "openMenu": "Open menu",

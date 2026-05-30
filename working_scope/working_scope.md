@@ -43,7 +43,7 @@ _No vehicle or client data is shared._
 
 Workshop admins add mechanics and service advisors to their tenant (invite/create accounts, deactivate when needed). Each mechanic’s work is attributed at visit, inspection, and service-line level for reports and KPI dashboards. User profile, password/PIN change, and login success/failure audit are specified in **[USER_PROFILE_MECHANICS_AND_AUDIT.md](USER_PROFILE_MECHANICS_AND_AUDIT.md)**.
 
-**Current gaps (2026-05):** Settings password change and notification/theme preferences need fixes; login audit and team UI not built; KPI analytics partial (inspection `performed_by` only).
+**Status (2026-05-30):** Phases A–E implemented including charts and CSV/PDF export on `/analytics/mechanics`. Phase F (Celery email invite) still pending — see doc for remaining polish.
 
 ---
 

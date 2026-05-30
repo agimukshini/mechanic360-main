@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { authApi } from '@/api'
+import { AdminField, AdminMobileCard, AdminResponsiveTable } from '@/components/admin/AdminMobile'
 
 export type LoginAuditScope = 'tenant' | 'platform'
 
@@ -81,11 +82,11 @@ export default function LoginAuditLogPanel({ scope }: LoginAuditLogPanelProps) {
       </div>
 
       {scope === 'platform' && (
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <select
             value={outcomeFilter}
             onChange={(e) => setOutcomeFilter(e.target.value)}
-            className="input max-w-xs"
+            className="input w-full min-w-0"
           >
             <option value="all">{t('loginAudit.filters.allOutcomes')}</option>
             {OUTCOME_KEYS.map((key) => (
@@ -99,7 +100,7 @@ export default function LoginAuditLogPanel({ scope }: LoginAuditLogPanelProps) {
             value={usernameFilter}
             onChange={(e) => setUsernameFilter(e.target.value)}
             placeholder={t('loginAudit.filters.username')}
-            className="input max-w-xs"
+            className="input w-full min-w-0"
           />
         </div>
       )}
@@ -115,67 +116,105 @@ export default function LoginAuditLogPanel({ scope }: LoginAuditLogPanelProps) {
       )}
 
       {!isLoading && !error && (
-        <div className="card overflow-hidden">
-          <div className="table-scroll-mobile">
-            <table className="w-full text-sm">
-              <thead className="bg-workshop-charcoal/5">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
-                    {t('loginAudit.columns.time')}
-                  </th>
-                  <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
-                    {t('loginAudit.columns.username')}
-                  </th>
-                  {scope === 'platform' && (
-                    <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
-                      {t('loginAudit.columns.workshop')}
-                    </th>
-                  )}
-                  <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
-                    {t('loginAudit.columns.outcome')}
-                  </th>
-                  <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
-                    {t('loginAudit.columns.method')}
-                  </th>
-                  <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
-                    {t('loginAudit.columns.ip')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-workshop-charcoal/10">
-                {events.length === 0 ? (
+        <div className="card overflow-hidden min-w-0">
+          <AdminResponsiveTable
+            desktop={
+              <table className="w-full text-sm">
+                <thead className="bg-workshop-charcoal/5">
                   <tr>
-                    <td colSpan={scope === 'platform' ? 6 : 5} className="px-4 py-8 text-center text-workshop-charcoal/50">
-                      {t('loginAudit.empty')}
-                    </td>
+                    <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
+                      {t('loginAudit.columns.time')}
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
+                      {t('loginAudit.columns.username')}
+                    </th>
+                    {scope === 'platform' && (
+                      <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
+                        {t('loginAudit.columns.workshop')}
+                      </th>
+                    )}
+                    <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
+                      {t('loginAudit.columns.outcome')}
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
+                      {t('loginAudit.columns.method')}
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-workshop-charcoal/60">
+                      {t('loginAudit.columns.ip')}
+                    </th>
                   </tr>
-                ) : (
-                  events.map((event) => (
-                    <tr key={event.id} className="hover:bg-workshop-charcoal/5">
-                      <td className="px-4 py-3 whitespace-nowrap">{formatDate(event.created_at)}</td>
-                      <td className="px-4 py-3 font-medium">{event.username_attempted}</td>
-                      {scope === 'platform' && (
-                        <td className="px-4 py-3">{event.tenant_name || '—'}</td>
-                      )}
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                            event.outcome === 'success'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {outcomeLabel(event.outcome)}
-                        </span>
+                </thead>
+                <tbody className="divide-y divide-workshop-charcoal/10">
+                  {events.length === 0 ? (
+                    <tr>
+                      <td colSpan={scope === 'platform' ? 6 : 5} className="px-4 py-8 text-center text-workshop-charcoal/50">
+                        {t('loginAudit.empty')}
                       </td>
-                      <td className="px-4 py-3">{authMethodLabel(event.auth_method)}</td>
-                      <td className="px-4 py-3 font-mono text-xs">{event.ip_address || '—'}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    events.map((event) => (
+                      <tr key={event.id} className="hover:bg-workshop-charcoal/5">
+                        <td className="px-4 py-3">{formatDate(event.created_at)}</td>
+                        <td className="px-4 py-3 font-medium">{event.username_attempted}</td>
+                        {scope === 'platform' && (
+                          <td className="px-4 py-3">{event.tenant_name || '—'}</td>
+                        )}
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                              event.outcome === 'success'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {outcomeLabel(event.outcome)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">{authMethodLabel(event.auth_method)}</td>
+                        <td className="px-4 py-3 font-mono text-xs break-all">{event.ip_address || '—'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            }
+            mobile={
+              events.length === 0 ? (
+                <p className="p-6 text-center text-sm text-workshop-charcoal/50">{t('loginAudit.empty')}</p>
+              ) : (
+                events.map((event) => (
+                  <AdminMobileCard
+                    key={event.id}
+                    title={event.username_attempted}
+                    subtitle={formatDate(event.created_at)}
+                    badge={
+                      <span
+                        className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                          event.outcome === 'success'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {outcomeLabel(event.outcome)}
+                      </span>
+                    }
+                  >
+                    {scope === 'platform' && (
+                      <AdminField label={t('loginAudit.columns.workshop')}>
+                        {event.tenant_name || '—'}
+                      </AdminField>
+                    )}
+                    <AdminField label={t('loginAudit.columns.method')}>
+                      {authMethodLabel(event.auth_method)}
+                    </AdminField>
+                    <AdminField label={t('loginAudit.columns.ip')}>
+                      <span className="font-mono text-xs break-all">{event.ip_address || '—'}</span>
+                    </AdminField>
+                  </AdminMobileCard>
+                ))
+              )
+            }
+          />
         </div>
       )}
     </div>

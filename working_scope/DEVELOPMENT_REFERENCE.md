@@ -43,11 +43,12 @@ Full scope: **`working_scope/USER_PROFILE_MECHANICS_AND_AUDIT.md`**.
 
 | Topic | Status |
 |-------|--------|
-| Settings password/profile PATCH | Implemented — see `accounts/migrations/0005_*`, `SettingsSerializer`, `SettingsPage` |
-| Login audit (success/fail) | Implemented — `/auth/login-audit/`, `/auth/admin/login-audit/`, UI at `/settings/login-log` and `/admin/security/logins` |
-| Tenant staff CRUD API | `/api/v1/auth/tenant/users/` exists; no frontend Team page |
-| Mechanic work attribution | `Inspection.performed_by`, `Visit.created_by`; service/labor lines unassigned |
-| Mechanic KPI dashboard | Not implemented |
+| Settings password/profile PATCH | Implemented — `SettingsSerializer`, `SettingsPage`, prefs migration |
+| Login audit (success/fail) | Implemented — tenant + superadmin APIs and UI |
+| Tenant staff + invite link | Implemented — `/settings/team`, `StaffInviteToken`, accept page |
+| Mechanic work attribution | Implemented — line-level `performed_by` on service/labor lines |
+| Mechanic KPI dashboard | Implemented — `/analytics/mechanics`, charts, CSV/PDF export |
+| Platform admin console | Implemented — tenants, onboarding, audit, transfers, translation health (mobile-friendly) |
 
 ## Forbidden
 

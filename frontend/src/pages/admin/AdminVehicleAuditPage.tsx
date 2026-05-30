@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Loader2, Search } from 'lucide-react'
 import { vehicleAuditApi } from '@/api'
+import { AdminField, AdminMobileCard, AdminResponsiveTable } from '@/components/admin/AdminMobile'
 
 interface AuditEvent {
   id: string
@@ -140,123 +141,171 @@ export default function AdminVehicleAuditPage() {
       )}
 
       {events.length > 0 && (
-        <div className="card overflow-hidden">
-          <div className="table-scroll-mobile">
-            <table className="w-full text-sm">
-              <thead className="bg-workshop-charcoal/5">
-                <tr>
-                  <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    {t('adminVehicleAudit.tableWhen')}
-                  </th>
-                  <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    {t('adminVehicleAudit.tableWorkshop')}
-                  </th>
-                  <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    {t('adminVehicleAudit.tableActor')}
-                  </th>
-                  <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    {t('adminVehicleAudit.tableEntityAction')}
-                  </th>
-                  <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    {t('adminVehicleAudit.tableTarget')}
-                  </th>
-                  <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
-                    {t('adminVehicleAudit.tableChangesNote')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-workshop-charcoal/10">
-                {events.map((e) => (
-                  <tr key={e.id} className="hover:bg-workshop-charcoal/5 align-top">
-                    <td className="px-3 py-3 whitespace-nowrap text-xs">
-                      <div className="text-gray-700">
-                        {new Date(e.occurred_at).toLocaleDateString(undefined, {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </div>
-                      <div className="text-gray-400">
-                        {new Date(e.occurred_at).toLocaleTimeString(undefined, {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 text-xs">
-                      <p className="font-medium text-gray-800">
-                        {e.tenant_name || e.tenant_schema}
-                      </p>
-                      <p className="text-gray-500">{e.tenant_schema}</p>
-                    </td>
-                    <td className="px-3 py-3 text-xs">
-                      <p className="font-medium text-gray-800">
-                        {e.actor_username || <span className="text-gray-400">{t('adminVehicleAudit.system')}</span>}
-                      </p>
-                      <p className="text-gray-500">{e.actor_role}</p>
-                      {e.request_ip && (
-                        <p className="text-gray-400 mt-1">
-                          <code>{e.request_ip}</code>
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-3 py-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase ${
-                          ENTITY_COLOR[e.entity] || 'bg-gray-50 text-gray-700 border-gray-200'
-                        }`}
-                      >
-                        {e.entity}
-                      </span>
-                      <p className="text-xs text-gray-700 mt-1">{e.action}</p>
-                    </td>
-                    <td className="px-3 py-3 text-xs">
-                      {e.global_vehicle_id && (
-                        <code className="text-[10px] text-gray-500 break-all">
-                          gv:{e.global_vehicle_id.slice(0, 8)}…
-                        </code>
-                      )}
-                      {e.vehicle_tenant_id && (
-                        <code className="text-[10px] text-gray-500 break-all block">
-                          tv:{e.vehicle_tenant_id.slice(0, 8)}…
-                        </code>
-                      )}
-                      {e.target_id && (
-                        <code className="text-[10px] text-gray-400 break-all block">
-                          → {e.target_id.slice(0, 12)}
-                        </code>
-                      )}
-                    </td>
-                    <td className="px-3 py-3 text-xs max-w-xs">
-                      {Object.keys(e.changes).length > 0 && (
-                        <ul className="space-y-0.5 mb-1">
-                          {Object.entries(e.changes).map(([field, diff]) => (
-                            <li key={field} className="text-gray-700">
-                              <code className="text-gray-500">{field}:</code>{' '}
-                              <span className="text-red-600 line-through">
-                                {String(diff.before ?? '∅')}
-                              </span>{' '}
-                              →{' '}
-                              <span className="text-emerald-700">
-                                {String(diff.after ?? '∅')}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      {e.note && (
-                        <p className="text-gray-600 italic break-words">{e.note}</p>
-                      )}
-                      {Object.keys(e.changes).length === 0 && !e.note && (
-                        <span className="text-gray-300">—</span>
-                      )}
-                    </td>
+        <div className="card overflow-hidden min-w-0">
+          <AdminResponsiveTable
+            desktop={
+              <table className="w-full text-sm">
+                <thead className="bg-workshop-charcoal/5">
+                  <tr>
+                    <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
+                      {t('adminVehicleAudit.tableWhen')}
+                    </th>
+                    <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
+                      {t('adminVehicleAudit.tableWorkshop')}
+                    </th>
+                    <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
+                      {t('adminVehicleAudit.tableActor')}
+                    </th>
+                    <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
+                      {t('adminVehicleAudit.tableEntityAction')}
+                    </th>
+                    <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
+                      {t('adminVehicleAudit.tableTarget')}
+                    </th>
+                    <th className="px-3 py-3 text-left font-medium text-workshop-charcoal/60 uppercase text-xs">
+                      {t('adminVehicleAudit.tableChangesNote')}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-workshop-charcoal/10">
+                  {events.map((e) => (
+                    <tr key={e.id} className="hover:bg-workshop-charcoal/5 align-top">
+                      <td className="px-3 py-3 text-xs">
+                        <div className="text-gray-700">
+                          {new Date(e.occurred_at).toLocaleDateString(undefined, {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </div>
+                        <div className="text-gray-400">
+                          {new Date(e.occurred_at).toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-xs">
+                        <p className="font-medium text-gray-800">
+                          {e.tenant_name || e.tenant_schema}
+                        </p>
+                        <p className="text-gray-500">{e.tenant_schema}</p>
+                      </td>
+                      <td className="px-3 py-3 text-xs">
+                        <p className="font-medium text-gray-800">
+                          {e.actor_username || <span className="text-gray-400">{t('adminVehicleAudit.system')}</span>}
+                        </p>
+                        <p className="text-gray-500">{e.actor_role}</p>
+                        {e.request_ip && (
+                          <p className="text-gray-400 mt-1">
+                            <code>{e.request_ip}</code>
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-3 py-3">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase ${
+                            ENTITY_COLOR[e.entity] || 'bg-gray-50 text-gray-700 border-gray-200'
+                          }`}
+                        >
+                          {e.entity}
+                        </span>
+                        <p className="text-xs text-gray-700 mt-1">{e.action}</p>
+                      </td>
+                      <td className="px-3 py-3 text-xs">
+                        {e.global_vehicle_id && (
+                          <code className="text-[10px] text-gray-500 break-all">
+                            gv:{e.global_vehicle_id.slice(0, 8)}…
+                          </code>
+                        )}
+                        {e.vehicle_tenant_id && (
+                          <code className="text-[10px] text-gray-500 break-all block">
+                            tv:{e.vehicle_tenant_id.slice(0, 8)}…
+                          </code>
+                        )}
+                        {e.target_id && (
+                          <code className="text-[10px] text-gray-400 break-all block">
+                            → {e.target_id.slice(0, 12)}
+                          </code>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-xs max-w-xs">
+                        {Object.keys(e.changes).length > 0 && (
+                          <ul className="space-y-0.5 mb-1">
+                            {Object.entries(e.changes).map(([field, diff]) => (
+                              <li key={field} className="text-gray-700 break-words">
+                                <code className="text-gray-500">{field}:</code>{' '}
+                                <span className="text-red-600 line-through">
+                                  {String(diff.before ?? '∅')}
+                                </span>{' '}
+                                →{' '}
+                                <span className="text-emerald-700">
+                                  {String(diff.after ?? '∅')}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {e.note && (
+                          <p className="text-gray-600 italic break-words">{e.note}</p>
+                        )}
+                        {Object.keys(e.changes).length === 0 && !e.note && (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            }
+            mobile={events.map((e) => (
+              <AdminMobileCard
+                key={e.id}
+                title={e.tenant_name || e.tenant_schema}
+                subtitle={new Date(e.occurred_at).toLocaleString()}
+                badge={
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase ${
+                      ENTITY_COLOR[e.entity] || 'bg-gray-50 text-gray-700 border-gray-200'
+                    }`}
+                  >
+                    {e.entity} · {e.action}
+                  </span>
+                }
+              >
+                <AdminField label={t('adminVehicleAudit.tableActor')}>
+                  {e.actor_username || t('adminVehicleAudit.system')}
+                  {e.actor_role ? ` (${e.actor_role})` : ''}
+                </AdminField>
+                {e.request_ip && (
+                  <AdminField label="IP">
+                    <code className="text-xs break-all">{e.request_ip}</code>
+                  </AdminField>
+                )}
+                {(e.global_vehicle_id || e.target_id) && (
+                  <AdminField label={t('adminVehicleAudit.tableTarget')}>
+                    {e.global_vehicle_id && (
+                      <span className="block font-mono text-xs break-all">gv:{e.global_vehicle_id}</span>
+                    )}
+                    {e.target_id && (
+                      <span className="block font-mono text-xs break-all">{e.target_id}</span>
+                    )}
+                  </AdminField>
+                )}
+                {(Object.keys(e.changes).length > 0 || e.note) && (
+                  <AdminField label={t('adminVehicleAudit.tableChangesNote')}>
+                    {Object.entries(e.changes).map(([field, diff]) => (
+                      <div key={field} className="text-xs break-words mb-1">
+                        {field}: {String(diff.before ?? '∅')} → {String(diff.after ?? '∅')}
+                      </div>
+                    ))}
+                    {e.note && <p className="text-xs italic break-words">{e.note}</p>}
+                  </AdminField>
+                )}
+              </AdminMobileCard>
+            ))}
+          />
         </div>
       )}
     </div>

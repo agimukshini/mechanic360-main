@@ -15,6 +15,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { adminTransfersApi } from '@/api'
 import { useApiToast } from '@/hooks/useApiToast'
+import { AdminField, AdminMobileCard } from '@/components/admin/AdminMobile'
 
 interface TransferRow {
   id: string
@@ -196,8 +197,8 @@ export default function AdminTransfersPage() {
       )}
 
       {transfers.length > 0 && (
-        <div className="card overflow-hidden">
-          <div className="table-scroll-mobile">
+        <div className="card overflow-hidden min-w-0">
+          <div className="hidden md:block">
             <table className="w-full text-sm">
               <thead className="bg-workshop-charcoal/5">
                 <tr>
@@ -246,7 +247,7 @@ export default function AdminTransfersPage() {
                             )}
                           </button>
                         </td>
-                        <td className="px-3 py-3 whitespace-nowrap">
+                        <td className="px-3 py-3">
                           <div className="flex items-center gap-1.5 text-gray-700">
                             <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                             {new Date(t.initiated_at).toLocaleDateString(undefined, {
@@ -339,6 +340,85 @@ export default function AdminTransfersPage() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          <div className="md:hidden divide-y divide-workshop-charcoal/10">
+            {transfers.map((t) => {
+              const isOpen = !!expanded[t.id]
+              const statusBadge =
+                STATUS_STYLES[t.status] || 'bg-gray-50 text-gray-700 border-gray-200'
+              const paymentBadge =
+                (t.billing && PAYMENT_STYLES[t.billing.payment_status]) ||
+                'bg-gray-50 text-gray-700'
+              return (
+                <div key={t.id} className="min-w-0">
+                  <AdminMobileCard
+                    title={t.vehicle?.license_plate || '—'}
+                    subtitle={`${t.vehicle?.make ?? ''} ${t.vehicle?.model ?? ''}`.trim()}
+                    badge={
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase ${statusBadge}`}
+                      >
+                        {t.status}
+                      </span>
+                    }
+                    actions={
+                      <button
+                        type="button"
+                        onClick={() => toggle(t.id)}
+                        className="p-1.5 rounded-lg hover:bg-workshop-charcoal/5"
+                        aria-expanded={isOpen}
+                      >
+                        {isOpen ? (
+                          <ChevronDown className="w-4 h-4 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-gray-500" />
+                        )}
+                      </button>
+                    }
+                  >
+                    <AdminField label={tr('adminTransfers.tableInitiated')}>
+                      {new Date(t.initiated_at).toLocaleString()}
+                    </AdminField>
+                    <AdminField label={tr('adminTransfers.tableTenant')}>
+                      {t.tenant_name || t.tenant_schema}
+                      <span className="block text-workshop-charcoal/60">{t.initiator_username}</span>
+                    </AdminField>
+                    <AdminField label={tr('adminTransfers.tableFromTo')}>
+                      {t.from_owner?.name || '—'} → {t.to_owner?.name || tr('adminTransfers.pendingTo')}
+                    </AdminField>
+                    {t.billing && (
+                      <AdminField label={tr('adminTransfers.tableFee')}>
+                        {t.billing.fee_amount} {t.billing.fee_currency}
+                        <span className={`ml-2 inline-block px-2 py-0.5 rounded-full text-[10px] font-medium uppercase ${paymentBadge}`}>
+                          {t.billing.payment_status}
+                        </span>
+                      </AdminField>
+                    )}
+                    {t.new_license_plate && (
+                      <AdminField label={tr('adminTransfers.tableVehicle')}>
+                        → {t.new_license_plate}
+                      </AdminField>
+                    )}
+                  </AdminMobileCard>
+                  {isOpen && (
+                    <div className="px-4 pb-4 bg-workshop-gray/30 border-t border-workshop-charcoal/5">
+                      <DetailPanel
+                        transfer={t}
+                        onDispute={(notes) => disputeMutation.mutate({ id: t.id, notes })}
+                        onReverse={(notes) => reverseMutation.mutate({ id: t.id, notes })}
+                        onBilling={(payload) => billingMutation.mutate({ id: t.id, ...payload })}
+                        busy={
+                          disputeMutation.isPending ||
+                          reverseMutation.isPending ||
+                          billingMutation.isPending
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

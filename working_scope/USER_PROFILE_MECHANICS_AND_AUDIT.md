@@ -1,6 +1,6 @@
 # User Profile, Login Audit, Mechanic Staff & KPIs
 
-**Status:** Phase A + Phase B + Phase C + Phase D + Phase E (v1) implemented (2026-05-28); Phase F pending  
+**Status:** Phase A + Phase B + Phase C + Phase D + Phase E implemented (2026-05-30); Phase F pending  
 **Related:** `working_scope.md` §2, §7, §14, §15; `DEVELOPMENT_REFERENCE.md`; MECH-7 (auth)
 
 ---
@@ -82,7 +82,7 @@ No model or middleware records login outcomes today. JWT login lives in `account
 
 - [x] Frontend **Team** page under workshop settings (`/settings/team` or `/team`)
 - [x] List, add, deactivate mechanics/advisors
-- [ ] **Invite flow** (phase 2): email invite link → set password on first login
+- [x] **Invite flow (phase 2):** link-based invite + accept page (`StaffInviteToken`); Celery **email send** still pending
 - [ ] Optional: temporary password + force change on first login
 - [ ] Display user limit (5) and link to contact superadmin for increase
 - [x] i18n for all team management strings
@@ -137,13 +137,14 @@ Per-mechanic dashboard for **Admin** and **Service Advisor** (mechanics see own 
 
 - [x] `/analytics/mechanics` — table + drill-down to mechanic detail
 - [x] Mechanic detail: list of visits/vehicles/lines in date range
-- [ ] Export CSV/PDF (phase 2)
-- [ ] Charts: visits over time, top services (Recharts)
+- [x] Export CSV/PDF — `GET /api/v1/visits/analytics/mechanics/export/?days=&export_as=csv|pdf`
+- [x] Charts: visits over time, top services (Recharts); team summary bar chart
 
 **API:**
 
-- [x] `GET /api/v1/analytics/mechanics/` — summary rows per user
-- [x] `GET /api/v1/analytics/mechanics/{user_id}/` — detail breakdown
+- [x] `GET /api/v1/visits/analytics/mechanics/` — summary rows per user
+- [x] `GET /api/v1/visits/analytics/mechanics/{user_id}/` — detail breakdown + `visits_over_time`, `top_services`
+- [x] `GET /api/v1/visits/analytics/mechanics/export/` — CSV (default) or PDF (`export_as=pdf`)
 - [x] Tenant-scoped; permission `IsAdvisorOrAdmin` for all mechanics; mechanic role sees self only
 
 ---
@@ -223,9 +224,10 @@ erDiagram
 
 ### Phase E — Mechanic KPIs
 
-1. Analytics queries in `visits/analytics_views.py` (extend)
-2. Dashboard pages + charts
-3. Tests with seeded visit data
+1. Analytics queries in `visits/mechanic_analytics.py`
+2. Dashboard pages + Recharts (team bar, detail line/bar)
+3. CSV/PDF export via `/visits/analytics/mechanics/export/`
+4. Tests with seeded visit data
 
 ### Phase F — Email invite (optional)
 

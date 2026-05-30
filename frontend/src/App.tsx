@@ -52,6 +52,7 @@ import TenantOnboardingAdminPage from './pages/admin/TenantOnboardingAdminPage'
 import AdminLoginAuditPage from './pages/admin/AdminLoginAuditPage'
 import AdminTransfersPage from './pages/admin/AdminTransfersPage'
 import AdminVehicleAuditPage from './pages/admin/AdminVehicleAuditPage'
+import AdminTranslationCoveragePage from './pages/admin/AdminTranslationCoveragePage'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, sessionChecked, user } = useSelector((state: RootState) => state.auth)
@@ -156,6 +157,7 @@ function App() {
         <Route path="transfers" element={<AdminTransfersPage />} />
         <Route path="audit" element={<AdminVehicleAuditPage />} />
         <Route path="security/logins" element={<AdminLoginAuditPage />} />
+        <Route path="translation-coverage" element={<AdminTranslationCoveragePage />} />
       </Route>
 
       <Route

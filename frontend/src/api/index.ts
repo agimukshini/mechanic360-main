@@ -73,6 +73,7 @@ export const authApi = {
     api.get('/auth/login-audit/', { params }),
   getAdminLoginAudit: (params?: Record<string, string>) =>
     api.get('/auth/admin/login-audit/', { params }),
+  getTranslationCoverage: () => api.get('/auth/admin/translation-coverage/'),
   changePassword: (currentPassword: string, newPassword: string, confirmPassword: string) =>
     api.patch('/auth/settings/', {
       current_password: currentPassword,
@@ -357,6 +358,11 @@ export const visitsApi = {
       api.get('/visits/analytics/mechanics/', { params }),
     mechanicDetail: (userId: string, params?: { days?: number }) =>
       api.get(`/visits/analytics/mechanics/${userId}/`, { params }),
+    mechanicsExport: (params?: { days?: number; export_as?: 'csv' | 'pdf' }) =>
+      api.get('/visits/analytics/mechanics/export/', {
+        params,
+        responseType: 'blob',
+      }),
   },
 }
 

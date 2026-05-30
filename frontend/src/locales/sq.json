@@ -291,7 +291,14 @@
       "empty": "Nuk ka aktivitet mekanik në këtë periudhë",
       "last7": "7 ditët e fundit",
       "last30": "30 ditët e fundit",
-      "last90": "90 ditët e fundit"
+      "last90": "90 ditët e fundit",
+      "exportCsv": "Eksporto CSV",
+      "exportPdf": "Eksporto PDF",
+      "teamVisitsChart": "Vizita të përfunduara sipas mekanikut",
+      "visitsOverTime": "Vizita në kohë",
+      "topServices": "Shërbimet kryesore",
+      "serviceCount": "Sasia",
+      "noChartData": "Nuk ka të dhëna të mjaftueshme për këtë periudhë"
     }
   },
   "settings": {
@@ -1193,6 +1200,25 @@
     "errInvalidQr": "Kod QR i pavlefshëm",
     "errAddVehicle": "Shtimi i automjetit dështoi"
   },
+  "adminTranslationCoverage": {
+    "title": "Gjendja e përkthimeve",
+    "subtitle": "Mbulimi për përmbajtjen e bazës së të dhënave dhe gjuhët aktive (EN / SQ).",
+    "loadFailed": "Nuk u ngarkua raporti i përkthimeve.",
+    "statusHealthy": "Të gjitha vargjet e ndjekura në bazën e të dhënave janë plotësisht të përkthyera.",
+    "statusGaps": "Disa vargje në bazën e të dhënave mungojnë përkthim.",
+    "statusHint": "Çelësat statikë të frontend audit-ohen në CI me npm run i18n. Plotësoni boshllëqet në katalogun e shërbimeve ose skedarët locale JSON.",
+    "serviceCatalog": "Katalogu i shërbimeve",
+    "inspectionItems": "Lista e inspektimit",
+    "inspectionNote": "Etiketat e listës jetojnë në skedarët locale të frontend (çelësat inspection.*).",
+    "frontendLocales": "Gjuhët aktive",
+    "frontendHint": "Vargjet e UI në React duhet të ekzistojnë në çdo skedar locale në frontend/src/locales/. CI dështon kur mungojnë çelësa.",
+    "missingTitle": "Përkthime që mungojnë (mostër)",
+    "missingCount": "{{count}} të shfaqura (max 50 për zonë)",
+    "noMissing": "Nuk ka përkthime që mungojnë në katalogun e shërbimeve (mostër).",
+    "colArea": "Zona",
+    "colLabel": "Etiketa",
+    "colId": "ID"
+  },
   "superAdminLayout": {
     "platformAdmin": "Admin Platforme",
     "consoleSubtitle": "Konsola e superpërdoruesit Workshop360",
@@ -1203,7 +1229,9 @@
     "navGlobal": "Regjistri global",
     "navTransfers": "Transferimet e pronësisë",
     "navAudit": "Regjistri i auditit të automjeteve",
-    "navLoginLog": "Regjistri i hyrjeve"
+    "navLoginLog": "Regjistri i hyrjeve",
+    "navTranslation": "Gjendja e përkthimeve",
+    "navMenu": "Menyja e adminit"
   },
   "a11y": {
     "openMenu": "Hap menynë",

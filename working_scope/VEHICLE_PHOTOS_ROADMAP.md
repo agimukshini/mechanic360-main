@@ -1,8 +1,8 @@
 # Vehicle Gallery + Full Vehicle Audit Log — Implementation Roadmap
 
-Status: planned, not started.
+Status: **implemented** (2026-05). Acceptance checklist below is for QA sign-off — do not treat as “not started”.
 Owner: TBD.
-Target: pick up next working session.
+Target: maintenance / QA only.
 
 ## Goal
 

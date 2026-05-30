@@ -1,8 +1,8 @@
 # Ownership Transfer, Billing, Audit & Fraud — Implementation Roadmap
 
-Status: planned, not started.
-Depends on: `VEHICLE_PHOTOS_ROADMAP.md` Phase A (shared `VehicleAuditEvent`).
-Target: pick up after the photo gallery work.
+Status: **implemented** (2026-05). Acceptance checklist below is for QA sign-off.
+Depends on: `VEHICLE_PHOTOS_ROADMAP.md` Phase A (shared `VehicleAuditEvent`) — done.
+Target: maintenance / QA only.
 
 ## Goal
 

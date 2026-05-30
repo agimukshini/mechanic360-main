@@ -5,7 +5,8 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q, Sum
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import TruncDate, TruncWeek
 from django.utils import timezone
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
@@ -89,14 +90,71 @@ def mechanics_summary(request):
     return Response({"days": days, "mechanics": rows})
 
 
+def _rows_for_export(request, days: int):
+    since = _period_start(days)
+    return [_stats_for_mechanic(mechanic, since) for mechanic in _mechanics_for_request(request)]
+
+
+def _visits_over_time(mechanic, since, days: int) -> list[dict]:
+    qs = _visit_filter_for_mechanic(mechanic, since).filter(
+        status=ServiceVisit.Status.COMPLETED,
+    )
+    if days <= 31:
+        grouped = (
+            qs.annotate(period=TruncDate("service_date"))
+            .values("period")
+            .annotate(visits=Count("id"))
+            .order_by("period")
+        )
+        return [
+            {"period": row["period"].strftime("%Y-%m-%d"), "visits": row["visits"]}
+            for row in grouped
+            if row["period"]
+        ]
+
+    grouped = (
+        qs.annotate(period=TruncWeek("service_date"))
+        .values("period")
+        .annotate(visits=Count("id"))
+        .order_by("period")
+    )
+    return [
+        {
+            "period": row["period"].strftime("%Y-W%W") if row["period"] else "",
+            "visits": row["visits"],
+        }
+        for row in grouped
+        if row["period"]
+    ]
+
+
+def _top_services(mechanic, since, limit: int = 8) -> list[dict]:
+    rows = (
+        VisitServiceLine.objects.filter(
+            performed_by=mechanic,
+            visit__service_date__gte=since,
+        )
+        .values("description")
+        .annotate(count=Count("id"), revenue=Sum("total_price"))
+        .order_by("-count")[:limit]
+    )
+    return [
+        {
+            "service": (row["description"] or "—")[:120],
+            "count": row["count"],
+            "revenue": float(row["revenue"] or 0),
+        }
+        for row in rows
+    ]
+
+
 def mechanics_export_csv(request):
     """Download mechanic KPI summary as CSV."""
     import csv
     from django.http import HttpResponse
 
     days = int(request.query_params.get("days", 30))
-    since = _period_start(days)
-    rows = [_stats_for_mechanic(mechanic, since) for mechanic in _mechanics_for_request(request)]
+    rows = _rows_for_export(request, days)
 
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="mechanic-kpis-{days}d.csv"'
@@ -128,6 +186,71 @@ def mechanics_export_csv(request):
             ],
         )
     return response
+
+
+def mechanics_export_pdf(request):
+    """Download mechanic KPI summary as a simple PDF table."""
+    from django.http import HttpResponse
+    from django.utils.html import escape
+    from weasyprint import HTML
+
+    days = int(request.query_params.get("days", 30))
+    rows = _rows_for_export(request, days)
+    generated = timezone.now().strftime("%Y-%m-%d %H:%M")
+
+    table_rows = ""
+    for row in rows:
+        user = row["user"]
+        name = escape(
+            " ".join(
+                part
+                for part in [user.get("first_name", ""), user.get("last_name", "")]
+                if part
+            ).strip()
+            or user.get("username", ""),
+        )
+        table_rows += (
+            f"<tr>"
+            f"<td>{name}</td>"
+            f"<td>{row['visits_completed']}</td>"
+            f"<td>{row['labor_hours']:.1f}</td>"
+            f"<td>{row['revenue_total']:.2f}</td>"
+            f"<td>{row['vehicles_touched']}</td>"
+            f"</tr>"
+        )
+
+    html = f"""
+    <!DOCTYPE html>
+    <html><head><meta charset="utf-8">
+    <style>
+      body {{ font-family: sans-serif; font-size: 11pt; color: #1B263B; }}
+      h1 {{ font-size: 16pt; color: #0077B6; margin-bottom: 4px; }}
+      p.meta {{ color: #666; font-size: 9pt; margin-top: 0; }}
+      table {{ width: 100%; border-collapse: collapse; margin-top: 16px; }}
+      th, td {{ border: 1px solid #ddd; padding: 6px 8px; text-align: left; }}
+      th {{ background: #f3f4f6; font-size: 9pt; text-transform: uppercase; }}
+    </style></head><body>
+    <h1>Mechanic KPI summary</h1>
+    <p class="meta">Period: last {days} days · Generated {escape(generated)}</p>
+    <table>
+      <thead><tr>
+        <th>Mechanic</th><th>Visits</th><th>Labor h</th><th>Revenue</th><th>Vehicles</th>
+      </tr></thead>
+      <tbody>{table_rows or '<tr><td colspan="5">No data</td></tr>'}</tbody>
+    </table>
+    </body></html>
+    """
+    pdf = HTML(string=html).write_pdf()
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="mechanic-kpis-{days}d.pdf"'
+    return response
+
+
+def mechanics_export(request):
+    export_as = (request.query_params.get("export_as") or request.query_params.get("format") or "csv").lower()
+    if export_as == "pdf":
+        return mechanics_export_pdf(request)
+    return mechanics_export_csv(request)
 
 
 def mechanic_detail(request, user_id: str):
@@ -174,6 +297,8 @@ def mechanic_detail(request, user_id: str):
         {
             "days": days,
             "summary": _stats_for_mechanic(mechanic, since),
+            "visits_over_time": _visits_over_time(mechanic, since, days),
+            "top_services": _top_services(mechanic, since),
             "recent_visits": visit_rows,
             "recent_service_lines": [
                 {

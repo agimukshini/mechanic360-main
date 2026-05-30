@@ -146,3 +146,44 @@ class VisitLineAttributionTests(APITestCase):
         self.assertEqual(row["service_lines"], 1)
         self.assertEqual(row["labor_lines"], 1)
         self.assertEqual(row["visits_completed"], 1)
+
+    def test_mechanics_analytics_detail_charts(self):
+        connection.set_schema(self.tenant.schema_name)
+        VisitServiceLine.objects.create(
+            visit=self.visit,
+            description="Oil change",
+            quantity=1,
+            unit_price=30,
+            total_price=30,
+            performed_by=self.mechanic,
+        )
+        self.visit.status = ServiceVisit.Status.COMPLETED
+        self.visit.save(update_fields=["status"])
+        connection.set_schema("public")
+
+        self._auth(self.admin)
+        response = self.client.get(
+            reverse("analytics-mechanics-detail", kwargs={"user_id": self.mechanic.id}),
+            {"days": 30},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("visits_over_time", response.data)
+        self.assertIn("top_services", response.data)
+        self.assertEqual(response.data["top_services"][0]["service"], "Oil change")
+
+    def test_mechanics_analytics_export_csv(self):
+        self._auth(self.admin)
+        response = self.client.get(reverse("analytics-mechanics-export"), {"days": 7})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("text/csv", response["Content-Type"])
+        self.assertIn(b"username", response.content)
+
+    def test_mechanics_analytics_export_pdf(self):
+        self._auth(self.admin)
+        response = self.client.get(
+            reverse("analytics-mechanics-export"),
+            {"days": 7, "export_as": "pdf"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertTrue(response.content.startswith(b"%PDF"))
