@@ -44,6 +44,13 @@ class ServiceCatalogItem(models.Model):
 
     is_active = models.BooleanField(default=True)
 
+    pm_kind = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        help_text="When set, this catalog service counts toward preventive maintenance offers.",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -173,8 +180,13 @@ class PreventiveMaintenancePlan(models.Model):
     - km-based intervals
     - hour-based intervals
     - calendar-based intervals
-    Any combination can be used; empty fields mean 'not used' for that plan.
+    - seasonal windows (e.g. winter / summer tire change by month-day)
+    Any combination can be used for interval mode; empty fields mean 'not used'.
     """
+
+    class ScheduleMode(models.TextChoices):
+        INTERVAL = "interval", "Interval (km / days / hours)"
+        SEASONAL = "seasonal", "Seasonal (month-day window)"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
@@ -206,6 +218,39 @@ class PreventiveMaintenancePlan(models.Model):
         help_text="Calendar days between services.",
     )
 
+    schedule_mode = models.CharField(
+        max_length=16,
+        choices=ScheduleMode.choices,
+        default=ScheduleMode.INTERVAL,
+        help_text="Interval counters or fixed seasonal month-day windows.",
+    )
+
+    # Seasonal configuration (tire change: winter period start/end)
+    season_start_month = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Month when the seasonal period starts (1–12), e.g. 11 for November.",
+    )
+    season_start_day = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Day when the seasonal period starts (1–31).",
+    )
+    season_end_month = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Month when the seasonal period ends (1–12), e.g. 4 for April.",
+    )
+    season_end_day = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Last day of the seasonal period (1–31).",
+    )
+    reminder_days_before = models.PositiveSmallIntegerField(
+        default=14,
+        help_text="How many days before the target date to start reminders.",
+    )
+
     # Last completion data (used to calculate next due)
     last_service_date = models.DateField(null=True, blank=True)
     last_mileage_km = models.PositiveIntegerField(null=True, blank=True)
@@ -213,6 +258,13 @@ class PreventiveMaintenancePlan(models.Model):
 
     is_active = models.BooleanField(default=True)
     notes = models.TextField(blank=True)
+
+    pm_kind = models.CharField(
+        max_length=32,
+        blank=True,
+        default="regular_service",
+        help_text="Type of PM work order to publish when this plan is due.",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

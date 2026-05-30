@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ownerApi, ownerPhotosApi } from '@/api'
+import { ownerApi, ownerPhotosApi, type PMOrder } from '@/api'
 import { getApiErrorMessage } from '@/lib/utils'
 import OwnerLayout from '@/components/layout/OwnerLayout'
 
@@ -74,6 +74,14 @@ export default function OwnerVehicleDetail() {
   const [downloadAction, setDownloadAction] = useState<
     null | 'sticker' | 'booklet' | 'preview'
   >(null)
+
+  const { data: pmOrdersData } = useQuery({
+    queryKey: ['owner-pm-orders', id],
+    queryFn: () => ownerApi.maintenanceOrders(id!),
+    enabled: Boolean(id),
+  })
+
+  const pmOrders: PMOrder[] = pmOrdersData?.data ?? []
 
   useEffect(() => {
     if (!id) return
@@ -249,6 +257,31 @@ export default function OwnerVehicleDetail() {
         </div>
 
         <OwnerVehiclePhotoGallery vehicleId={id!} />
+
+        {pmOrders.length > 0 && (
+          <div className="bg-white rounded-2xl border border-amber-200 shadow-sm p-5 sm:p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">{t('pmOrders.ownerSectionTitle')}</h2>
+            <p className="text-xs text-gray-500 mb-4">{t('pmOrders.ownerSectionHint')}</p>
+            <div className="space-y-3">
+              {pmOrders.filter((o) => o.status === 'open').map((order) => (
+                <div key={order.id} className="border border-gray-100 rounded-xl p-4">
+                  <p className="font-medium text-gray-900">{order.title}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {t(`pmOrders.kind.${order.pm_kind}`, { defaultValue: order.pm_kind_display })}
+                  </p>
+                  <div className="flex flex-wrap gap-3 text-sm text-gray-500 mt-2">
+                    {order.due_date && (
+                      <span>{t('pmOrders.dueDate')}: {formatDate(order.due_date)}</span>
+                    )}
+                    {order.due_odometer_km != null && (
+                      <span>{t('pmOrders.dueKm', { km: order.due_odometer_km.toLocaleString() })}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Aggregated history */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">

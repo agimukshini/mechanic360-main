@@ -56,7 +56,26 @@ def finish_service_visit(
         update_fields=["status", "mileage_km", "hour_meter", "notes", "updated_at"],
     )
     apply_visit_completion_effects(visit)
+    _resolve_pm_after_visit(visit)
     return visit
+
+
+def _resolve_pm_after_visit(visit: ServiceVisit) -> None:
+    tenant = getattr(getattr(visit, "created_by", None), "tenant", None)
+    if tenant is None:
+        from django.db import connection
+
+        tenant = getattr(connection, "tenant", None)
+    if tenant is None:
+        return
+    try:
+        from visits.visit_side_effects import resolve_pm_on_visit_completed
+
+        resolve_pm_on_visit_completed(visit, tenant=tenant)
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).exception("PM resolution failed for visit %s", visit.id)
 
 
 def complete_in_progress_visit(visit: ServiceVisit) -> ServiceVisit:
@@ -68,4 +87,5 @@ def complete_in_progress_visit(visit: ServiceVisit) -> ServiceVisit:
     visit.status = ServiceVisit.Status.COMPLETED
     visit.save(update_fields=["status", "updated_at"])
     apply_visit_completion_effects(visit)
+    _resolve_pm_after_visit(visit)
     return visit

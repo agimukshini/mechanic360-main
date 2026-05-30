@@ -3,6 +3,7 @@
     "dashboard": "Paneli",
     "vehicles": "Automjetet",
     "visits": "Vizitat",
+    "maintenanceOrders": "Shërbimet e planifikuara",
     "services": "Shërbimet",
     "inventory": "Inventari",
     "marketplace": "Tregu",
@@ -715,7 +716,76 @@
     "descriptionEnLabel": "Përshkrimi (anglisht)",
     "descriptionEnPlaceholder": "Describe what this service includes…",
     "descriptionSqLabel": "Përshkrimi (shqip)",
-    "descriptionSqPlaceholder": "Përshkruani çfarë përfshin ky shërbim…"
+    "descriptionSqPlaceholder": "Përshkruani çfarë përfshin ky shërbim…",
+    "pmKindLabel": "Lloji i mirëmbajtjes parandaluese",
+    "pmKindNone": "Nuk është shërbim i planifikuar",
+    "pmKindHint": "Kur vendoset, punëtoria juaj sheh shërbimet e planifikuara për automjetet që servisni."
+  },
+  "pmOrders": {
+    "title": "Shërbimet e planifikuara",
+    "subtitle": "Kujtesa të hapura për automjetet në regjistrin tuaj. Kontaktoni pronarin për të planifikuar.",
+    "empty": "Nuk ka shërbime të planifikuara të hapura për punëtorinë tuaj.",
+    "offeredKinds": "Punëtoria juaj merr shërbime të planifikuara për: {{kinds}}",
+    "dueDate": "Afati",
+    "dueKm": "Afati në {{km}} km",
+    "contactOwnerHint": "Kontaktoni pronarin e automjetit para se të caktoni vizitën.",
+    "autoCompleteHint": "Urdhërat PM mbyllen automatikisht kur automjeti regjistrohet dhe vizita përfundon me shërbime përkatëse nga katalogu.",
+    "markCompleted": "Shëno si përfunduar",
+    "catalogFilterHint": "Vetëm punëtoritë me shërbime përkatëse në katalog shohin këto shërbime të planifikuara.",
+    "ownerSectionTitle": "Mirëmbajtje e ardhshme",
+    "ownerSectionHint": "Punëtoritë që servisojnë këtë automjet mund t'ju kontaktojnë.",
+    "kind": {
+      "regular_service": "Servis i rregullt",
+      "major_service": "Servis i madh",
+      "tire_change": "Ndrrim Gomash"
+    }
+  },
+  "vehicleMaintenance": {
+    "title": "Shërbimet e planifikuara",
+    "subtitle": "Konfiguroni kur duhet servisi i rregullt, servisi i madh dhe ndrrimi i gomave për këtë automjet.",
+    "empty": "Asnjë plan mirëmbajtjeje nuk është konfiguruar ende.",
+    "saved": "Plani i mirëmbajtjes u ruajt.",
+    "saveFailed": "Plani i mirëmbajtjes nuk u ruajt.",
+    "deleted": "Plani i mirëmbajtjes u fshi.",
+    "deleteFailed": "Plani i mirëmbajtjes nuk u fshi.",
+    "deleteTitle": "Të hiqet plani i mirëmbajtjes?",
+    "deleteMessage": "Ky automjet nuk do të ndjekë më këtë plan.",
+    "inactive": "Në pauzë",
+    "seasonHint": "Gomat e dimrit kërkohen nga data e fillimit deri në datën e përfundimit çdo vit. Kujtesat dërgohen para dimrit dhe para verës.",
+    "seasonRange": "Goma dimri {{startDay}}/{{startMonth}} – {{endDay}}/{{endMonth}}",
+    "defaultNames": {
+      "regular": "Servis i rregullt",
+      "major": "Servis i madh",
+      "tire": "Ndrrim Gomash"
+    },
+    "fields": {
+      "name": "Emri i planit",
+      "type": "Lloji i shërbimit",
+      "intervalKm": "Çdo (km)",
+      "intervalDays": "Çdo (ditë)",
+      "lastServiceDate": "Data e servisit të fundit",
+      "lastServiceKm": "Km e servisit të fundit",
+      "winterFromMonth": "Goma dimri nga (muaji)",
+      "winterUntilMonth": "Goma dimri deri (muaji)",
+      "day": "Dita",
+      "reminderDays": "Kujto ditë para",
+      "notes": "Shënime",
+      "active": "Aktiv"
+    },
+    "months": {
+      "1": "Janar",
+      "2": "Shkurt",
+      "3": "Mars",
+      "4": "Prill",
+      "5": "Maj",
+      "6": "Qershor",
+      "7": "Korrik",
+      "8": "Gusht",
+      "9": "Shtator",
+      "10": "Tetor",
+      "11": "Nëntor",
+      "12": "Dhjetor"
+    }
   },
   "vehicles": {
     "archived": "Arkivuar",

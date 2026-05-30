@@ -14,6 +14,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from .pm_kinds import PMKind
+
 
 class GlobalVehicle(models.Model):
     """
@@ -797,3 +799,102 @@ class GlobalVehiclePhoto(models.Model):
 
     def __str__(self) -> str:
         return f"Photo for {self.vehicle.vin} ({self.id})"
+
+
+class PreventiveMaintenanceOrder(models.Model):
+    """
+    Cross-tenant preventive maintenance work order for a global vehicle.
+
+    Visible to the vehicle owner and to workshops that (a) have this vehicle
+    in their local registry and (b) offer the matching service type in their
+    catalog (`ServiceCatalogItem.pm_kind`).
+    """
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    global_vehicle = models.ForeignKey(
+        GlobalVehicle,
+        related_name="maintenance_orders",
+        on_delete=models.CASCADE,
+    )
+
+    pm_kind = models.CharField(max_length=32, choices=PMKind.choices, db_index=True)
+
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.OPEN,
+        db_index=True,
+    )
+
+    due_date = models.DateField(null=True, blank=True)
+    due_odometer_km = models.PositiveIntegerField(null=True, blank=True)
+
+    title = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+
+    created_by_tenant = models.ForeignKey(
+        "tenancy.WorkshopTenant",
+        related_name="created_pm_orders",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="created_pm_orders",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    # Reference to tenant-scoped PreventiveMaintenancePlan.id (no cross-schema FK).
+    source_plan_id = models.UUIDField(null=True, blank=True, db_index=True)
+
+    completed_at = models.DateTimeField(null=True, blank=True)
+    completed_by_tenant = models.ForeignKey(
+        "tenancy.WorkshopTenant",
+        related_name="completed_pm_orders",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Preventive maintenance order"
+        verbose_name_plural = "Preventive maintenance orders"
+        indexes = [
+            models.Index(
+                fields=["global_vehicle", "status"],
+                name="global_vehi_global__a8f2c1_idx",
+            ),
+            models.Index(
+                fields=["pm_kind", "status"],
+                name="global_vehi_pm_kind_4b91ef_idx",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["global_vehicle", "pm_kind"],
+                condition=models.Q(status="open"),
+                name="unique_open_pm_order_per_vehicle_kind",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_pm_kind_display()} — {self.global_vehicle.license_plate} ({self.status})"
+
+    def save(self, *args, **kwargs):
+        if not self.title:
+            self.title = self.get_pm_kind_display()
+        super().save(*args, **kwargs)
+

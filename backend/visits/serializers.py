@@ -202,7 +202,17 @@ class ServiceVisitSerializer(serializers.ModelSerializer):
         if request and hasattr(request, "user") and request.user.is_authenticated:
             validated_data["created_by"] = request.user
 
-        return ServiceVisit.objects.create(**validated_data)
+        visit = ServiceVisit.objects.create(**validated_data)
+
+        try:
+            from visits.visit_side_effects import notify_principal_owner_on_check_in
+
+            if request and getattr(request.user, "tenant", None):
+                notify_principal_owner_on_check_in(visit, tenant=request.user.tenant)
+        except Exception:  # pragma: no cover — never block check-in
+            pass
+
+        return visit
 
     def update(self, instance, validated_data):
         """
@@ -231,6 +241,7 @@ class ServiceCatalogItemSerializer(serializers.ModelSerializer):
             "description_sq",
             "default_duration_hours",
             "default_price",
+            "pm_kind",
             "is_active",
             "created_at",
             "updated_at",
@@ -429,6 +440,9 @@ class VisitLaborLineSerializer(serializers.ModelSerializer):
 
 class PreventiveMaintenancePlanSerializer(serializers.ModelSerializer):
     vehicle_label = serializers.SerializerMethodField(read_only=True)
+    next_due_summary = serializers.SerializerMethodField(read_only=True)
+    pm_kind_display = serializers.SerializerMethodField(read_only=True)
+    schedule_mode_display = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = PreventiveMaintenancePlan
@@ -437,21 +451,107 @@ class PreventiveMaintenancePlanSerializer(serializers.ModelSerializer):
             "vehicle",
             "vehicle_label",
             "name",
+            "pm_kind",
+            "pm_kind_display",
+            "schedule_mode",
+            "schedule_mode_display",
             "interval_km",
             "interval_hours",
             "interval_days",
+            "season_start_month",
+            "season_start_day",
+            "season_end_month",
+            "season_end_day",
+            "reminder_days_before",
             "last_service_date",
             "last_mileage_km",
             "last_hours",
             "is_active",
             "notes",
+            "next_due_summary",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "vehicle_label"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "vehicle_label",
+            "next_due_summary",
+            "pm_kind_display",
+            "schedule_mode_display",
+        ]
 
     def get_vehicle_label(self, obj: PreventiveMaintenancePlan) -> str:
         v: Vehicle = obj.vehicle
         return f"{v.license_plate} - {v.make} {v.model}"
+
+    def get_pm_kind_display(self, obj: PreventiveMaintenancePlan) -> str:
+        from global_vehicles.pm_kinds import PMKind
+
+        try:
+            return PMKind(obj.pm_kind).label
+        except ValueError:
+            return obj.pm_kind.replace("_", " ").title()
+
+    def get_schedule_mode_display(self, obj: PreventiveMaintenancePlan) -> str:
+        return obj.get_schedule_mode_display()
+
+    def get_next_due_summary(self, obj: PreventiveMaintenancePlan) -> str | None:
+        from visits.maintenance_schedule import calculate_next_due, is_maintenance_due
+
+        next_due = calculate_next_due(obj)
+        if not next_due:
+            return None
+        due, reason = is_maintenance_due(obj, next_due)
+        if due:
+            return reason
+        if obj.schedule_mode == PreventiveMaintenancePlan.ScheduleMode.SEASONAL:
+            target = next_due.get("seasonal_target") or next_due.get("date")
+            if target:
+                return target.isoformat()
+        if "date" in next_due:
+            return next_due["date"].isoformat()
+        if "mileage" in next_due:
+            return f"{next_due['mileage']} km"
+        if "hours" in next_due:
+            return f"{next_due['hours']} h"
+        return None
+
+    def validate(self, attrs):
+        schedule_mode = attrs.get(
+            "schedule_mode",
+            getattr(self.instance, "schedule_mode", PreventiveMaintenancePlan.ScheduleMode.INTERVAL),
+        )
+        pm_kind = attrs.get("pm_kind", getattr(self.instance, "pm_kind", ""))
+
+        if schedule_mode == PreventiveMaintenancePlan.ScheduleMode.SEASONAL:
+            merged = {
+                "season_start_month": attrs.get("season_start_month", getattr(self.instance, "season_start_month", None)),
+                "season_start_day": attrs.get("season_start_day", getattr(self.instance, "season_start_day", None)),
+                "season_end_month": attrs.get("season_end_month", getattr(self.instance, "season_end_month", None)),
+                "season_end_day": attrs.get("season_end_day", getattr(self.instance, "season_end_day", None)),
+            }
+            missing = [key for key, value in merged.items() if not value]
+            if missing:
+                raise serializers.ValidationError(
+                    {"schedule_mode": "Seasonal plans require winter period start and end month/day."},
+                )
+            for field, value in merged.items():
+                if field.endswith("_month") and not 1 <= value <= 12:
+                    raise serializers.ValidationError({field: "Month must be between 1 and 12."})
+                if field.endswith("_day") and not 1 <= value <= 31:
+                    raise serializers.ValidationError({field: "Day must be between 1 and 31."})
+        elif pm_kind != "tire_change":
+            has_interval = any(
+                attrs.get(field, getattr(self.instance, field, None))
+                for field in ("interval_km", "interval_hours", "interval_days")
+            )
+            if not has_interval and self.instance is None:
+                raise serializers.ValidationError(
+                    "Set at least one interval (km, days, or hours) for interval-based plans.",
+                )
+
+        return attrs
 
 

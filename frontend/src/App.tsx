@@ -38,6 +38,7 @@ import MechanicsAnalyticsPage from './pages/analytics/MechanicsAnalyticsPage'
 import MarketplaceList from './pages/marketplace/MarketplaceList'
 import SellerDashboard from './pages/marketplace/SellerDashboard'
 import SellerPartForm from './pages/marketplace/SellerPartForm'
+import MaintenanceOrdersList from './pages/maintenance/MaintenanceOrdersList'
 import SettingsPage from './pages/settings/SettingsPage'
 import WorkshopLoginAuditPage from './pages/settings/WorkshopLoginAuditPage'
 import TeamPage from './pages/settings/TeamPage'
@@ -324,6 +325,15 @@ function App() {
           element={
             <RoleGuard mode="mechanics_kpi">
               <MechanicsAnalyticsPage />
+            </RoleGuard>
+          }
+        />
+
+        <Route
+          path="maintenance-orders"
+          element={
+            <RoleGuard mode="marketplace_browse">
+              <MaintenanceOrdersList />
             </RoleGuard>
           }
         />

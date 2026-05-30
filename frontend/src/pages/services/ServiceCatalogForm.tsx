@@ -16,6 +16,7 @@ type ServiceFormValues = {
   description_sq?: string
   default_duration_hours: number
   default_price: number
+  pm_kind?: string
   is_active: boolean
 }
 
@@ -36,6 +37,7 @@ export default function ServiceCatalogForm() {
         description_sq: z.string().optional(),
         default_duration_hours: z.coerce.number().min(0).max(24),
         default_price: z.coerce.number().min(0),
+        pm_kind: z.string().optional(),
         is_active: z.boolean().default(true),
       }),
     [t],
@@ -61,6 +63,7 @@ export default function ServiceCatalogForm() {
       description_sq: '',
       default_duration_hours: 1.0,
       default_price: 0,
+      pm_kind: '',
       is_active: true,
     },
   })
@@ -75,6 +78,7 @@ export default function ServiceCatalogForm() {
         description_sq: item.description_sq || '',
         default_duration_hours: Number(item.default_duration_hours),
         default_price: Number(item.default_price),
+        pm_kind: item.pm_kind || '',
         is_active: item.is_active,
       })
     }
@@ -193,6 +197,19 @@ export default function ServiceCatalogForm() {
               <p className="text-sm text-red-600 mt-1">{errors.default_price.message}</p>
             )}
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+            {t('services.pmKindLabel')}
+          </label>
+          <select {...register('pm_kind')} className="input">
+            <option value="">{t('services.pmKindNone')}</option>
+            <option value="regular_service">{t('pmOrders.kind.regular_service')}</option>
+            <option value="major_service">{t('pmOrders.kind.major_service')}</option>
+            <option value="tire_change">{t('pmOrders.kind.tire_change')}</option>
+          </select>
+          <p className="text-xs text-workshop-charcoal/50 mt-1">{t('services.pmKindHint')}</p>
         </div>
 
         <div className="flex items-center gap-2">

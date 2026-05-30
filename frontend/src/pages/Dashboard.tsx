@@ -203,7 +203,7 @@ export default function Dashboard() {
               tone="warning"
               title={t('dashboard.overdueMaintenance')}
               message={t('dashboard.overdueMessage', { count: overdueMaintenance })}
-              href="/analytics"
+              href="/maintenance-orders"
               linkLabel={t('dashboard.viewMaintenance')}
             />
           )}

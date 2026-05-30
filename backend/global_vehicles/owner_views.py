@@ -128,6 +128,24 @@ class OwnerVehicleViewSet(viewsets.ReadOnlyModelViewSet):
             row["service_date"] = row["service_date"].isoformat()
         return Response({"vehicle_id": str(vehicle.id), "visits": visits})
 
+    @action(detail=True, methods=["get"], url_path="maintenance-orders")
+    def maintenance_orders(self, request, pk=None):
+        """Open and historical PM work orders for this vehicle."""
+        from .models import PreventiveMaintenanceOrder
+        from .pm_serializers import PreventiveMaintenanceOrderSerializer
+
+        vehicle = self.get_object()
+        status_param = request.query_params.get("status")
+        qs = PreventiveMaintenanceOrder.objects.filter(global_vehicle=vehicle)
+        if status_param:
+            qs = qs.filter(status=status_param)
+        else:
+            qs = qs.exclude(status=PreventiveMaintenanceOrder.Status.CANCELLED)
+        qs = qs.order_by("-created_at")
+        return Response(
+            PreventiveMaintenanceOrderSerializer(qs, many=True).data,
+        )
+
     @action(detail=True, methods=["get"], url_path="door-sticker")
     def door_sticker(self, request, pk=None):
         """

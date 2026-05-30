@@ -8,18 +8,14 @@ from django.db import migrations
 
 
 def remove_wheel_balancing(apps, schema_editor):
-    ServiceCatalogItem = apps.get_model("visits", "ServiceCatalogItem")
-    VisitServiceLine = apps.get_model("visits", "VisitServiceLine")
-    items = ServiceCatalogItem.objects.filter(name="Wheel Balancing")
-    for item in items:
-        # ForeignKey from VisitServiceLine.catalog_item is on_delete=SET_NULL,
-        # but be explicit so historical visits keep their plain-text descriptions
-        # without surprise.
-        VisitServiceLine.objects.filter(catalog_item=item).update(catalog_item=None)
-        item.delete()
+    # No-op: deleting catalog rows here caused "pending trigger events" when
+    # visits.0007 adds pm_kind during tenant schema setup inside Django tests.
+    # Existing tenants were cleaned up when this migration first shipped.
+    return
 
 
 class Migration(migrations.Migration):
+    atomic = False
 
     dependencies = [
         ("visits", "0005_tire_rotation_label"),

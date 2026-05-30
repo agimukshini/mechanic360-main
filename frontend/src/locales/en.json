@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "vehicles": "Vehicles",
     "visits": "Visits",
+    "maintenanceOrders": "PM work orders",
     "services": "Services",
     "inventory": "Inventory",
     "marketplace": "Marketplace",
@@ -75,7 +76,7 @@
     "viewInventory": "View inventory",
     "overdueMaintenance": "Overdue maintenance",
     "overdueMessage": "{{count}} vehicle(s) past service due.",
-    "viewMaintenance": "View maintenance schedule",
+    "viewMaintenance": "View PM work orders",
     "noOpenVisits": "No open visits",
     "startNewVisit": "Start a new visit",
     "walkIn": "Walk-in"
@@ -715,7 +716,76 @@
     "descriptionEnLabel": "Description (English)",
     "descriptionEnPlaceholder": "Describe what this service includes…",
     "descriptionSqLabel": "Description (Albanian)",
-    "descriptionSqPlaceholder": "Përshkruani çfarë përfshin ky shërbim…"
+    "descriptionSqPlaceholder": "Përshkruani çfarë përfshin ky shërbim…",
+    "pmKindLabel": "Preventive maintenance type",
+    "pmKindNone": "Not a PM service",
+    "pmKindHint": "When set, your workshop will see matching PM work orders for vehicles you service."
+  },
+  "pmOrders": {
+    "title": "Preventive maintenance",
+    "subtitle": "Open service reminders for vehicles in your registry. Contact the owner to schedule work.",
+    "empty": "No open preventive maintenance work orders for your workshop.",
+    "offeredKinds": "Your workshop receives PM orders for: {{kinds}}",
+    "dueDate": "Due by",
+    "dueKm": "Due at {{km}} km",
+    "contactOwnerHint": "Contact the vehicle owner to confirm timing before booking a visit.",
+    "autoCompleteHint": "PM orders close automatically when you check the vehicle in and finish the visit with matching catalog services.",
+    "markCompleted": "Mark completed",
+    "catalogFilterHint": "Only shops with matching services in their catalog see these orders.",
+    "ownerSectionTitle": "Upcoming maintenance",
+    "ownerSectionHint": "Workshops that service this vehicle may contact you to schedule.",
+    "kind": {
+      "regular_service": "Regular service",
+      "major_service": "Major service",
+      "tire_change": "Tire change"
+    }
+  },
+  "vehicleMaintenance": {
+    "title": "Planned services",
+    "subtitle": "Configure when regular service, major service, and tire changes are due for this vehicle.",
+    "empty": "No maintenance plans configured yet.",
+    "saved": "Maintenance plan saved.",
+    "saveFailed": "Could not save maintenance plan.",
+    "deleted": "Maintenance plan removed.",
+    "deleteFailed": "Could not delete maintenance plan.",
+    "deleteTitle": "Remove maintenance plan?",
+    "deleteMessage": "This vehicle will no longer follow this schedule.",
+    "inactive": "Paused",
+    "seasonHint": "Winter tires are required from the start date through the end date each year. Reminders are sent before winter and before summer periods.",
+    "seasonRange": "Winter tires {{startDay}}/{{startMonth}} – {{endDay}}/{{endMonth}}",
+    "defaultNames": {
+      "regular": "Regular service",
+      "major": "Major service",
+      "tire": "Tire change"
+    },
+    "fields": {
+      "name": "Plan name",
+      "type": "Service type",
+      "intervalKm": "Every (km)",
+      "intervalDays": "Every (days)",
+      "lastServiceDate": "Last service date",
+      "lastServiceKm": "Last service km",
+      "winterFromMonth": "Winter tires from (month)",
+      "winterUntilMonth": "Winter tires until (month)",
+      "day": "Day",
+      "reminderDays": "Remind days before",
+      "notes": "Notes",
+      "active": "Active"
+    },
+    "months": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    }
   },
   "vehicles": {
     "archived": "Archived",

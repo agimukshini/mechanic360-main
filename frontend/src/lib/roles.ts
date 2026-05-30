@@ -63,5 +63,5 @@ export function canBrowseMarketplace(role: AppRole | null): boolean {
 
 /** Sidebar entries for mechanic-focused workflow. */
 export function mechanicNavigationIds(): string[] {
-  return ['dashboard', 'vehicles', 'visits', 'marketplace', 'mechanics']
+  return ['dashboard', 'vehicles', 'visits', 'maintenanceOrders', 'marketplace', 'mechanics']
 }

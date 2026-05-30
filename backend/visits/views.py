@@ -285,4 +285,11 @@ class PreventiveMaintenancePlanViewSet(AdvisorWriteMixin, viewsets.ModelViewSet)
     ordering_fields = ["name", "created_at"]
     ordering = ["name"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        vehicle_id = self.request.query_params.get("vehicle")
+        if vehicle_id:
+            queryset = queryset.filter(vehicle_id=vehicle_id)
+        return queryset
+
 

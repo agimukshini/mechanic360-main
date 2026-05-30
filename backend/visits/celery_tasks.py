@@ -6,16 +6,14 @@ for scheduled maintenance.
 """
 from __future__ import annotations
 
-from datetime import timedelta
-
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
-from django.db.models import Q
 
 from celery import shared_task
+from django_tenants.utils import get_tenant_model, schema_context
 
-from vehicles.models import Vehicle
+from visits.maintenance_schedule import calculate_next_due, is_maintenance_due
 from visits.models import PreventiveMaintenancePlan
 
 
@@ -26,89 +24,39 @@ def check_maintenance_due(self):
 
     This task runs daily via Celery Beat.
     """
-    plans = PreventiveMaintenancePlan.objects.filter(is_active=True)
+    Tenant = get_tenant_model()
+    plans_checked = 0
     reminders_sent = 0
 
-    for plan in plans:
-        try:
-            # Calculate next due date/mileage
-            next_due = calculate_next_due(plan)
+    for tenant in Tenant.objects.exclude(schema_name="public"):
+        with schema_context(tenant.schema_name):
+            plans = PreventiveMaintenancePlan.objects.filter(is_active=True).select_related(
+                "vehicle",
+                "vehicle__owner",
+            )
+            plans_checked += plans.count()
+            for plan in plans:
+                try:
+                    next_due = calculate_next_due(plan)
+                    if not next_due:
+                        continue
 
-            if not next_due:
-                continue
+                    is_due, reason = is_maintenance_due(plan, next_due)
+                    if is_due:
+                        send_maintenance_reminder(plan, reason)
+                        reminders_sent += 1
 
-            # Check if maintenance is due (within next 7 days or 500 km)
-            is_due, reason = is_maintenance_due(plan, next_due)
+                except Exception as exc:
+                    self.retry(exc=exc, countdown=60)
 
-            if is_due:
-                # Send reminder notification
-                send_maintenance_reminder(plan, reason)
-                reminders_sent += 1
+    from global_vehicles.pm_services import sync_due_pm_orders_across_tenants
 
-        except Exception as exc:
-            # Retry on failure
-            self.retry(exc=exc, countdown=60)
+    pm_orders_synced = sync_due_pm_orders_across_tenants()
 
-    return f"Checked {plans.count()} plans, sent {reminders_sent} reminders"
-
-
-def calculate_next_due(plan: PreventiveMaintenancePlan) -> dict | None:
-    """
-    Calculate when the next maintenance is due based on the plan configuration.
-
-    Returns a dict with next_due_date, next_due_mileage, or next_due_hours.
-    """
-    next_due = {}
-
-    # KM-based
-    if plan.interval_km and plan.last_mileage_km:
-        next_due['mileage'] = plan.last_mileage_km + plan.interval_km
-
-    # Hour-based
-    if plan.interval_hours and plan.last_hours:
-        next_due['hours'] = plan.last_hours + plan.interval_hours
-
-    # Calendar-based
-    if plan.interval_days and plan.last_service_date:
-        from datetime import date
-        next_due['date'] = plan.last_service_date + timedelta(days=plan.interval_days)
-
-    return next_due if next_due else None
-
-
-def is_maintenance_due(plan: PreventiveMaintenancePlan, next_due: dict) -> tuple[bool, str]:
-    """
-    Check if maintenance is due (within threshold).
-
-    Returns (is_due, reason).
-    """
-    vehicle = plan.vehicle
-
-    # Check mileage
-    if 'mileage' in next_due:
-        km_remaining = next_due['mileage'] - vehicle.odometer_km
-        if km_remaining <= 500:  # Within 500 km
-            if km_remaining <= 0:
-                return True, f"Overdue by {abs(km_remaining)} km"
-            return True, f"Due in {km_remaining} km"
-
-    # Check hours
-    if 'hours' in next_due:
-        hours_remaining = next_due['hours'] - vehicle.hour_meter
-        if hours_remaining <= 10:  # Within 10 hours
-            if hours_remaining <= 0:
-                return True, f"Overdue by {abs(hours_remaining)} hours"
-            return True, f"Due in {hours_remaining} hours"
-
-    # Check calendar
-    if 'date' in next_due:
-        days_remaining = (next_due['date'] - timezone.now().date()).days
-        if days_remaining <= 7:  # Within 7 days
-            if days_remaining <= 0:
-                return True, f"Overdue by {abs(days_remaining)} days"
-            return True, f"Due in {days_remaining} days"
-
-    return False, ""
+    return (
+        f"Checked {plans_checked} plans, sent {reminders_sent} reminders, "
+        f"synced {pm_orders_synced} PM work orders"
+    )
 
 
 def send_maintenance_reminder(plan: PreventiveMaintenancePlan, reason: str):
@@ -119,6 +67,8 @@ def send_maintenance_reminder(plan: PreventiveMaintenancePlan, reason: str):
     """
     vehicle = plan.vehicle
     owner = vehicle.owner
+    if owner is None:
+        return
 
     # Prepare email
     subject = f"Maintenance Reminder: {plan.name} for {vehicle.license_plate}"

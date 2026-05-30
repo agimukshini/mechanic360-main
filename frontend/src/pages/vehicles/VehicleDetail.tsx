@@ -9,6 +9,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import VehiclePhoto from '@/components/vehicles/VehiclePhoto'
 import VehicleOwnerQrPanel from '@/components/vehicles/VehicleOwnerQrPanel'
 import { VehiclePhotoGallery } from '@/components/vehicles/VehiclePhotoGallery'
+import VehicleMaintenancePlans from '@/components/vehicles/VehicleMaintenancePlans'
 import { unwrapList, getApiErrorMessage, resolveMediaUrl } from '@/lib/utils'
 import { formatHourMeter, formatOdometer, type OdometerUnit } from '@/lib/odometer'
 import { canManageVehicles, canManageWorkshopData, normalizeRole } from '@/lib/roles'
@@ -525,6 +526,8 @@ export default function VehicleDetail() {
             vehicleId={id!}
             canEdit={canManageVehicles(normalizeRole(user?.role))}
           />
+
+          <VehicleMaintenancePlans vehicleId={id!} canEdit={canManage} />
 
           {/* Recent Visits */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">

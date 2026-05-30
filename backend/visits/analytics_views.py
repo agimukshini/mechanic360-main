@@ -9,7 +9,7 @@ Provides aggregated data for the analytics dashboard including:
 """
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.db.models import Count, Sum, Q, F
 from django.utils import timezone
@@ -162,41 +162,43 @@ def maintenance_forecast(request):
     ).select_related('vehicle', 'vehicle__owner')
 
     forecast = []
+    from visits.maintenance_schedule import calculate_next_due, is_maintenance_due
+
     for plan in plans:
-        # Calculate next due based on intervals
-        next_due = None
-        due_type = None
+        next_due = calculate_next_due(plan)
+        due, reason = is_maintenance_due(plan, next_due) if next_due else (False, "")
 
-        if plan.interval_km and plan.last_mileage_km:
-            next_mileage = plan.last_mileage_km + plan.interval_km
-            current_mileage = plan.vehicle.odometer_km
+        if plan.schedule_mode == PreventiveMaintenancePlan.ScheduleMode.SEASONAL and next_due:
+            target = next_due.get("seasonal_target") or next_due.get("date")
+            next_due_label = reason or (target.isoformat() if target else "Not scheduled")
+            due_type = "seasonal"
+        elif next_due and "mileage" in next_due:
+            next_mileage = next_due["mileage"]
+            current_mileage = plan.vehicle.odometer_km or 0
             if current_mileage >= next_mileage:
-                next_due = "Overdue"
-                due_type = "km"
+                next_due_label = "Overdue"
             else:
-                km_remaining = next_mileage - current_mileage
-                next_due = f"In {km_remaining} km"
-                due_type = "km"
-
-        elif plan.interval_days and plan.last_service_date:
-            from datetime import date
-            last_date = plan.last_service_date
-            days_since = (date.today() - last_date).days
-            if days_since >= plan.interval_days:
-                next_due = "Overdue"
-                due_type = "days"
+                next_due_label = f"In {next_mileage - current_mileage} km"
+            due_type = "km"
+        elif next_due and "date" in next_due:
+            days_remaining = (next_due["date"] - date.today()).days
+            if days_remaining <= 0:
+                next_due_label = "Overdue"
             else:
-                days_remaining = plan.interval_days - days_since
-                next_due = f"In {days_remaining} days"
-                due_type = "days"
+                next_due_label = f"In {days_remaining} days"
+            due_type = "days"
+        else:
+            next_due_label = reason or "Not scheduled"
+            due_type = None
 
         forecast.append({
             'plan_id': str(plan.id),
             'plan_name': plan.name,
             'vehicle': f"{plan.vehicle.license_plate} - {plan.vehicle.make} {plan.vehicle.model}",
-            'owner': plan.vehicle.owner.name or plan.vehicle.owner.company_name,
-            'next_due': next_due or "Not scheduled",
+            'owner': plan.vehicle.owner.name or plan.vehicle.owner.company_name if plan.vehicle.owner else "",
+            'next_due': next_due_label,
             'due_type': due_type,
+            'is_due': due,
         })
 
     # Sort: overdue first, then by due date

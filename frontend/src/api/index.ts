@@ -167,6 +167,8 @@ export const ownerApi = {
     api.get('/owner/transfers/', { params }),
   getTransfer: (id: string) => api.get(`/owner/transfers/${id}/`),
   confirmTransfer: (id: string) => api.post(`/owner/transfers/${id}/confirm/`, {}),
+  maintenanceOrders: (vehicleId: string) =>
+    api.get(`/owner/vehicles/${vehicleId}/maintenance-orders/`),
 }
 
 // Platform-wide (cross-workshop) registry — read-only search from the tenant side.
@@ -344,6 +346,8 @@ export const visitsApi = {
   maintenancePlans: {
     list: (params?: object) => api.get('/visits/maintenance-plans/', { params }),
     create: (data: object) => api.post('/visits/maintenance-plans/', data),
+    update: (id: string, data: object) => api.patch(`/visits/maintenance-plans/${id}/`, data),
+    delete: (id: string) => api.delete(`/visits/maintenance-plans/${id}/`),
   },
   analytics: {
     dashboardStats: () => api.get('/visits/analytics/dashboard/'),
@@ -433,6 +437,33 @@ export type MarketplaceSeller = {
   contact_phone?: string
   contact_whatsapp?: string
   contact_email?: string
+}
+
+export type PMOrder = {
+  id: string
+  global_vehicle: string
+  pm_kind: 'regular_service' | 'major_service' | 'tire_change'
+  pm_kind_display?: string
+  status: 'open' | 'completed' | 'cancelled'
+  status_display?: string
+  due_date?: string | null
+  due_odometer_km?: number | null
+  title: string
+  notes?: string
+  vehicle_label?: string
+  vehicle_vin?: string
+  vehicle_plate?: string
+  vehicle_make?: string
+  vehicle_model?: string
+  vehicle_year?: number
+}
+
+export const pmOrdersApi = {
+  list: (params?: Record<string, string>) =>
+    api.get('/global-vehicles/maintenance-orders/', { params }),
+  create: (data: object) => api.post('/global-vehicles/maintenance-orders/', data),
+  complete: (id: string) => api.patch(`/global-vehicles/maintenance-orders/${id}/`, { status: 'completed' }),
+  cancel: (id: string) => api.patch(`/global-vehicles/maintenance-orders/${id}/`, { status: 'cancelled' }),
 }
 
 export const marketplaceApi = {
