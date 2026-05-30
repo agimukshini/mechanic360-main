@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import PlatformBillingAlertBanner from '@/components/billing/PlatformBillingAlertBanner'
 import { Cloud } from 'lucide-react'
 
 export default function DashboardLayout() {
@@ -41,6 +42,7 @@ export default function DashboardLayout() {
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar min-w-0">
           <div className="page-shell px-4 sm:px-6 lg:px-8 py-4 lg:py-6 max-w-[1600px] mx-auto">
+            <PlatformBillingAlertBanner />
             <Outlet />
           </div>
         </main>

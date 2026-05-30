@@ -2,9 +2,16 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, CreditCard, Loader2, RefreshCcw, Save } from 'lucide-react'
-import { platformBillingApi, tenantsApi } from '@/api'
+import { ArrowLeft, CreditCard, FileText, Loader2, RefreshCcw, Save } from 'lucide-react'
+import { adminInvoicesApi, platformBillingApi, tenantsApi } from '@/api'
 import { useApiToast } from '@/hooks/useApiToast'
+import {
+  formatTenantSubscription,
+  formatSubscriptionPeriodRange,
+  formatSubscriptionPeriodTimeline,
+  type SubscriptionDisplayKey,
+  type TenantSubscription,
+} from '@/lib/tenantSubscription'
 
 interface TenantDetail {
   id: string
@@ -15,6 +22,8 @@ interface TenantDetail {
   contact_email: string
   contact_phone: string
   subscription_plan: string
+  subscription_display_key?: SubscriptionDisplayKey
+  subscription?: TenantSubscription
   is_active: boolean
   created_at: string
   stats: {
@@ -105,6 +114,30 @@ export default function AdminTenantDetailPage() {
 
   const tenant = data.data as TenantDetail
 
+  const subscriptionLabel = formatTenantSubscription(
+    tenant.subscription,
+    tenant.subscription_display_key,
+    t,
+  )
+
+  const subscriptionPeriodLabel = formatSubscriptionPeriodTimeline(tenant.subscription, t)
+  const subscriptionPeriodRange = formatSubscriptionPeriodRange(tenant.subscription)
+  const periodStart = tenant.subscription?.subscription_period_start
+  const periodEnd = tenant.subscription?.subscription_period_end
+
+  const periodProgress =
+    periodStart && periodEnd
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            ((Date.now() - new Date(periodStart).getTime()) /
+              (new Date(periodEnd).getTime() - new Date(periodStart).getTime())) *
+              100,
+          ),
+        )
+      : null
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
@@ -131,7 +164,39 @@ export default function AdminTenantDetailPage() {
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.plan')}</dt>
-              <dd>{tenant.subscription_plan}</dd>
+              <dd>{subscriptionLabel}</dd>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex justify-between gap-4">
+                <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.subscriptionPeriod')}</dt>
+                <dd className="text-right">{subscriptionPeriodLabel}</dd>
+              </div>
+              {subscriptionPeriodRange && periodProgress != null && (
+                <div className="space-y-1">
+                  <div className="h-1.5 rounded-full bg-workshop-charcoal/10 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-workshop-blue transition-all"
+                      style={{ width: `${periodProgress}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-workshop-charcoal/50">
+                    <span>
+                      {periodStart
+                        ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+                            new Date(periodStart),
+                          )
+                        : '—'}
+                    </span>
+                    <span>
+                      {periodEnd
+                        ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+                            new Date(periodEnd),
+                          )
+                        : '—'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.status')}</dt>
@@ -172,6 +237,7 @@ export default function AdminTenantDetailPage() {
       </div>
 
       <PlatformBillingPanel
+        tenantId={id!}
         billing={billingQuery.data}
         isLoading={billingQuery.isLoading}
         isSaving={billingMutation.isPending}
@@ -182,15 +248,28 @@ export default function AdminTenantDetailPage() {
 }
 
 interface BillingPanelProps {
+  tenantId: string
   billing: PlatformBilling | undefined
   isLoading: boolean
   isSaving: boolean
   onSave: (payload: Partial<PlatformBilling>) => void
 }
 
-function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingPanelProps) {
+function PlatformBillingPanel({ tenantId, billing, isLoading, isSaving, onSave }: BillingPanelProps) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const { showError, showSuccess } = useApiToast()
   const [form, setForm] = useState<Partial<PlatformBilling>>({})
+
+  const issueMutation = useMutation({
+    mutationFn: () => adminInvoicesApi.issueSubscription(tenantId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-tenant-platform-billing', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['admin-invoices'] })
+      showSuccess(t('platformBilling.issueInvoiceSuccess'))
+    },
+    onError: (err) => showError(err, t('platformBilling.issueInvoiceError')),
+  })
 
   useEffect(() => {
     if (billing) {
@@ -276,7 +355,60 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="rounded-xl border-2 border-workshop-blue/20 bg-workshop-blue/5 p-4 space-y-4">
+        <div>
+          <h4 className="font-semibold text-workshop-charcoal">{t('platformBilling.subscriptionSectionTitle')}</h4>
+          <p className="text-xs text-workshop-charcoal/60 mt-1">{t('platformBilling.subscriptionSectionHint')}</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {renderMoney(
+            'subscription_fee_amount',
+            'subscription_fee_currency',
+            t('platformBilling.subscriptionFee'),
+            t('platformBilling.subscriptionFeeHint'),
+          )}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-workshop-charcoal/70">
+              {t('platformBilling.subscriptionPeriod')}
+            </label>
+            <select
+              value={form.subscription_period ?? 'none'}
+              onChange={(e) =>
+                update('subscription_period', e.target.value as PlatformBilling['subscription_period'])
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            >
+              <option value="none">{t('platformBilling.periodNone')}</option>
+              <option value="monthly">{t('platformBilling.periodMonthly')}</option>
+              <option value="yearly">{t('platformBilling.periodYearly')}</option>
+            </select>
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-xs font-medium text-workshop-charcoal/70">
+              {t('platformBilling.nextChargeAt')}
+            </label>
+            <input
+              type="datetime-local"
+              value={
+                form.subscription_next_charge_at
+                  ? form.subscription_next_charge_at.slice(0, 16)
+                  : ''
+              }
+              onChange={(e) =>
+                update(
+                  'subscription_next_charge_at',
+                  (e.target.value ? new Date(e.target.value).toISOString() : null) as never,
+                )
+              }
+              className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-semibold text-workshop-charcoal mb-3">{t('platformBilling.otherFeesTitle')}</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {renderMoney(
           'transfer_fee_amount',
           'transfer_fee_currency',
@@ -289,50 +421,6 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
           t('platformBilling.registrationFee'),
           t('platformBilling.registrationFeeHint'),
         )}
-        {renderMoney(
-          'subscription_fee_amount',
-          'subscription_fee_currency',
-          t('platformBilling.subscriptionFee'),
-          t('platformBilling.subscriptionFeeHint'),
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-workshop-charcoal/70">
-            {t('platformBilling.subscriptionPeriod')}
-          </label>
-          <select
-            value={form.subscription_period ?? 'none'}
-            onChange={(e) =>
-              update('subscription_period', e.target.value as PlatformBilling['subscription_period'])
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-          >
-            <option value="none">{t('platformBilling.periodNone')}</option>
-            <option value="monthly">{t('platformBilling.periodMonthly')}</option>
-            <option value="yearly">{t('platformBilling.periodYearly')}</option>
-          </select>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-workshop-charcoal/70">
-            {t('platformBilling.nextChargeAt')}
-          </label>
-          <input
-            type="datetime-local"
-            value={
-              form.subscription_next_charge_at
-                ? form.subscription_next_charge_at.slice(0, 16)
-                : ''
-            }
-            onChange={(e) =>
-              update(
-                'subscription_next_charge_at',
-                (e.target.value ? new Date(e.target.value).toISOString() : null) as never,
-              )
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-          />
         </div>
       </div>
 
@@ -349,37 +437,63 @@ function PlatformBillingPanel({ billing, isLoading, isSaving, onSave }: BillingP
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
-        <button
-          type="button"
-          onClick={() =>
-            billing &&
-            setForm({
-              transfer_fee_amount: billing.transfer_fee_amount,
-              transfer_fee_currency: billing.transfer_fee_currency,
-              registration_fee_amount: billing.registration_fee_amount,
-              registration_fee_currency: billing.registration_fee_currency,
-              subscription_fee_amount: billing.subscription_fee_amount,
-              subscription_fee_currency: billing.subscription_fee_currency,
-              subscription_period: billing.subscription_period,
-              subscription_next_charge_at: billing.subscription_next_charge_at,
-              notes: billing.notes,
-            })
-          }
-          className="btn btn-secondary inline-flex items-center justify-center gap-1.5 text-sm w-full sm:w-auto"
-        >
-          <RefreshCcw className="w-4 h-4" />
-          {t('platformBilling.reset')}
-        </button>
-        <button
-          type="button"
-          onClick={() => onSave(form)}
-          disabled={isSaving}
-          className="btn btn-primary inline-flex items-center justify-center gap-1.5 text-sm w-full sm:w-auto disabled:opacity-50"
-        >
-          <Save className="w-4 h-4" />
-          {isSaving ? t('platformBilling.saving') : t('platformBilling.save')}
-        </button>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Link
+            to={`/admin/invoices?tenant_id=${tenantId}`}
+            className="btn btn-secondary inline-flex items-center justify-center gap-1.5 text-sm w-full sm:w-auto"
+          >
+            <FileText className="w-4 h-4" />
+            {t('platformBilling.viewInvoices')}
+          </Link>
+          {form.subscription_period && form.subscription_period !== 'none' && (
+            <button
+              type="button"
+              disabled={issueMutation.isPending}
+              onClick={() => issueMutation.mutate()}
+              className="btn btn-secondary inline-flex items-center justify-center gap-1.5 text-sm w-full sm:w-auto disabled:opacity-50"
+            >
+              {issueMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              {t('platformBilling.issueInvoiceNow')}
+            </button>
+          )}
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              billing &&
+              setForm({
+                transfer_fee_amount: billing.transfer_fee_amount,
+                transfer_fee_currency: billing.transfer_fee_currency,
+                registration_fee_amount: billing.registration_fee_amount,
+                registration_fee_currency: billing.registration_fee_currency,
+                subscription_fee_amount: billing.subscription_fee_amount,
+                subscription_fee_currency: billing.subscription_fee_currency,
+                subscription_period: billing.subscription_period,
+                subscription_next_charge_at: billing.subscription_next_charge_at,
+                notes: billing.notes,
+              })
+            }
+            className="btn btn-secondary inline-flex items-center justify-center gap-1.5 text-sm w-full sm:w-auto"
+          >
+            <RefreshCcw className="w-4 h-4" />
+            {t('platformBilling.reset')}
+          </button>
+          <button
+            type="button"
+            onClick={() => onSave(form)}
+            disabled={isSaving}
+            className="btn btn-primary inline-flex items-center justify-center gap-1.5 text-sm w-full sm:w-auto disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {isSaving ? t('platformBilling.saving') : t('platformBilling.save')}
+          </button>
+        </div>
       </div>
     </div>
   )

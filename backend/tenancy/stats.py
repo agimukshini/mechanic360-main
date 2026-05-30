@@ -11,13 +11,16 @@ from dataclasses import dataclass
 from django.contrib.auth import get_user_model
 from django.db import connection
 
+from decimal import Decimal
+
 from clients.models import Client
-from global_vehicles.models import GlobalOwner, GlobalVehicle, VehicleClaimToken
+from global_vehicles.models import GlobalOwner, GlobalVehicle, TenantPlatformBilling, VehicleClaimToken
 from inventory.models import InventoryItem
 from marketplace.models import MarketplaceListing
 from vehicles.models import Inspection, ServiceVisit, Vehicle
 
 from .models import TenantOnboardingApplication, WorkshopTenant
+from .subscription_period import resolve_tenant_subscription_period
 
 User = get_user_model()
 
@@ -121,7 +124,58 @@ def platform_stats_dict() -> dict:
     }
 
 
+def tenant_subscription_dict(tenant: WorkshopTenant) -> dict:
+    try:
+        billing = tenant.platform_billing
+    except TenantPlatformBilling.DoesNotExist:
+        return {
+            "subscription_fee_amount": "0.00",
+            "subscription_fee_currency": "EUR",
+            "subscription_period": "none",
+            "subscription_next_charge_at": None,
+            "subscription_period_start": None,
+            "subscription_period_end": None,
+            "subscription_days_remaining": None,
+            "notes": "",
+        }
+
+    period_bounds = resolve_tenant_subscription_period(tenant, billing)
+
+    return {
+        "subscription_fee_amount": str(billing.subscription_fee_amount),
+        "subscription_fee_currency": billing.subscription_fee_currency,
+        "subscription_period": billing.subscription_period,
+        "subscription_next_charge_at": billing.subscription_next_charge_at,
+        "subscription_period_start": period_bounds["subscription_period_start"],
+        "subscription_period_end": period_bounds["subscription_period_end"],
+        "subscription_days_remaining": period_bounds["subscription_days_remaining"],
+        "notes": billing.notes,
+    }
+
+
+def subscription_display_key(tenant: WorkshopTenant, sub: dict) -> str:
+    """
+    UI label bucket for platform subscription — avoids showing legacy default ``trial``.
+
+    - ``trial`` only when superadmin explicitly set ``subscription_plan=trial`` and billing is free.
+    - ``free`` when there is no paid subscription configured.
+    - ``paid`` when a recurring fee is configured.
+    """
+    amount = Decimal(sub["subscription_fee_amount"])
+    period = sub["subscription_period"]
+    if (
+        tenant.subscription_plan == "trial"
+        and period == TenantPlatformBilling.SubscriptionPeriod.NONE
+        and amount <= Decimal("0.00")
+    ):
+        return "trial"
+    if period == TenantPlatformBilling.SubscriptionPeriod.NONE or amount <= Decimal("0.00"):
+        return "free"
+    return "paid"
+
+
 def tenant_summary_dict(tenant: WorkshopTenant, *, include_stats: bool = True) -> dict:
+    subscription = tenant_subscription_dict(tenant)
     payload = {
         "id": str(tenant.id),
         "name": tenant.name,
@@ -131,6 +185,8 @@ def tenant_summary_dict(tenant: WorkshopTenant, *, include_stats: bool = True) -
         "contact_email": tenant.contact_email,
         "contact_phone": tenant.contact_phone,
         "subscription_plan": tenant.subscription_plan,
+        "subscription": subscription,
+        "subscription_display_key": subscription_display_key(tenant, subscription),
         "is_active": tenant.is_active,
         "created_at": tenant.created_at,
         "updated_at": tenant.updated_at,
@@ -145,7 +201,7 @@ def collect_dashboard_payload() -> dict:
         "platform": platform_stats_dict(),
         "tenants": [
             tenant_summary_dict(tenant)
-            for tenant in WorkshopTenant.objects.order_by("name")
+            for tenant in WorkshopTenant.objects.select_related("platform_billing").order_by("name")
         ],
     }
 

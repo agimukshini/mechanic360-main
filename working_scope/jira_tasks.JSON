@@ -575,6 +575,60 @@
           ]
         }
       ]
+    },
+    {
+      "key": "MECH-42",
+      "summary": "Platform subscription billing & invoicing",
+      "description": "Per-tenant subscription pricing, platform invoices, reminders, grace suspension, admin UI, membership period timeline. See working_scope/PLATFORM_SUBSCRIPTION_BILLING.md",
+      "status": "Done",
+      "priority": "High",
+      "estimate": "2 weeks",
+      "assignee": "Full Stack Developer",
+      "stories": [
+        {
+          "key": "MECH-43",
+          "summary": "PlatformInvoice model and issue/paid flow",
+          "description": "Subscription invoice CRUD, PDF export, advance next_charge_at",
+          "status": "Done",
+          "priority": "High",
+          "estimate": "4 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "PlatformInvoice + migrations",
+            "issue_subscription_invoice service and Celery task",
+            "Superadmin invoice APIs and tests"
+          ]
+        },
+        {
+          "key": "MECH-44",
+          "summary": "Billing reminders and tenant suspension",
+          "description": "Option C reminders before due and period end; grace deactivation; reactivation on payment",
+          "status": "Done",
+          "priority": "High",
+          "estimate": "3 days",
+          "assignee": "Backend Developer",
+          "tasks": [
+            "PlatformInvoiceReminder model",
+            "process_subscription_billing_reminders Celery task",
+            "Workshop billing-status API and dashboard banner"
+          ]
+        },
+        {
+          "key": "MECH-45",
+          "summary": "Admin subscriptions and invoices UI",
+          "description": "Per-tenant pricing page, invoices list, tenant period column, trial label fix",
+          "status": "Done",
+          "priority": "High",
+          "estimate": "4 days",
+          "assignee": "Frontend Developer",
+          "tasks": [
+            "AdminSubscriptionsPage grid/table views",
+            "AdminInvoicesPage",
+            "Subscription period timeline on tenants list and detail",
+            "Workshop Settings platform invoices panel"
+          ]
+        }
+      ]
     }
   ],
   "timeline": {

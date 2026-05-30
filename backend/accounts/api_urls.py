@@ -12,6 +12,10 @@ from __future__ import annotations
 
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+from global_vehicles.invoice_views import (
+    WorkshopPlatformBillingStatusView,
+    WorkshopPlatformInvoiceViewSet,
+)
 from mechanic360.i18n_views import TranslationCoverageView
 from .auth_views import LogoutView, ThrottledTokenObtainPairView, ThrottledTokenRefreshView
 from .login_audit_views import SuperadminLoginAuditListView, TenantLoginAuditListView
@@ -34,6 +38,11 @@ from .views import (
 router = DefaultRouter()
 # Tenant-scoped user management for workshop admins
 router.register(r"tenant/users", TenantUserViewSet, basename="tenant-users")
+router.register(
+    r"platform-invoices",
+    WorkshopPlatformInvoiceViewSet,
+    basename="workshop-platform-invoices",
+)
 
 urlpatterns = [
     # JWT token endpoints (login & refresh)
@@ -46,6 +55,11 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="auth_register"),
     path("me/", MeView.as_view(), name="auth_me"),
     path("settings/", SettingsView.as_view(), name="auth_settings"),
+    path(
+        "platform-billing-status/",
+        WorkshopPlatformBillingStatusView.as_view(),
+        name="auth_platform_billing_status",
+    ),
     path("tenant/mechanics/", TenantMechanicsListView.as_view(), name="auth_tenant_mechanics"),
     path("tenant/invites/", TenantStaffInviteListCreateView.as_view(), name="auth_tenant_invites"),
     path(

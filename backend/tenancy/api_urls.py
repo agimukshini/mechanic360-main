@@ -11,6 +11,11 @@ from __future__ import annotations
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from global_vehicles.invoice_views import (
+    AdminPlatformInvoiceViewSet,
+    IssueSubscriptionInvoiceView,
+    WorkshopPlatformInvoiceViewSet,
+)
 from global_vehicles.transfer_views import (
     AdminRegistrationChargeViewSet,
     AdminTenantPlatformBillingViewSet,
@@ -45,10 +50,16 @@ router.register(
     AdminRegistrationChargeViewSet,
     basename="admin-registration-charges",
 )
+router.register(r"invoices", AdminPlatformInvoiceViewSet, basename="admin-invoices")
 
 urlpatterns = [
     path("register/", TenantRegisterView.as_view(), name="tenant_register"),
     path("admin/dashboard/", SuperadminDashboardView.as_view(), name="admin-dashboard"),
     path("admin/global/", SuperadminGlobalRegistryView.as_view(), name="admin-global"),
+    path(
+        "platform-billing/<uuid:tenant_id>/issue-subscription-invoice/",
+        IssueSubscriptionInvoiceView.as_view(),
+        name="admin-issue-subscription-invoice",
+    ),
     path("", include(router.urls)),
 ]

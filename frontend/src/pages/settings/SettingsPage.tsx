@@ -11,6 +11,7 @@ import { setWorkshopLanguage as setWorkshopLanguageInStore } from '@/store/authS
 import type { AppDispatch, RootState } from '@/store'
 import { isTenantAdmin, normalizeRole } from '@/lib/roles'
 import StaffInviteModal from '@/components/settings/StaffInviteModal'
+import WorkshopPlatformInvoicesPanel from '@/components/settings/WorkshopPlatformInvoicesPanel'
 import { UnderlineTabs } from '@/components/ui/PageTabs'
 
 interface SettingsFormData {
@@ -620,6 +621,12 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      {canEditWorkshop && (
+        <div className="mt-8">
+          <WorkshopPlatformInvoicesPanel />
+        </div>
+      )}
     </div>
   )
 }

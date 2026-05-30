@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
@@ -585,6 +587,33 @@ def update_registration_charge(
 # ---------------------------------------------------------------------------
 
 
+def _sync_tenant_subscription_plan_label(billing: TenantPlatformBilling) -> None:
+    """
+    Keep ``WorkshopTenant.subscription_plan`` aligned with platform billing.
+
+    Clears stale ``trial`` when a workshop moves to paid billing. Preserves an
+    explicit ``trial`` only while billing remains free/none.
+    """
+    tenant = billing.tenant
+    if (
+        billing.subscription_period != TenantPlatformBilling.SubscriptionPeriod.NONE
+        and billing.subscription_fee_amount > Decimal("0.00")
+    ):
+        if tenant.subscription_plan == "trial":
+            tenant.subscription_plan = "none"
+            tenant.save(update_fields=["subscription_plan"])
+        return
+
+    if (
+        billing.subscription_period == TenantPlatformBilling.SubscriptionPeriod.NONE
+        and billing.subscription_fee_amount <= Decimal("0.00")
+        and tenant.subscription_plan not in {"trial"}
+    ):
+        if tenant.subscription_plan != "none":
+            tenant.subscription_plan = "none"
+            tenant.save(update_fields=["subscription_plan"])
+
+
 @transaction.atomic
 def update_tenant_platform_billing(
     *,
@@ -619,11 +648,25 @@ def update_tenant_platform_billing(
                       "after": str(new) if new is not None else None}
         setattr(billing, f, new)
 
+    if (
+        "subscription_period" in fields
+        and billing.subscription_period
+        not in {TenantPlatformBilling.SubscriptionPeriod.NONE}
+        and billing.subscription_next_charge_at is None
+    ):
+        billing.subscription_next_charge_at = timezone.now()
+        changes["subscription_next_charge_at"] = {
+            "before": None,
+            "after": billing.subscription_next_charge_at.isoformat(),
+        }
+
     if not changes:
         return billing
 
     billing.updated_by = superadmin
     billing.save()
+
+    _sync_tenant_subscription_plan_label(billing)
 
     log_vehicle_event(
         entity=VehicleAuditEvent.Entity.BILLING,

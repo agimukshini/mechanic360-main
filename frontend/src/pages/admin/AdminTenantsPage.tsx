@@ -4,12 +4,19 @@ import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
 import { tenantsApi } from '@/api'
 import { AdminField, AdminMobileCard, AdminResponsiveTable } from '@/components/admin/AdminMobile'
+import {
+  formatTenantSubscription,
+  formatSubscriptionPeriodTimeline,
+  type SubscriptionDisplayKey,
+  type TenantSubscription,
+} from '@/lib/tenantSubscription'
 
 interface TenantRow {
   id: string
   name: string
   schema_name: string
-  subscription_plan: string
+  subscription?: TenantSubscription
+  subscription_display_key?: SubscriptionDisplayKey
   is_active: boolean
   contact_email: string
   contact_phone: string
@@ -41,6 +48,12 @@ export default function AdminTenantsPage() {
 
   const tenants = (data?.data?.tenants ?? []) as TenantRow[]
 
+  const subscriptionSummary = (tenant: TenantRow) =>
+    formatTenantSubscription(tenant.subscription, tenant.subscription_display_key, t)
+
+  const subscriptionPeriod = (tenant: TenantRow) =>
+    formatSubscriptionPeriodTimeline(tenant.subscription, t)
+
   if (isLoading) {
     return (
       <div className="card p-12 flex justify-center">
@@ -70,6 +83,12 @@ export default function AdminTenantsPage() {
                     {t('adminTenants.tableWorkshop')}
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminTenants.tableSubscription')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
+                    {t('adminTenants.tablePeriod')}
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
                     {t('adminTenants.tableContact')}
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-workshop-charcoal/60 uppercase">
@@ -93,9 +112,19 @@ export default function AdminTenantsPage() {
                       >
                         {tenant.name}
                       </Link>
-                      <div className="text-xs text-workshop-charcoal/50">
-                        {tenant.schema_name} · {tenant.subscription_plan}
-                      </div>
+                      <div className="text-xs text-workshop-charcoal/50">{tenant.schema_name}</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <Link
+                        to="/admin/subscriptions"
+                        className="text-workshop-blue hover:underline"
+                        title={t('adminTenants.editSubscription')}
+                      >
+                        {subscriptionSummary(tenant)}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-workshop-charcoal/70 whitespace-nowrap">
+                      {subscriptionPeriod(tenant)}
                     </td>
                     <td className="px-6 py-4 text-sm text-workshop-charcoal/70">
                       {tenant.contact_email || '—'}
@@ -150,7 +179,7 @@ export default function AdminTenantsPage() {
                   {tenant.name}
                 </Link>
               }
-              subtitle={`${tenant.schema_name} · ${tenant.subscription_plan}`}
+              subtitle={tenant.schema_name}
               badge={
                 <span
                   className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
@@ -178,6 +207,12 @@ export default function AdminTenantsPage() {
                 </button>
               }
             >
+              <AdminField label={t('adminTenants.tableSubscription')}>
+                <Link to="/admin/subscriptions" className="text-workshop-blue hover:underline">
+                  {subscriptionSummary(tenant)}
+                </Link>
+              </AdminField>
+              <AdminField label={t('adminTenants.tablePeriod')}>{subscriptionPeriod(tenant)}</AdminField>
               <AdminField label={t('adminTenants.tableContact')}>
                 {tenant.contact_email || '—'}
                 {tenant.contact_phone ? ` · ${tenant.contact_phone}` : ''}

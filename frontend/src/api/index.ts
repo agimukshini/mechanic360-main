@@ -266,6 +266,33 @@ export const registrationChargesApi = {
   ) => api.patch(`/tenants/registration-charges/${id}/billing/`, data),
 }
 
+export const adminInvoicesApi = {
+  list: (params?: {
+    tenant_id?: string
+    payment_status?: string
+    kind?: string
+  }) => api.get('/tenants/invoices/', { params }),
+  get: (id: string) => api.get(`/tenants/invoices/${id}/`),
+  updatePayment: (
+    id: string,
+    data: { payment_status?: string; invoice_reference?: string; notes?: string },
+  ) => api.patch(`/tenants/invoices/${id}/payment/`, data),
+  downloadPdf: (id: string) =>
+    api.get(`/tenants/invoices/${id}/pdf/`, { responseType: 'blob' }),
+  issueSubscription: (tenantId: string) =>
+    api.post(`/tenants/platform-billing/${tenantId}/issue-subscription-invoice/`),
+}
+
+export const workshopInvoicesApi = {
+  list: () => api.get('/auth/platform-invoices/'),
+  downloadPdf: (id: string) =>
+    api.get(`/auth/platform-invoices/${id}/pdf/`, { responseType: 'blob' }),
+}
+
+export const workshopBillingApi = {
+  getStatus: () => api.get('/auth/platform-billing-status/'),
+}
+
 // Vehicles API
 export const vehiclesApi = {
   list: (params?: object) => api.get('/vehicles/', { params }),

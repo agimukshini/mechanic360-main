@@ -4,6 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { Building2, Car, ClipboardList, Loader2, Users } from 'lucide-react'
 import { tenantsApi } from '@/api'
 import { AdminField, AdminMobileCard, AdminResponsiveTable } from '@/components/admin/AdminMobile'
+import {
+  formatTenantSubscription,
+  formatSubscriptionPeriodTimeline,
+  type SubscriptionDisplayKey,
+  type TenantSubscription,
+} from '@/lib/tenantSubscription'
 
 interface PlatformStats {
   tenants_total: number
@@ -21,7 +27,8 @@ interface TenantRow {
   id: string
   name: string
   schema_name: string
-  subscription_plan: string
+  subscription_display_key?: SubscriptionDisplayKey
+  subscription?: TenantSubscription
   is_active: boolean
   stats: {
     users: number
@@ -79,6 +86,12 @@ export default function AdminDashboardPage() {
 
   const platform = data.data.platform as PlatformStats
   const tenants = data.data.tenants as TenantRow[]
+
+  const subscriptionSummary = (tenant: TenantRow) =>
+    formatTenantSubscription(tenant.subscription, tenant.subscription_display_key, t)
+
+  const subscriptionPeriod = (tenant: TenantRow) =>
+    formatSubscriptionPeriodTimeline(tenant.subscription, t)
 
   return (
     <div className="space-y-6">
@@ -165,7 +178,10 @@ export default function AdminDashboardPage() {
                       </Link>
                       <div className="text-xs text-workshop-charcoal/50">{tenant.schema_name}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm">{tenant.subscription_plan}</td>
+                    <td className="px-6 py-4 text-sm">
+                      <div>{subscriptionSummary(tenant)}</div>
+                      <div className="text-xs text-workshop-charcoal/50 mt-0.5">{subscriptionPeriod(tenant)}</div>
+                    </td>
                     <td className="px-6 py-4 text-sm">{tenant.stats.users}</td>
                     <td className="px-6 py-4 text-sm">{tenant.stats.clients}</td>
                     <td className="px-6 py-4 text-sm">{tenant.stats.vehicles}</td>
@@ -211,7 +227,10 @@ export default function AdminDashboardPage() {
                 </span>
               }
             >
-              <AdminField label={t('adminDashboard.tablePlan')}>{tenant.subscription_plan}</AdminField>
+              <AdminField label={t('adminDashboard.tablePlan')}>
+                <div>{subscriptionSummary(tenant)}</div>
+                <div className="text-xs text-workshop-charcoal/50 mt-0.5">{subscriptionPeriod(tenant)}</div>
+              </AdminField>
               <AdminField label={t('adminDashboard.tableUsers')}>{tenant.stats.users}</AdminField>
               <AdminField label={t('adminDashboard.tableClients')}>{tenant.stats.clients}</AdminField>
               <AdminField label={t('adminDashboard.tableVehicles')}>{tenant.stats.vehicles}</AdminField>

@@ -72,6 +72,39 @@ class SuperadminDashboardTests(TestCase):
         )
         self.assertEqual(tenant_row["stats"]["clients"], 1)
         self.assertEqual(tenant_row["stats"]["global_vehicles_registered"], 1)
+        self.assertIn("subscription", tenant_row)
+        self.assertEqual(tenant_row["subscription"]["subscription_period"], "none")
+        self.assertIsNone(tenant_row["subscription"]["subscription_period_start"])
+        self.assertEqual(tenant_row["subscription_display_key"], "free")
+        self.assertEqual(tenant_row["subscription_plan"], "none")
+
+    def test_subscription_display_key_trial_only_when_explicit(self):
+        self.tenant.subscription_plan = "trial"
+        self.tenant.save(update_fields=["subscription_plan"])
+        self.client.force_authenticate(user=self.superuser)
+        response = self.client.get(reverse("admin-dashboard"))
+        tenant_row = next(
+            row for row in response.data["tenants"] if row["id"] == str(self.tenant.id)
+        )
+        self.assertEqual(tenant_row["subscription_display_key"], "trial")
+
+    def test_subscription_display_key_paid_when_billing_configured(self):
+        from global_vehicles.models import TenantPlatformBilling
+
+        TenantPlatformBilling.objects.create(
+            tenant=self.tenant,
+            subscription_fee_amount="49.00",
+            subscription_fee_currency="EUR",
+            subscription_period=TenantPlatformBilling.SubscriptionPeriod.MONTHLY,
+        )
+        self.client.force_authenticate(user=self.superuser)
+        response = self.client.get(reverse("admin-dashboard"))
+        tenant_row = next(
+            row for row in response.data["tenants"] if row["id"] == str(self.tenant.id)
+        )
+        self.assertEqual(tenant_row["subscription_display_key"], "paid")
+        self.assertIsNotNone(tenant_row["subscription"]["subscription_period_start"])
+        self.assertIsNotNone(tenant_row["subscription"]["subscription_period_end"])
 
     def test_tenant_detail_includes_stats(self):
         self.client.force_authenticate(user=self.superuser)

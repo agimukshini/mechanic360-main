@@ -53,6 +53,8 @@ import AdminLoginAuditPage from './pages/admin/AdminLoginAuditPage'
 import AdminTransfersPage from './pages/admin/AdminTransfersPage'
 import AdminVehicleAuditPage from './pages/admin/AdminVehicleAuditPage'
 import AdminTranslationCoveragePage from './pages/admin/AdminTranslationCoveragePage'
+import AdminInvoicesPage from './pages/admin/AdminInvoicesPage'
+import AdminSubscriptionsPage from './pages/admin/AdminSubscriptionsPage'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, sessionChecked, user } = useSelector((state: RootState) => state.auth)
@@ -158,6 +160,8 @@ function App() {
         <Route path="audit" element={<AdminVehicleAuditPage />} />
         <Route path="security/logins" element={<AdminLoginAuditPage />} />
         <Route path="translation-coverage" element={<AdminTranslationCoveragePage />} />
+        <Route path="invoices" element={<AdminInvoicesPage />} />
+        <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
       </Route>
 
       <Route

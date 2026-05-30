@@ -37,8 +37,8 @@ class WorkshopTenant(TenantMixin, models.Model):
     contact_email = models.EmailField(blank=True)
     contact_phone = models.CharField(max_length=64, blank=True)
 
-    # Subscription / billing metadata (phase 2+)
-    subscription_plan = models.CharField(max_length=64, default="trial")
+    # Legacy label — use ``TenantPlatformBilling`` for real pricing. ``trial`` only when set explicitly.
+    subscription_plan = models.CharField(max_length=64, default="none")
     is_active = models.BooleanField(default=True)
 
     # Workshop preferences

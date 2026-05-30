@@ -747,6 +747,126 @@ class VehicleRegistrationCharge(models.Model):
         return f"Reg charge {self.fee_amount} {self.fee_currency} — {self.payment_status}"
 
 
+class PlatformInvoice(models.Model):
+    """
+    Unified platform → tenant invoice.
+
+    Subscription invoices are issued by the billing cron (or manually by
+    superadmin). Transfer / registration rows may link here in a later phase;
+    v1 focuses on recurring subscription billing.
+    """
+
+    class Kind(models.TextChoices):
+        SUBSCRIPTION = "subscription", "Subscription"
+        TRANSFER = "transfer", "Ownership transfer"
+        REGISTRATION = "registration", "Vehicle registration"
+        MANUAL = "manual", "Manual"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    invoice_number = models.CharField(max_length=32, unique=True, db_index=True)
+    tenant = models.ForeignKey(
+        "tenancy.WorkshopTenant",
+        related_name="platform_invoices",
+        on_delete=models.PROTECT,
+    )
+    kind = models.CharField(max_length=16, choices=Kind.choices)
+
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default="EUR")
+
+    payment_status = models.CharField(
+        max_length=16,
+        choices=TransferBilling.PaymentStatus.choices,
+        default=TransferBilling.PaymentStatus.UNPAID,
+    )
+    invoice_reference = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text="External payment reference (bank transfer id, Stripe invoice, etc.).",
+    )
+    paid_at = models.DateTimeField(null=True, blank=True)
+    captured_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="captured_platform_invoices",
+    )
+
+    period_start = models.DateTimeField(null=True, blank=True)
+    period_end = models.DateTimeField(null=True, blank=True)
+    due_at = models.DateTimeField(null=True, blank=True)
+    issued_at = models.DateTimeField(default=timezone.now)
+
+    line_items = models.JSONField(default=list, blank=True)
+    snapshot = models.JSONField(default=dict, blank=True)
+    notes = models.TextField(blank=True)
+
+    related_transfer = models.OneToOneField(
+        TransferBilling,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="platform_invoice",
+    )
+    related_registration_charge = models.OneToOneField(
+        VehicleRegistrationCharge,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="platform_invoice",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Platform invoice"
+        verbose_name_plural = "Platform invoices"
+        ordering = ["-issued_at"]
+        indexes = [
+            models.Index(fields=["tenant", "-issued_at"]),
+            models.Index(fields=["payment_status"]),
+            models.Index(fields=["kind"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.invoice_number} — {self.amount} {self.currency} ({self.payment_status})"
+
+
+class PlatformInvoiceReminder(models.Model):
+    """Tracks which billing reminders were sent for one invoice (idempotent daily job)."""
+
+    class Kind(models.TextChoices):
+        INVOICE_ISSUED = "invoice_issued", "Invoice issued"
+        DUE_7D = "due_7d", "7 days before due"
+        DUE_1D = "due_1d", "1 day before due"
+        PERIOD_END_7D = "period_end_7d", "7 days before period end"
+        PERIOD_END_1D = "period_end_1d", "1 day before period end"
+        OVERDUE_FINAL = "overdue_final", "Final overdue warning"
+        TENANT_DEACTIVATED = "tenant_deactivated", "Tenant deactivated"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    invoice = models.ForeignKey(
+        PlatformInvoice,
+        related_name="reminders",
+        on_delete=models.CASCADE,
+    )
+    kind = models.CharField(max_length=32, choices=Kind.choices)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["invoice", "kind"],
+                name="unique_platform_invoice_reminder",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.invoice.invoice_number} — {self.kind}"
+
+
 class GlobalVehiclePhoto(models.Model):
     """
     Cross-tenant gallery photo for a vehicle.

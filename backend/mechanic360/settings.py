@@ -324,10 +324,23 @@ CELERY_BEAT_SCHEDULE = {
         "task": "accounts.celery_tasks.purge_old_login_audit_events",
         "schedule": 86400.0,
     },
+    "issue-due-subscription-invoices-daily": {
+        "task": "global_vehicles.celery_tasks.issue_due_subscription_invoices",
+        "schedule": 86400.0,
+    },
+    "process-subscription-billing-reminders-daily": {
+        "task": "global_vehicles.celery_tasks.process_subscription_billing_reminders",
+        "schedule": 86400.0,
+    },
 }
 
 # Login audit retention (days) — see USER_PROFILE_MECHANICS_AND_AUDIT.md Phase B
 LOGIN_AUDIT_RETENTION_DAYS = int(os.getenv("LOGIN_AUDIT_RETENTION_DAYS", "90"))
+
+# Platform subscription billing reminders (see global_vehicles.subscription_reminder_services)
+PLATFORM_BILLING_REMINDER_DAYS_BEFORE_DUE = (7, 1)
+PLATFORM_BILLING_REMINDER_DAYS_BEFORE_PERIOD_END = (7, 1)
+PLATFORM_BILLING_GRACE_DAYS_AFTER_DUE = int(os.getenv("PLATFORM_BILLING_GRACE_DAYS_AFTER_DUE", "14"))
 
 # Absolute URLs for one-time staff invite links (e.g. https://mechanic360.example.com)
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "").strip()

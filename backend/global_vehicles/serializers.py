@@ -10,6 +10,7 @@ from .models import (
     GlobalOwner,
     GlobalVehicle,
     OwnershipTransfer,
+    PlatformInvoice,
     TenantPlatformBilling,
     TransferBilling,
     VehicleAuditEvent,
@@ -424,6 +425,53 @@ class VehicleRegistrationChargeSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = fields
+
+
+class PlatformInvoiceSerializer(serializers.ModelSerializer):
+    tenant_name = serializers.CharField(source="tenant.name", read_only=True)
+    tenant_schema = serializers.CharField(source="tenant.schema_name", read_only=True)
+    captured_by_username = serializers.CharField(
+        source="captured_by.username", read_only=True,
+    )
+
+    class Meta:
+        model = PlatformInvoice
+        fields = [
+            "id",
+            "invoice_number",
+            "tenant",
+            "tenant_name",
+            "tenant_schema",
+            "kind",
+            "amount",
+            "currency",
+            "payment_status",
+            "invoice_reference",
+            "paid_at",
+            "captured_by",
+            "captured_by_username",
+            "period_start",
+            "period_end",
+            "due_at",
+            "issued_at",
+            "line_items",
+            "snapshot",
+            "notes",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
+class UpdatePlatformInvoiceSerializer(serializers.Serializer):
+    payment_status = serializers.ChoiceField(
+        choices=TransferBilling.PaymentStatus.choices,
+        required=False,
+    )
+    invoice_reference = serializers.CharField(
+        max_length=64, allow_blank=True, required=False,
+    )
+    notes = serializers.CharField(allow_blank=True, required=False)
 
 
 class VehicleAuditEventSerializer(serializers.ModelSerializer):
