@@ -16,6 +16,7 @@ from rest_framework.views import APIView
 
 from mechanic360.permissions import IsPlatformSuperuser, IsTenantAdmin, IsTenantUser
 
+from .cache import cache_get, cache_get_or_set, cache_set, marketplace_cache_key
 from .catalog_serializers import (
     AdminPartSuspendSerializer,
     MarketplaceSellerSerializer,
@@ -52,15 +53,43 @@ def _mechanic_visible_parts():
     )
 
 
+def _is_public_visible_part(part: SparePart) -> bool:
+    seller = part.seller
+    return (
+        part.is_active
+        and part.suspended_at is None
+        and seller.is_approved
+        and seller.billing_status == "active"
+    )
+
+
+def _parts_list_cache_scope(request) -> str | None:
+    """Return cache scope key, or None when the response must not be cached."""
+    if request.query_params.get("mine") == "1":
+        return None
+    tenant = getattr(request.user, "tenant", None)
+    if tenant is None:
+        return "public"
+    if get_workshop_seller(tenant) is not None:
+        return f"tenant:{tenant.pk}"
+    return "public"
+
+
 class VehicleIssueListView(APIView):
     """Issue taxonomy for the recommendation engine (read-only)."""
 
     permission_classes = [IsAuthenticated, IsTenantUser]
 
     def get(self, request):
+        cache_key = marketplace_cache_key("issues")
+        cached = cache_get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
         issues = VehicleIssue.objects.prefetch_related("mapped_categories").all()
-        serializer = VehicleIssueSerializer(issues, many=True)
-        return Response(serializer.data)
+        data = VehicleIssueSerializer(issues, many=True).data
+        cache_set(cache_key, data)
+        return Response(data)
 
 
 class SellerMeView(APIView):
@@ -225,6 +254,39 @@ class SparePartViewSet(viewsets.ModelViewSet):
 
         return base
 
+    def list(self, request, *args, **kwargs):
+        scope = _parts_list_cache_scope(request)
+        if scope is not None:
+            cache_key = marketplace_cache_key(
+                "parts-list",
+                scope=scope,
+                params=sorted(request.query_params.items()),
+            )
+            cached = cache_get(cache_key)
+            if cached is not None:
+                return Response(cached)
+
+        response = super().list(request, *args, **kwargs)
+        if scope is not None and response.status_code == status.HTTP_200_OK:
+            cache_set(cache_key, response.data)
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        part_id = self.kwargs.get(lookup_url_kwarg)
+        cache_key = marketplace_cache_key("parts-detail", part_id=str(part_id))
+
+        cached = cache_get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        response = super().retrieve(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            part = self.get_object()
+            if _is_public_visible_part(part):
+                cache_set(cache_key, response.data)
+        return response
+
     def perform_create(self, serializer):
         if not IsTenantAdmin().has_permission(self.request, self):
             raise PermissionDenied("Only workshop admins can list spare parts.")
@@ -304,10 +366,17 @@ class PartCategoryListView(APIView):
     permission_classes = [IsAuthenticated, IsTenantUser]
 
     def get(self, request):
+        cache_key = marketplace_cache_key("categories")
+        cached = cache_get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
         categories = PartCategory.objects.filter(parent__isnull=False).order_by(
             "sort_order", "name",
         )
-        return Response(PartCategorySerializer(categories, many=True).data)
+        data = PartCategorySerializer(categories, many=True).data
+        cache_set(cache_key, data)
+        return Response(data)
 
 
 class RecommendationView(APIView):
@@ -328,31 +397,48 @@ class RecommendationView(APIView):
         except Vehicle.DoesNotExist as exc:
             raise NotFound("Vehicle not found.") from exc
 
-        parts, issue = recommend_parts_for_vehicle(
-            vehicle=vehicle,
-            issue_slug=issue_slug,
+        rec_key = marketplace_cache_key(
+            "recommendations",
+            issue=issue_slug,
+            make=vehicle.make,
+            model=vehicle.model,
+            year=vehicle.year,
         )
-        compatibility_confirmed = bool(
-            parts
-            and parts[0].compatibilities.filter(
-                make__iexact=vehicle.make,
-                model__iexact=vehicle.model,
-                year_from__lte=vehicle.year,
-                year_to__gte=vehicle.year,
-            ).exists()
-        )
+
+        def load_recommendation_payload():
+            parts, issue = recommend_parts_for_vehicle(
+                vehicle=vehicle,
+                issue_slug=issue_slug,
+            )
+            compatibility_confirmed = bool(
+                parts
+                and parts[0].compatibilities.filter(
+                    make__iexact=vehicle.make,
+                    model__iexact=vehicle.model,
+                    year_from__lte=vehicle.year,
+                    year_to__gte=vehicle.year,
+                ).exists()
+            )
+            return {
+                "issue": VehicleIssueSerializer(issue).data if issue else None,
+                "compatibility_confirmed": compatibility_confirmed,
+                "parts": SparePartListSerializer(parts, many=True).data,
+                "displayed_part_ids": [str(part.id) for part in parts],
+            }
+
+        payload = cache_get_or_set(rec_key, load_recommendation_payload)
+        displayed_part_ids = payload.pop("displayed_part_ids", [])
+        issue = VehicleIssue.objects.filter(slug=issue_slug).first()
         event = record_banner_impression(
             request=request,
             vehicle=vehicle,
             issue=issue,
-            parts=parts,
+            displayed_part_ids=displayed_part_ids,
         )
         return Response(
             {
                 "banner_event_id": str(event.id),
-                "issue": VehicleIssueSerializer(issue).data if issue else None,
-                "compatibility_confirmed": compatibility_confirmed,
-                "parts": SparePartListSerializer(parts, many=True).data,
+                **payload,
             },
         )
 

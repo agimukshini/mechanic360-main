@@ -88,17 +88,20 @@ def record_banner_impression(
     request,
     vehicle: Vehicle | None,
     issue: VehicleIssue | None,
-    parts: list[SparePart],
+    parts: list[SparePart] | None = None,
+    displayed_part_ids: list[str] | None = None,
 ) -> MarketplaceBannerEvent:
     tenant = getattr(request.user, "tenant", None)
     schema = tenant.schema_name if tenant else ""
+    if displayed_part_ids is None:
+        displayed_part_ids = [str(part.id) for part in (parts or [])]
     return MarketplaceBannerEvent.objects.create(
         mechanic_tenant_schema=schema,
         mechanic_user_id=getattr(request.user, "id", None),
         vehicle_tenant_id=vehicle.id if vehicle else None,
         global_vehicle_id=getattr(vehicle, "global_vehicle_id", None),
         issue=issue,
-        displayed_part_ids=[str(part.id) for part in parts],
+        displayed_part_ids=displayed_part_ids,
     )
 
 

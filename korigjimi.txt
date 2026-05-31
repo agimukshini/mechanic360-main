@@ -1,0 +1,12 @@
+Origjinali	Version i Koirgjuar
+Punëtori Auto Mekanik 	Auto-Mekaniku
+Mirë se vini në Mekaniku360 Menaxhoni automjetet, vizitat dhe historinë e shërbimeve — për punëtoritë dhe pronarët.	Mirë se vini në Mekaniku360 Menaxhoni automjetet, vizitat dhe historinë e shërbimeve - si për punëtoritë ashtu edhe për pronarët e automjeteve.
+Një profil automjeti, dy përvoja të lidhura Punëtoritë menaxhojnë automjetet e klientëve çdo ditë. Pronarët mbeten të lidhur përmes të njëjtit profil — me qasje të plotë në historinë e shërbimeve. 	Një profil automjeti, dy përvoja të lidhura Punëtoritë menaxhojnë automjetet e klientëve çdo ditë. Pronarët qëndrojnë të lidhur përmes të njëjtit profil, me qasje të plotë në historikun e shërbimeve. 
+Regjistroni klientët & automjetet Shtoni klientët tuaj dhe makinat, kamionët ose makineritë e tyre në punëtori. 	Regjistroni klientët & automjetet Menaxhoni klientët tuaj dhe automjetet e tyre - nga makinat dhe kamionët, deri te makineritë në një sistem të vetëm. 
+Regjistrim & inspektim Filloni vizitat me QR, kryeni inspektime dhe regjistroni punën nga telefoni ose tableti 	Regjistrim & Inspektim Filloni vizitat përmes QR kodit, kryeni inspektime dhe regjistroni punën direkt nga telefoni ose tableti. 
+Ndiqni çdo shërbim Ndërtoni histori të plotë shërbimi — pjesë, punë, kilometrazh dhe foto për çdo automjet klienti. 	Ndiqni çdo shërbim Krijoni historinë e plotë të automjetit — nga pjesët dhe punimet, deri te kilometrazhi dhe fotot për çdo vizitë
+Profil i përbashkët automjeti Çdo vizitë, inspektim dhe përditësim ruhet në një regjistrim — i qasshëm për punëtoriën dhe pronarin.  Punëtoria Pronari	Profil i Përbashkët i Automjetit Çdo vizitë, inspektim dhe përditësim ruhet në një regjistër të vetëm — i qasshëm si për punëtorinë ashtu edhe për pronarin e automjetit.  Punëtoria / Pronari
+Skanoni QR-në e punëtorisë Pas shërbimit, skanoni kodin QR në regjistrimin e automjetit për t'u lidhur me Mekaniku360. 	Skanoni QR-në e punëtorisë Pas përfundimit të shërbimit, skanoni QR kodin e automjetit për t’u lidhur menjëherë me Mekaniku360. 
+Lidhni automjetin tuaj Krijoni një llogari falas si pronar dhe lidheni automjetin me garazhin tuaj personal.	Lidhni automjetin tuaj Krijoni një llogari falas si pronar dhe lidhni automjetin me garazhin tuaj personal.
+
+Ndiqni historinë e shërbimeve Shihni vizitat, inspektimet dhe përditësimet nga punëtoria juaj — kurdo, nga çdo pajisje. 	Ndiqni historinë e shërbimeve Shihni vizitat, inspektimet dhe përditësimet e automjetit tuaj nga punëtoria — në çdo kohë dhe nga çdo pajisje.

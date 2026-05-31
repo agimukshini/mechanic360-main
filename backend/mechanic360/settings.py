@@ -315,6 +315,17 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = _max_upload_mb * 1024 * 1024
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
+# Django cache — Redis DB 1 (Celery broker uses DB 0).
+DJANGO_CACHE_URL = os.getenv("DJANGO_CACHE_URL", "redis://redis:6379/1")
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": DJANGO_CACHE_URL,
+    }
+}
+MARKETPLACE_CACHE_ENABLED = os.getenv("MARKETPLACE_CACHE_ENABLED", "1") == "1"
+MARKETPLACE_CACHE_TTL = int(os.getenv("MARKETPLACE_CACHE_TTL", "300"))
+
 CELERY_BEAT_SCHEDULE = {
     "check-preventive-maintenance-daily": {
         "task": "visits.celery_tasks.check_maintenance_due",

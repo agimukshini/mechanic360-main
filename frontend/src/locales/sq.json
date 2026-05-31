@@ -785,7 +785,7 @@
     "tagline": "Mirëmbajtje e zgjuar. Mekanikë të vërtetë.",
     "heroTitle": "Mirë se vini në",
     "heroTitleAccent": "Mekaniku360",
-    "heroBody": "Menaxhoni automjetet, vizitat dhe historinë e shërbimeve — dhe tregtoni pjesë këmbimi me punëtoritë e platformës.",
+    "heroBody": "Menaxhoni automjetet, vizitat dhe historinë e shërbimeve — si për punëtoritë ashtu edhe për pronarët e automjeteve.",
     "registerCta": "Regjistrohu",
     "signInCta": "Hyr",
     "applyTitle": "Aplikoni punëtorinë tuaj",
@@ -795,30 +795,30 @@
     "workflow": {
       "eyebrow": "Si funksionon",
       "title": "Një profil automjeti, dy përvoja të lidhura",
-      "subtitle": "Punëtoritë menaxhojnë automjetet e klientëve çdo ditë. Pronarët mbeten të lidhur përmes të njëjtit profil — me qasje të plotë në historinë e shërbimeve.",
-      "workshopLabel": "Punëtori Auto Mekanik",
+      "subtitle": "Punëtoritë menaxhojnë automjetet e klientëve çdo ditë. Pronarët qëndrojnë të lidhur përmes të njëjtit profil, me qasje të plotë në historikun e shërbimeve.",
+      "workshopLabel": "Auto-Mekaniku",
       "ownerLabel": "Pronar automjeti",
-      "hubTitle": "Profil i përbashkët automjeti",
-      "hubBody": "Çdo vizitë, inspektim dhe përditësim ruhet në një regjistrim — i qasshëm për punëtoriën dhe pronarin.",
+      "hubTitle": "Profil i Përbashkët i Automjetit",
+      "hubBody": "Çdo vizitë, inspektim dhe përditësim ruhet në një regjistër të vetëm — i qasshëm si për punëtorinë ashtu edhe për pronarin e automjetit.",
       "hubWorkshopTag": "Punëtoria",
       "hubOwnerTag": "Pronari",
       "workshop1Title": "Regjistroni klientët & automjetet",
-      "workshop1Body": "Shtoni klientët tuaj dhe makinat, kamionët ose makineritë e tyre në punëtori.",
-      "workshop2Title": "Regjistrim & inspektim",
-      "workshop2Body": "Filloni vizitat me QR, kryeni inspektime dhe regjistroni punën nga telefoni ose tableti.",
+      "workshop1Body": "Menaxhoni klientët tuaj dhe automjetet e tyre — nga makinat dhe kamionët, deri te makineritë në një sistem të vetëm.",
+      "workshop2Title": "Regjistrim & Inspektim",
+      "workshop2Body": "Filloni vizitat përmes QR kodit, kryeni inspektime dhe regjistroni punën direkt nga telefoni ose tableti.",
       "workshop3Title": "Ndiqni çdo shërbim",
-      "workshop3Body": "Ndërtoni histori të plotë shërbimi — pjesë, punë, kilometrazh dhe foto për çdo automjet klienti.",
+      "workshop3Body": "Krijoni historinë e plotë të automjetit — nga pjesët dhe punimet, deri te kilometrazhi dhe fotot për çdo vizitë",
       "owner1Title": "Skanoni QR-në e punëtorisë",
-      "owner1Body": "Pas shërbimit, skanoni kodin QR në regjistrimin e automjetit për t'u lidhur me Mekaniku360.",
+      "owner1Body": "Pas përfundimit të shërbimit, skanoni QR kodin e automjetit për t'u lidhur menjëherë me Mekaniku360.",
       "owner2Title": "Lidhni automjetin tuaj",
-      "owner2Body": "Krijoni një llogari falas si pronar dhe lidheni automjetin me garazhin tuaj personal.",
+      "owner2Body": "Krijoni një llogari falas si pronar dhe lidhni automjetin me garazhin tuaj personal.",
       "owner3Title": "Ndiqni historinë e shërbimeve",
-      "owner3Body": "Shihni vizitat, inspektimet dhe përditësimet nga punëtoria juaj — kurdo, nga çdo pajisje."
+      "owner3Body": "Shihni vizitat, inspektimet dhe përditësimet e automjetit tuaj nga punëtoria — në çdo kohë dhe nga çdo pajisje."
     },
     "marketplace": {
       "eyebrow": "Tregu i përbashkët i pjesëve",
       "title": "Blini dhe shisni pjesë të përdorura me punëtoritë e tjera",
-      "subtitle": "Mekaniku360 u jep çdo punëtori të regjistruar qasje në një marketplace të përbashkët — listoni stokun e tepërt, gjeni pjesë më shpejt dhe mbajini riparimet në lëvizje.",
+      "subtitle": "Mekaniku360 u jep çdo punëtori të regjistruar qasje në tregun e përbashkët — listoni stokun e tepërt, gjeni pjesë më shpejt dhe mbajini riparimet në lëvizje.",
       "highlight": "Ktheni raftet e papërdorura në të ardhura: shisni pjesë me numër OEM ose pjesë të përdorura të përshkruara thjesht te mekanikët e tjerë, dhe blini take-off ose pjesë të reja kur klienti pret makinën në lift.",
       "sellTitle": "Shisni pjesë këmbimi",
       "sellBody": "Publikoni pjesë të përdorura ose të reja që nuk ju duhen — me numra OEM, referenca kryqëzuese ose përshkrim të thjeshtë për pjesë të përdorura.",
@@ -831,7 +831,7 @@
   "registerChooser": {
     "title": "Regjistrohu",
     "subtitle": "Si do ta përdorni Mekaniku360?",
-    "mechanicTitle": "Auto Mekanik",
+    "mechanicTitle": "Auto-Mekaniku",
     "mechanicBody": "Regjistroni biznesin tuaj të punëtorisë",
     "ownerTitle": "Pronar automjeti",
     "ownerBody": "Menaxhoni automjetet tuaja personale",
@@ -1289,7 +1289,7 @@
     "statInspections": "Inspektimet",
     "statInventoryItems": "Artikujt e inventarit",
     "statGlobalVehicles": "Automjete globale të regjistruara",
-    "statMarketplaceListings": "Shpalljet e marketplace"
+    "statMarketplaceListings": "Shpalljet e tregut të përbashkët"
   },
   "inspectionDetail": {
     "valuePass": "Kalon",
@@ -1458,7 +1458,7 @@
     "creating": "Po krijohet..."
   },
   "marketplaceList": {
-    "title": "Marketplace",
+    "title": "Tregu",
     "subtitle": "Bli dhe shit pjesë me punëtori të tjera",
     "createListing": "Krijo shpallje",
     "searchPlaceholder": "Kërko shpallje...",
@@ -1474,7 +1474,7 @@
     "tryAdjusting": "Provoni të rregulloni kërkimin ose filtrat",
     "beTheFirst": "Jini të parët që shpallin një pjesë për shitje!",
     "deleteTitle": "Fshi shpalljen?",
-    "deleteBody": "Kjo do ta heqë shpalljen nga marketplace.",
+    "deleteBody": "Kjo do ta heqë shpalljen nga tregu.",
     "cancel": "Anulo",
     "delete": "Fshi",
     "deleting": "Po fshihet...",
@@ -1502,7 +1502,7 @@
     "email": "Email"
   },
   "marketplaceSeller": {
-    "title": "Shpalljet e mia në marketplace",
+    "title": "Shpalljet e mia në treg",
     "registerTitle": "Regjistrohu si shitës",
     "registerHint": "Krijoni profilin e shitësit për punëtorinë tuaj për të listuar pjesë.",
     "registerCta": "Regjistro profilin e shitësit",

@@ -12,4 +12,5 @@ class MarketplaceConfig(AppConfig):
     verbose_name = "Marketplace"
 
     def ready(self):
+        from . import cache_signals  # noqa: F401
         from . import signals  # noqa: F401
