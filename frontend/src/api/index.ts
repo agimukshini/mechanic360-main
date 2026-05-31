@@ -93,26 +93,42 @@ export const authApi = {
   staffInvitePreview: (tokenId: string) => api.get(`/auth/staff-invite/${tokenId}/preview/`),
   acceptStaffInvite: (tokenId: string, data: object) =>
     api.post(`/auth/staff-invite/${tokenId}/accept/`, data),
+  forgotPassword: (email: string) => api.post('/auth/password/forgot/', { email }),
+  passwordResetPreview: (tokenId: string) => api.get(`/auth/password/reset/${tokenId}/preview/`),
+  passwordResetConfirm: (tokenId: string, data: { password: string; confirm_password: string }) =>
+    api.post(`/auth/password/reset/${tokenId}/`, data),
 }
 
 // Tenants API
 export const tenantsApi = {
+  getOnboardingContact: () => api.get('/tenants/onboarding-contact/'),
   register: (data: {
     workshop_name: string
+    business_registration_number: string
+    address: string
+    contact_email: string
+    contact_phone: string
     admin_username: string
     admin_email: string
     admin_password: string
-    address?: string
-    contact_email?: string
-    contact_phone?: string
     website?: string
   }) => api.post('/tenants/register/', data),
   listOnboardingApplications: (params?: { status?: string }) =>
     api.get('/tenants/admin/onboarding-applications/', { params }),
-  approveOnboardingApplication: (id: string) =>
-    api.post(`/tenants/admin/onboarding-applications/${id}/approve/`),
+  confirmOnboardingVerificationCode: (
+    id: string,
+    data: { channel: 'email' | 'phone'; note?: string },
+  ) => api.post(`/tenants/admin/onboarding-applications/${id}/confirm-verification-code/`, data),
+  approveOnboardingApplication: (id: string, verification_note?: string) =>
+    api.post(`/tenants/admin/onboarding-applications/${id}/approve/`, {
+      verification_note: verification_note ?? '',
+    }),
   rejectOnboardingApplication: (id: string, reason?: string) =>
     api.post(`/tenants/admin/onboarding-applications/${id}/reject/`, { reason: reason ?? '' }),
+  onboardingVerifyPreview: (tokenId: string) =>
+    api.get(`/tenants/verify-onboarding/${tokenId}/preview/`),
+  onboardingVerifyConfirm: (tokenId: string) =>
+    api.post(`/tenants/verify-onboarding/${tokenId}/confirm/`),
   getDashboard: () => api.get('/tenants/admin/dashboard/'),
   getGlobalRegistry: () => api.get('/tenants/admin/global/'),
   list: () => api.get('/tenants/admin/tenants/'),

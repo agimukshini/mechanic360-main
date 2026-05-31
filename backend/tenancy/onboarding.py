@@ -10,6 +10,11 @@ from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework.exceptions import ValidationError
 
+from .celery_tasks import (
+    send_onboarding_application_approved_email_task,
+    send_onboarding_application_rejected_email_task,
+)
+from .kyc import assert_nui_available
 from .models import TenantOnboardingApplication, WorkshopTenant
 
 User = get_user_model()
@@ -63,10 +68,21 @@ def approve_onboarding_application(
 
     _assert_username_available(application.admin_username, exclude_application_id=application.id)
     _assert_email_available(application.admin_email, exclude_application_id=application.id)
+    if application.business_registration_number:
+        assert_nui_available(
+            application.business_registration_number,
+            exclude_application_id=application.id,
+        )
+
+    if not application.verification_code_confirmed_at:
+        raise ValidationError(
+            "Confirm the applicant's verification code was received before approving."
+        )
 
     tenant = WorkshopTenant.objects.create(
         name=application.workshop_name,
         schema_name=_unique_schema_name(application.workshop_name),
+        business_registration_number=application.business_registration_number,
         address=application.address,
         contact_email=application.contact_email or application.admin_email,
         contact_phone=application.contact_phone,
@@ -97,6 +113,7 @@ def approve_onboarding_application(
             "updated_at",
         ]
     )
+    send_onboarding_application_approved_email_task.delay(str(application.id))
     return tenant
 
 
@@ -123,8 +140,39 @@ def reject_onboarding_application(
             "updated_at",
         ]
     )
+    send_onboarding_application_rejected_email_task.delay(str(application.id))
     return application
 
 
 def hash_admin_password(raw_password: str) -> str:
     return make_password(raw_password)
+
+
+@transaction.atomic
+def confirm_onboarding_verification_code(
+    application: TenantOnboardingApplication,
+    reviewer: User,
+    *,
+    channel: str,
+    note: str = "",
+) -> TenantOnboardingApplication:
+    if application.status != TenantOnboardingApplication.Status.PENDING:
+        raise ValidationError("Only pending applications can be updated.")
+
+    if application.verification_code_confirmed_at:
+        raise ValidationError("Verification code was already confirmed for this application.")
+
+    application.verification_code_confirmed_at = timezone.now()
+    application.verification_code_confirmed_by = reviewer
+    application.verification_code_channel = channel
+    application.verification_code_note = note.strip()
+    application.save(
+        update_fields=[
+            "verification_code_confirmed_at",
+            "verification_code_confirmed_by",
+            "verification_code_channel",
+            "verification_code_note",
+            "updated_at",
+        ]
+    )
+    return application

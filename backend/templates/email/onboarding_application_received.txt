@@ -1,0 +1,41 @@
+Mekaniku360 — Aplikimi i punëtorisë u pranua / Workshop application received
+
+Përshëndetje {{ recipient_name }},
+Hello {{ recipient_name }},
+
+Kemi pranuar aplikimin tuaj për punëtoriën {{ workshop_name }} në Mekaniku360.
+We received your workshop application for {{ workshop_name }} on Mechanic360.
+
+TË DHËNAT E BIZNESIT / REGISTERED BUSINESS DETAILS
+- Punëtoria / Workshop: {{ workshop_name }}
+- NUI (ARBK): {{ business_registration_number }}
+- Adresa / Address: {{ address }}
+- Email zyrtar / Official email: {{ contact_email }}
+- Telefon zyrtar / Official phone: {{ contact_phone }}
+
+LLOGARIA E ADMINISTRATORIT / ADMINISTRATOR ACCOUNT
+- Emri i përdoruesit / Username: {{ admin_username }}
+- Email: {{ admin_email }}
+
+VERIFIKIM ME NJË KLIK / ONE-CLICK VERIFICATION
+{{ verify_url }}
+
+OPSIONALE — KODI MANUAL / OPTIONAL MANUAL CODE: {{ verification_code }}
+
+Dërgojeni këtë kod te kontakti zyrtar i platformës:
+Send this code to our platform contact:
+{% if platform_contact_name %}{{ platform_contact_name }}{% endif %}
+{% if platform_contact_email %}Email: {{ platform_contact_email }}{% endif %}
+{% if platform_contact_phone %}Telefon / Phone: {{ platform_contact_phone }}{% endif %}
+
+HAPAT E ARDHSHËM / NEXT STEPS
+1. Dërgojeni kodin e verifikimit në email-in ose telefonin zyrtar të platformës.
+   Send the verification code to our platform email or phone.
+2. Prisni telefonatën e administratorit të platformës në numrin zyrtar të biznesit.
+   Wait for a platform administrator to call your official business phone.
+3. Pas aprovimit, identifikohuni me kredencialet e regjistrimit.
+   After approval, sign in with the username and password you chose during registration.
+
+Hyrje / Login: {{ login_url }}
+
+— Mekaniku360 / Mechanic360

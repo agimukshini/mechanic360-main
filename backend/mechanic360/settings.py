@@ -342,8 +342,38 @@ PLATFORM_BILLING_REMINDER_DAYS_BEFORE_DUE = (7, 1)
 PLATFORM_BILLING_REMINDER_DAYS_BEFORE_PERIOD_END = (7, 1)
 PLATFORM_BILLING_GRACE_DAYS_AFTER_DUE = int(os.getenv("PLATFORM_BILLING_GRACE_DAYS_AFTER_DUE", "14"))
 
-# Absolute URLs for one-time staff invite links (e.g. https://mechanic360.example.com)
+# Absolute URLs for one-time staff invite links (e.g. https://mekaniku360.com)
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "").strip()
+PLATFORM_CONTACT_EMAIL = os.getenv(
+    "PLATFORM_CONTACT_EMAIL",
+    "mekaniku360@scardustech.com",
+).strip()
+
+
+# -----------------------------------------------------------------------------
+# Email (SMTP)
+# -----------------------------------------------------------------------------
+
+_default_email_backend = (
+    "django.core.mail.backends.console.EmailBackend"
+    if DEBUG
+    else "django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", _default_email_backend)
+
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "1") == "1"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "0") == "1"
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "30"))
+
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    EMAIL_HOST_USER or "Mechanic360 <noreply@mechanic360.local>",
+)
+SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
 
 
 # -----------------------------------------------------------------------------

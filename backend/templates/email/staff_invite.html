@@ -1,0 +1,51 @@
+{% extends "email/base.html" %}
+{% block content %}
+<p style="margin:0 0 4px;font-size:16px;line-height:1.6;color:#1b263b;">
+  Përshëndetje{% if recipient_name %} {{ recipient_name }}{% endif %},
+</p>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  Hello{% if recipient_name %} {{ recipient_name }}{% endif %},
+</p>
+<p style="margin:0 0 8px;font-size:15px;line-height:1.65;color:#475569;">
+  <strong>{{ invited_by }}</strong> ju ftoi të bashkoheni me <strong>{{ workshop_name }}</strong> në {{ site_name_sq }}
+  si <strong>Mekanik</strong>.
+</p>
+<p style="margin:0 0 20px;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  {{ invited_by }} invited you to join {{ workshop_name }} on {{ site_name_en }} as a Mechanic.
+</p>
+
+<div style="margin:0 0 24px;padding:20px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;">
+  {% include "email/_section_title.html" with sq="Detajet e ftesës" en="Invitation details" only %}
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size:14px;line-height:1.6;color:#334155;">
+    <tr><td style="padding:4px 0;width:42%;vertical-align:top;">{% include "email/_label.html" with sq="Punëtoria" en="Workshop" only %}</td><td style="padding:4px 0;"><strong>{{ workshop_name }}</strong></td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Roli" en="Role" only %}</td><td style="padding:4px 0;">Mekanik <span style="font-size:12px;color:#94a3b8;font-style:italic;">/ Mechanic</span></td></tr>
+    {% if prefilled_email %}<tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Email" en="Email" only %}</td><td style="padding:4px 0;">{{ prefilled_email }}</td></tr>{% endif %}
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Skadon" en="Expires" only %}</td><td style="padding:4px 0;">{{ expires_at|date:"d M Y, H:i" }} UTC</td></tr>
+  </table>
+</div>
+
+<table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 8px;">
+  <tr>
+    <td style="border-radius:10px;background:#0077B6;">
+      <a href="{{ invite_url }}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">
+        Prano ftesën dhe krijo llogarinë
+      </a>
+    </td>
+  </tr>
+</table>
+<p style="margin:0 0 24px;font-size:12px;color:#94a3b8;font-style:italic;">Accept invitation &amp; create account</p>
+
+<p style="margin:0 0 4px;font-size:13px;line-height:1.6;color:#64748b;word-break:break-all;">
+  Ose kopjoni këtë link: <a href="{{ invite_url }}" style="color:#0077B6;text-decoration:none;">{{ invite_url }}</a>
+</p>
+<p style="margin:0 0 16px;font-size:12px;line-height:1.6;color:#94a3b8;font-style:italic;word-break:break-all;">
+  Or copy this link: {{ invite_url }}
+</p>
+
+<p style="margin:0 0 4px;font-size:14px;line-height:1.65;color:#475569;">
+  Ky link përdoret vetëm një herë dhe skadon pas 24 orëve. Do të zgjidhni emrin e përdoruesit dhe fjalëkalimin kur ta pranoni.
+</p>
+<p style="margin:0;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  This link can only be used once and expires in 24 hours. You will choose a username and password when you accept.
+</p>
+{% endblock %}

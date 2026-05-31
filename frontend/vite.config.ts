@@ -18,6 +18,8 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       '127.0.0.1',
+      'mekaniku360.com',
+      'www.mekaniku360.com',
       'mechanic360.managefleet.org',
       '.managefleet.org',
     ],

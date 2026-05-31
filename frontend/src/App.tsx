@@ -43,6 +43,9 @@ import SettingsPage from './pages/settings/SettingsPage'
 import WorkshopLoginAuditPage from './pages/settings/WorkshopLoginAuditPage'
 import TeamPage from './pages/settings/TeamPage'
 import StaffInviteAcceptPage from './pages/auth/StaffInviteAcceptPage'
+import OnboardingVerificationPage from './pages/auth/OnboardingVerificationPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import SuperAdminLayout from './components/layout/SuperAdminLayout'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminTenantsPage from './pages/admin/AdminTenantsPage'
@@ -143,6 +146,9 @@ function App() {
       <Route path="/register/owner" element={<OwnerRegisterPage />} />
       <Route path="/owner/register" element={<Navigate to="/register/owner" replace />} />
       <Route path="/invite/staff/:token" element={<StaffInviteAcceptPage />} />
+      <Route path="/verify/onboarding/:token" element={<OnboardingVerificationPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
       <Route
         path="/admin"

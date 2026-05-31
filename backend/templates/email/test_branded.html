@@ -1,0 +1,51 @@
+{% extends "email/base.html" %}
+{% block content %}
+<p style="margin:0 0 4px;font-size:16px;line-height:1.6;color:#1b263b;">
+  Përshëndetje {{ recipient_name }},
+</p>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  Hi {{ recipient_name }},
+</p>
+<p style="margin:0 0 8px;font-size:15px;line-height:1.65;color:#475569;">
+  Ky është një <strong>email test</strong> nga konfigurimi SMTP i {{ site_name_sq }} (Zoho EU).
+  Më poshtë është një shembull se si do të duken mesazhet e verifikimit gjatë onboarding-ut.
+</p>
+<p style="margin:0 0 20px;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  This is a test email from your {{ site_name_en }} SMTP configuration (Zoho EU).
+  Below is a sample of how workshop onboarding verification messages will look.
+</p>
+
+<div style="margin:0 0 24px;padding:20px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd;">
+  <p style="margin:0 0 4px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#0369a1;">
+    Kodi juaj i verifikimit
+  </p>
+  <p style="margin:0 0 8px;font-size:11px;color:#64748b;font-style:italic;">Your verification code</p>
+  <p style="margin:0;font-size:28px;font-weight:700;letter-spacing:0.2em;color:#0077B6;font-family:ui-monospace,monospace;">
+    {{ verification_code }}
+  </p>
+  <p style="margin:12px 0 4px;font-size:13px;line-height:1.5;color:#475569;">
+    Dërgojeni këtë kod te kontakti zyrtar i platformës për të konfirmuar aplikimin e punëtorisë.
+  </p>
+  <p style="margin:0;font-size:12px;line-height:1.5;color:#64748b;font-style:italic;">
+    Send this code to our platform contact to confirm your workshop application.
+  </p>
+</div>
+
+<table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 8px;">
+  <tr>
+    <td style="border-radius:10px;background:#0077B6;">
+      <a href="{{ frontend_url }}/register/mechanic" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">
+        Hap regjistrimin e punëtorisë
+      </a>
+    </td>
+  </tr>
+</table>
+<p style="margin:0 0 24px;font-size:12px;color:#94a3b8;font-style:italic;">Open workshop registration</p>
+
+<p style="margin:0 0 4px;font-size:14px;line-height:1.6;color:#64748b;">
+  Pasi ta marrim kodin, administratori i platformës do t'ju telefonojë në numrin zyrtar të biznesit para aktivizimit të llogarisë.
+</p>
+<p style="margin:0;font-size:13px;line-height:1.6;color:#94a3b8;font-style:italic;">
+  After we receive your code, a platform administrator will call your official business phone before activating your account.
+</p>
+{% endblock %}

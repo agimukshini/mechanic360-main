@@ -1,13 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { tenantsApi } from '@/api'
-import { Cog, Loader2 } from 'lucide-react'
+import { Cog, Copy, Loader2, Phone } from 'lucide-react'
+
+interface PlatformContact {
+  company_name: string
+  email: string
+  phone: string
+}
+
+interface RegistrationSuccess {
+  verification_code: string
+  platform_contact: PlatformContact
+}
 
 export default function TenantRegisterPage() {
   const { t } = useTranslation()
   const [formData, setFormData] = useState({
     workshop_name: '',
+    business_registration_number: '',
     address: '',
     contact_email: '',
     contact_phone: '',
@@ -16,9 +28,17 @@ export default function TenantRegisterPage() {
     admin_password: '',
     website: '',
   })
+  const [platformContact, setPlatformContact] = useState<PlatformContact | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [success, setSuccess] = useState<RegistrationSuccess | null>(null)
+
+  useEffect(() => {
+    tenantsApi
+      .getOnboardingContact()
+      .then((response) => setPlatformContact(response.data))
+      .catch(() => setPlatformContact(null))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,22 +46,21 @@ export default function TenantRegisterPage() {
     setError(null)
 
     try {
-      console.log('Submitting registration:', formData)
       const response = await tenantsApi.register(formData)
-      console.log('Registration successful:', response.data)
-      setSuccess(true)
+      setSuccess({
+        verification_code: response.data.verification_code,
+        platform_contact: response.data.platform_contact,
+      })
     } catch (err: any) {
-      console.error('Registration error:', err.response?.data)
       const responseData = err.response?.data
       let errorMsg = t('tenantRegister.registrationFailedDefault')
-      
+
       if (responseData) {
         if (typeof responseData === 'string') {
           errorMsg = responseData
         } else if (typeof responseData === 'object') {
-          // Collect all field errors
           const errors = Object.entries(responseData)
-            .map(([field, messages]) => {
+            .map(([, messages]) => {
               const msg = Array.isArray(messages) ? messages.join(', ') : String(messages)
               return `${msg}`
             })
@@ -55,10 +74,20 @@ export default function TenantRegisterPage() {
     }
   }
 
+  const copyVerificationCode = async () => {
+    if (!success?.verification_code) return
+    try {
+      await navigator.clipboard.writeText(success.verification_code)
+    } catch {
+      // Clipboard may be unavailable on some mobile browsers.
+    }
+  }
+
+  const contact = success?.platform_contact ?? platformContact
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-workshop-gray p-4">
       <div className="max-w-lg w-full">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/register" className="inline-flex text-sm text-workshop-charcoal/60 hover:text-workshop-blue mb-4">
             ← {t('tenantRegister.back')}
@@ -72,26 +101,66 @@ export default function TenantRegisterPage() {
 
         <div className="bg-white rounded-xl shadow-sm border border-workshop-charcoal/10 p-8">
           {success ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+            <div className="py-4 space-y-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-workshop-charcoal mb-2">
+                  {t('tenantRegister.applicationSubmitted')}
+                </h2>
+                <p className="text-workshop-charcoal/60">{t('tenantRegister.applicationSubmittedBody')}</p>
               </div>
-              <h2 className="text-lg font-semibold text-workshop-charcoal mb-2">{t('tenantRegister.applicationSubmitted')}</h2>
-              <p className="text-workshop-charcoal/60 mb-6">
-                {t('tenantRegister.applicationSubmittedBody')}
-              </p>
-              <Link to="/" className="btn btn-secondary inline-flex mr-3">
-                {t('tenantRegister.backHome')}
-              </Link>
-              <Link to="/login" className="btn btn-primary inline-flex">
-                {t('tenantRegister.signIn')}
-              </Link>
+
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+                <h3 className="font-semibold text-workshop-charcoal">{t('tenantRegister.verificationTitle')}</h3>
+                <p className="text-sm text-workshop-charcoal/70">{t('tenantRegister.verificationIntro')}</p>
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-white border border-workshop-charcoal/10 px-4 py-3">
+                  <code className="text-lg font-bold tracking-widest text-workshop-blue">
+                    {success.verification_code}
+                  </code>
+                  <button type="button" onClick={copyVerificationCode} className="btn btn-secondary btn-sm">
+                    <Copy className="w-4 h-4 mr-1" />
+                    {t('tenantRegister.copyCode')}
+                  </button>
+                </div>
+                <div className="text-sm text-workshop-charcoal/70 space-y-2">
+                  {contact?.email && (
+                    <p>
+                      {t('tenantRegister.sendToEmail')}{' '}
+                      <a href={`mailto:${contact.email}`} className="font-medium text-workshop-blue hover:underline">
+                        {contact.email}
+                      </a>
+                    </p>
+                  )}
+                  {contact?.phone && (
+                    <p className="flex items-center gap-2 flex-wrap">
+                      <Phone className="w-4 h-4 shrink-0" />
+                      <span>{t('tenantRegister.sendToPhone')}</span>
+                      <a href={`tel:${contact.phone}`} className="font-medium text-workshop-blue hover:underline">
+                        {contact.phone}
+                      </a>
+                    </p>
+                  )}
+                </div>
+                <p className="text-sm text-workshop-charcoal/70">{t('tenantRegister.verificationAfterSend')}</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link to="/" className="btn btn-secondary inline-flex justify-center">
+                  {t('tenantRegister.backHome')}
+                </Link>
+                <Link to="/login" className="btn btn-primary inline-flex justify-center">
+                  {t('tenantRegister.signIn')}
+                </Link>
+              </div>
             </div>
           ) : (
             <>
-              <h2 className="text-lg font-semibold text-workshop-charcoal mb-6">{t('tenantRegister.applyTitle')}</h2>
+              <h2 className="text-lg font-semibold text-workshop-charcoal mb-2">{t('tenantRegister.applyTitle')}</h2>
+              <p className="text-sm text-workshop-charcoal/60 mb-6">{t('tenantRegister.arbkIntro')}</p>
 
               {error && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -111,109 +180,135 @@ export default function TenantRegisterPage() {
                   value={formData.website}
                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 />
-                <div>
-                  <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-                    {t('tenantRegister.workshopName')} *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.workshop_name}
-                    onChange={(e) => setFormData({ ...formData, workshop_name: e.target.value })}
-                    className="input"
-                    placeholder={t('tenantRegister.workshopNamePlaceholder')}
-                    required
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-                    {t('tenantRegister.workshopAddress')}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="input"
-                    placeholder={t('tenantRegister.workshopAddressPlaceholder')}
-                  />
-                </div>
+                <div className="rounded-lg border border-workshop-charcoal/10 p-4 space-y-4">
+                  <h3 className="text-sm font-semibold text-workshop-charcoal">{t('tenantRegister.arbkSectionTitle')}</h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-                      {t('tenantRegister.contactEmail')}
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.contact_email}
-                      onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
-                      className="input"
-                      placeholder={t('tenantRegister.contactEmailPlaceholder')}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-                      {t('tenantRegister.contactPhone')}
+                      {t('tenantRegister.businessNumber')} *
                     </label>
                     <input
                       type="text"
-                      value={formData.contact_phone}
-                      onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                      inputMode="numeric"
+                      value={formData.business_registration_number}
+                      onChange={(e) =>
+                        setFormData({ ...formData, business_registration_number: e.target.value })
+                      }
                       className="input"
-                      placeholder={t('tenantRegister.contactPhonePlaceholder')}
+                      placeholder={t('tenantRegister.businessNumberPlaceholder')}
+                      required
                     />
+                    <p className="text-xs text-workshop-charcoal/40 mt-1">{t('tenantRegister.businessNumberHint')}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                      {t('tenantRegister.workshopName')} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.workshop_name}
+                      onChange={(e) => setFormData({ ...formData, workshop_name: e.target.value })}
+                      className="input"
+                      placeholder={t('tenantRegister.workshopNamePlaceholder')}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                      {t('tenantRegister.workshopAddress')} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="input"
+                      placeholder={t('tenantRegister.workshopAddressPlaceholder')}
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                        {t('tenantRegister.contactEmail')} *
+                      </label>
+                      <input
+                        type="email"
+                        value={formData.contact_email}
+                        onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                        className="input"
+                        placeholder={t('tenantRegister.contactEmailPlaceholder')}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                        {t('tenantRegister.contactPhone')} *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.contact_phone}
+                        onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                        className="input"
+                        placeholder={t('tenantRegister.contactPhonePlaceholder')}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-                    {t('tenantRegister.adminUsername')} *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.admin_username}
-                    onChange={(e) => setFormData({ ...formData, admin_username: e.target.value })}
-                    className="input"
-                    placeholder={t('tenantRegister.adminUsernamePlaceholder')}
-                    required
-                  />
+                <div className="rounded-lg border border-workshop-charcoal/10 p-4 space-y-4">
+                  <h3 className="text-sm font-semibold text-workshop-charcoal">{t('tenantRegister.adminSectionTitle')}</h3>
+
+                  <div>
+                    <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                      {t('tenantRegister.adminUsername')} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.admin_username}
+                      onChange={(e) => setFormData({ ...formData, admin_username: e.target.value })}
+                      className="input"
+                      placeholder={t('tenantRegister.adminUsernamePlaceholder')}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                      {t('tenantRegister.adminEmail')} *
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.admin_email}
+                      onChange={(e) => setFormData({ ...formData, admin_email: e.target.value })}
+                      className="input"
+                      placeholder={t('tenantRegister.adminEmailPlaceholder')}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-workshop-charcoal mb-1">
+                      {t('tenantRegister.adminPassword')} *
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.admin_password}
+                      onChange={(e) => setFormData({ ...formData, admin_password: e.target.value })}
+                      className="input"
+                      placeholder={t('tenantRegister.adminPasswordPlaceholder')}
+                      minLength={8}
+                      required
+                    />
+                    <p className="text-xs text-workshop-charcoal/40 mt-1">{t('tenantRegister.passwordHint')}</p>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-                    {t('tenantRegister.adminEmail')} *
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.admin_email}
-                    onChange={(e) => setFormData({ ...formData, admin_email: e.target.value })}
-                    className="input"
-                    placeholder={t('tenantRegister.adminEmailPlaceholder')}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-workshop-charcoal mb-1">
-                    {t('tenantRegister.adminPassword')} *
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.admin_password}
-                    onChange={(e) => setFormData({ ...formData, admin_password: e.target.value })}
-                    className="input"
-                    placeholder={t('tenantRegister.adminPasswordPlaceholder')}
-                    minLength={8}
-                    required
-                  />
-                  <p className="text-xs text-workshop-charcoal/40 mt-1">{t('tenantRegister.passwordHint')}</p>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="btn btn-primary w-full"
-                >
+                <button type="submit" disabled={isLoading} className="btn btn-primary w-full">
                   {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

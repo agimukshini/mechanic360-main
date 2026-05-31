@@ -106,7 +106,7 @@ export default function AdminCompanyPage() {
                 value={form.trade_name}
                 onChange={(e) => set('trade_name', e.target.value)}
                 className={INPUT}
-                placeholder="Workshop360"
+                placeholder="Mechanic360"
               />
             </Field>
             <Field label={t('adminCompany.registrationNumber')}>

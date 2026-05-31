@@ -1,0 +1,23 @@
+Mekaniku360 — Llogaria e punëtorisë është aktive / Your workshop account is active
+
+Përshëndetje {{ recipient_name }},
+Hello {{ recipient_name }},
+
+Punëtoria juaj {{ workshop_name }} është aprovuar në Mekaniku360.
+Your workshop {{ workshop_name }} has been approved on Mechanic360.
+
+IDENTIFIKOHU / SIGN IN
+- Emri i përdoruesit / Username: {{ admin_username }}
+- Fjalëkalimi / Password: përdorni fjalëkalimin e regjistrimit / use the password you set during registration
+- Hyrje / Login: {{ login_url }}
+
+PROFILI I BIZNESIT / BUSINESS PROFILE
+- NUI (ARBK): {{ business_registration_number }}
+- Adresa / Address: {{ address }}
+- Email zyrtar / Official email: {{ contact_email }}
+- Telefon zyrtar / Official phone: {{ contact_phone }}
+
+Mund të ftoni mekanikë nga Cilësimet → Ekipi.
+You can invite mechanics from Settings → Team after signing in.
+
+— Mekaniku360 / Mechanic360

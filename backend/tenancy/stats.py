@@ -179,6 +179,7 @@ def tenant_summary_dict(tenant: WorkshopTenant, *, include_stats: bool = True) -
     payload = {
         "id": str(tenant.id),
         "name": tenant.name,
+        "business_registration_number": tenant.business_registration_number,
         "schema_name": tenant.schema_name,
         "logo_url": tenant.logo_url,
         "address": tenant.address,

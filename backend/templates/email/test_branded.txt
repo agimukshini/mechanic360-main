@@ -1,0 +1,16 @@
+Mekaniku360 — Email test SMTP / SMTP test email
+
+Përshëndetje {{ recipient_name }},
+Hi {{ recipient_name }},
+
+Ky është një email test nga konfigurimi SMTP i Mekaniku360.
+This is a test email from your Mechanic360 SMTP configuration.
+
+KODI I VERIFIKIMIT / VERIFICATION CODE: {{ verification_code }}
+
+Dërgojeni këtë kod te kontakti zyrtar i platformës.
+Send this code to our platform contact to confirm a workshop application.
+
+Regjistrimi / Register: {{ frontend_url }}/register/mechanic
+
+— Mekaniku360 / Mechanic360

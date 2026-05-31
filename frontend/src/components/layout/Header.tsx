@@ -73,7 +73,7 @@ export default function Header({ onOpenMobileNav }: HeaderProps) {
           <Menu className="w-5 h-5" />
         </button>
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
-          {user?.tenant_name || 'Workshop360'}
+          {user?.tenant_name || t('common.appName')}
         </h1>
         <div className="hidden sm:flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-100 shrink-0">
           <div className="w-2 h-2 rounded-full bg-success" />

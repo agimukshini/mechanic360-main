@@ -25,9 +25,9 @@ function FlowNode({ icon, title, body, accent }: NodeProps) {
 
   return (
     <div
-      className={`relative rounded-2xl border p-5 backdrop-blur-sm shadow-lg transition-transform hover:-translate-y-0.5 ${ring}`}
+      className={`relative rounded-2xl border p-4 backdrop-blur-sm shadow-lg transition-transform hover:-translate-y-0.5 ${ring}`}
     >
-      <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${iconBg}`}>
+      <div className={`mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl ${iconBg}`}>
         {icon}
       </div>
       <h3 className="font-semibold text-white">{title}</h3>
@@ -38,14 +38,14 @@ function FlowNode({ icon, title, body, accent }: NodeProps) {
 
 function HubNode({ title, body, workshopTag, ownerTag }: { title: string; body: string; workshopTag: string; ownerTag: string }) {
   return (
-    <div className="relative flex h-full min-h-[280px] flex-col items-center justify-center rounded-3xl border border-violet-400/40 bg-gradient-to-b from-violet-500/20 via-blue-500/15 to-emerald-500/15 p-6 text-center shadow-2xl shadow-violet-500/10 backdrop-blur-md">
+    <div className="relative flex flex-col items-center justify-center rounded-3xl border border-violet-400/40 bg-gradient-to-b from-violet-500/20 via-blue-500/15 to-emerald-500/15 p-5 text-center shadow-2xl shadow-violet-500/10 backdrop-blur-md">
       <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.25),transparent_55%)]" />
-      <div className="relative mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
-        <Car className="h-8 w-8 text-violet-200" />
+      <div className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
+        <Car className="h-7 w-7 text-violet-200" />
       </div>
-      <h3 className="relative text-lg font-bold text-white">{title}</h3>
-      <p className="relative mt-2 text-sm leading-relaxed text-slate-300">{body}</p>
-      <div className="relative mt-5 flex gap-2">
+      <h3 className="relative text-base font-bold text-white">{title}</h3>
+      <p className="relative mt-1.5 text-sm leading-snug text-slate-300">{body}</p>
+      <div className="relative mt-4 flex flex-wrap justify-center gap-2">
         <span className="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-medium text-blue-200 ring-1 ring-blue-400/30">
           {workshopTag}
         </span>
@@ -61,7 +61,7 @@ function ConnectionLines() {
   return (
     <svg
       className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block"
-      viewBox="0 0 960 420"
+      viewBox="0 0 960 360"
       preserveAspectRatio="none"
       aria-hidden
     >
@@ -76,9 +76,9 @@ function ConnectionLines() {
         </linearGradient>
       </defs>
 
-      {/* Workshop → hub */}
+      {/* Workshop → hub — y coords scaled for shorter viewBox */}
       <path
-        d="M 280 70 C 360 70, 400 210, 430 210"
+        d="M 280 60 C 360 60, 400 180, 430 180"
         fill="none"
         stroke="url(#line-blue)"
         strokeWidth="2"
@@ -86,13 +86,13 @@ function ConnectionLines() {
         className="animate-[dash_20s_linear_infinite]"
       />
       <path
-        d="M 280 210 C 360 210, 400 210, 430 210"
+        d="M 280 180 C 360 180, 400 180, 430 180"
         fill="none"
         stroke="url(#line-blue)"
         strokeWidth="2.5"
       />
       <path
-        d="M 280 350 C 360 350, 400 210, 430 210"
+        d="M 280 300 C 360 300, 400 180, 430 180"
         fill="none"
         stroke="url(#line-blue)"
         strokeWidth="2"
@@ -102,7 +102,7 @@ function ConnectionLines() {
 
       {/* Hub → owner */}
       <path
-        d="M 530 210 C 560 210, 600 70, 680 70"
+        d="M 530 180 C 560 180, 600 60, 680 60"
         fill="none"
         stroke="url(#line-emerald)"
         strokeWidth="2"
@@ -110,13 +110,13 @@ function ConnectionLines() {
         className="animate-[dash_20s_linear_infinite]"
       />
       <path
-        d="M 530 210 C 560 210, 600 210, 680 210"
+        d="M 530 180 C 560 180, 600 180, 680 180"
         fill="none"
         stroke="url(#line-emerald)"
         strokeWidth="2.5"
       />
       <path
-        d="M 530 210 C 560 210, 600 350, 680 350"
+        d="M 530 180 C 560 180, 600 300, 680 300"
         fill="none"
         stroke="url(#line-emerald)"
         strokeWidth="2"
@@ -126,13 +126,13 @@ function ConnectionLines() {
 
       {/* Connection dots */}
       {[
-        [280, 70],
-        [280, 210],
-        [280, 350],
-        [680, 70],
-        [680, 210],
-        [680, 350],
-        [480, 210],
+        [280, 60],
+        [280, 180],
+        [280, 300],
+        [680, 60],
+        [680, 180],
+        [680, 300],
+        [480, 180],
       ].map(([cx, cy]) => (
         <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="5" fill="#c4b5fd" opacity="0.9" />
       ))}
@@ -180,8 +180,8 @@ export default function LandingWorkflowDiagram() {
   ]
 
   return (
-    <section className="py-16 lg:py-24">
-      <div className="mb-12 text-center lg:text-left">
+    <section className="pb-10 lg:pb-14">
+      <div className="mb-8 text-center lg:text-left">
         <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-blue-300">
           {t('landing.workflow.eyebrow')}
         </p>
@@ -193,7 +193,7 @@ export default function LandingWorkflowDiagram() {
       <div className="relative hidden lg:block">
         <ConnectionLines />
 
-        <div className="relative grid grid-cols-[1fr_220px_1fr] items-center gap-x-6 gap-y-10">
+        <div className="relative grid grid-cols-[1fr_200px_1fr] items-center gap-x-5 gap-y-4">
           <div className="col-start-1 row-start-1 flex items-center gap-2 text-sm font-semibold text-blue-300">
             <Building2 className="h-4 w-4" />
             {t('landing.workflow.workshopLabel')}
@@ -209,7 +209,7 @@ export default function LandingWorkflowDiagram() {
             </div>
           ))}
 
-          <div className="col-start-2 row-span-3 row-start-2 self-stretch">
+          <div className="col-start-2 row-span-3 row-start-2 self-center">
             <HubNode
               title={t('landing.workflow.hubTitle')}
               body={t('landing.workflow.hubBody')}
@@ -227,7 +227,7 @@ export default function LandingWorkflowDiagram() {
       </div>
 
       {/* Mobile diagram */}
-      <div className="space-y-8 lg:hidden">
+      <div className="space-y-6 lg:hidden">
         <div>
           <p className="mb-4 flex items-center gap-2 text-sm font-semibold text-blue-300">
             <Building2 className="h-4 w-4" />

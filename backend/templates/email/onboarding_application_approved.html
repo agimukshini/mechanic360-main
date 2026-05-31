@@ -1,0 +1,59 @@
+{% extends "email/base.html" %}
+{% block content %}
+<p style="margin:0 0 4px;font-size:16px;line-height:1.6;color:#1b263b;">
+  Përshëndetje {{ recipient_name }},
+</p>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  Hello {{ recipient_name }},
+</p>
+<p style="margin:0 0 8px;font-size:15px;line-height:1.65;color:#475569;">
+  Punëtoria juaj <strong>{{ workshop_name }}</strong> është aprovuar në {{ site_name_sq }}.
+  Llogaria e administratorit tani është aktive.
+</p>
+<p style="margin:0 0 20px;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  Your workshop {{ workshop_name }} has been approved on {{ site_name_en }}.
+  Your administrator account is now active.
+</p>
+
+<div style="margin:0 0 24px;padding:20px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;">
+  {% include "email/_section_title.html" with sq="Identifikohu në punëtori" en="Sign in to your workshop" only %}
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size:14px;line-height:1.6;color:#334155;">
+    <tr><td style="padding:4px 0;width:42%;vertical-align:top;">{% include "email/_label.html" with sq="Emri i përdoruesit" en="Username" only %}</td><td style="padding:4px 0;"><strong>{{ admin_username }}</strong></td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Fjalëkalimi" en="Password" only %}</td><td style="padding:4px 0;">Përdorni fjalëkalimin që vendosët gjatë regjistrimit<br><span style="font-size:12px;color:#94a3b8;font-style:italic;">Use the password you set during registration</span></td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Punëtoria" en="Workshop" only %}</td><td style="padding:4px 0;">{{ workshop_name }}</td></tr>
+    {% if tenant_schema_name %}<tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="ID e tenant-it" en="Tenant ID" only %}</td><td style="padding:4px 0;font-family:ui-monospace,monospace;font-size:13px;">{{ tenant_schema_name }}</td></tr>{% endif %}
+  </table>
+</div>
+
+<table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 8px;">
+  <tr>
+    <td style="border-radius:10px;background:#0077B6;">
+      <a href="{{ login_url }}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">
+        Hyr në {{ site_name_sq }}
+      </a>
+    </td>
+  </tr>
+</table>
+<p style="margin:0 0 24px;font-size:12px;color:#94a3b8;font-style:italic;">Sign in to {{ site_name_en }}</p>
+
+<div style="margin:0 0 24px;padding:20px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;">
+  {% include "email/_section_title.html" with sq="Profili i biznesit në dosje" en="Business profile on file" only %}
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size:14px;line-height:1.6;color:#334155;">
+    <tr><td style="padding:4px 0;width:42%;vertical-align:top;">{% include "email/_label.html" with sq="NUI (ARBK)" en="Business registration number" only %}</td><td style="padding:4px 0;">{{ business_registration_number }}</td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Adresa" en="Address" only %}</td><td style="padding:4px 0;">{{ address }}</td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Email zyrtar" en="Official email" only %}</td><td style="padding:4px 0;">{{ contact_email }}</td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Telefon zyrtar" en="Official phone" only %}</td><td style="padding:4px 0;">{{ contact_phone }}</td></tr>
+  </table>
+</div>
+
+<p style="margin:0 0 4px;font-size:14px;line-height:1.65;color:#475569;">
+  Mund të ftoni mekanikë nga <strong>Cilësimet → Ekipi</strong> pasi të identifikoheni.
+  Keni nevojë për ndihmë? Na kontaktoni në
+  {% if issuer_email %}<a href="mailto:{{ issuer_email }}" style="color:#0077B6;text-decoration:none;">{{ issuer_email }}</a>{% endif %}
+  {% if issuer_phone %} ose {{ issuer_phone }}{% endif %}.
+</p>
+<p style="margin:0;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  You can invite mechanics from Settings → Team after signing in.
+  Need help? Contact us{% if issuer_email %} at {{ issuer_email }}{% endif %}{% if issuer_phone %} or {{ issuer_phone }}{% endif %}.
+</p>
+{% endblock %}

@@ -8,10 +8,18 @@ services:
     env_file:
       - .env
     environment:
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend,backmechanic.managefleet.org,mechanic360.managefleet.org}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://mechanic360.managefleet.org}
-      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://mechanic360.managefleet.org,https://backmechanic.managefleet.org}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend,backmechanic.managefleet.org,mechanic360.managefleet.org,mekaniku360.com,www.mekaniku360.com}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://mekaniku360.com,https://www.mekaniku360.com,https://mechanic360.managefleet.org}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://mekaniku360.com,https://www.mekaniku360.com,https://mechanic360.managefleet.org,https://backmechanic.managefleet.org}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-0}
+
+  celery:
+    env_file:
+      - .env
+
+  celery-beat:
+    env_file:
+      - .env
 
   frontend:
     build:

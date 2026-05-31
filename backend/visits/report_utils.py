@@ -46,7 +46,7 @@ def workshop_context_from_request(request) -> dict:
         }
 
     return {
-        "workshop_name": "Workshop360",
+        "workshop_name": "Mechanic360",
         "workshop_address": "",
         "workshop_phone": "",
         "workshop_email": "",

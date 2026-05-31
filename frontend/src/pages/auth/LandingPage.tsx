@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, Wrench } from 'lucide-react'
 import LanguageToggle from '@/components/i18n/LanguageToggle'
+import LandingMarketplaceSection from '@/components/landing/LandingMarketplaceSection'
 import LandingWorkflowDiagram from '@/components/landing/LandingWorkflowDiagram'
 import type { RootState } from '@/store'
 import { isOwnerRole, normalizeRole } from '@/lib/roles'
@@ -39,7 +40,7 @@ export default function LandingPage() {
               <Wrench className="w-6 h-6 text-yellow-400" />
             </div>
             <div>
-              <p className="text-xl font-bold">Workshop360</p>
+              <p className="text-xl font-bold">{t('common.appName')}</p>
               <p className="text-sm text-blue-200/80">{t('landing.tagline')}</p>
             </div>
           </Link>
@@ -73,7 +74,7 @@ export default function LandingPage() {
             </div>
           )}
 
-          <div className="max-w-3xl space-y-8 text-center lg:text-left mb-16 lg:mb-20">
+          <div className="max-w-3xl space-y-8 text-center lg:text-left mb-10 lg:mb-12">
             <div className="space-y-4">
               <h1 className="text-4xl lg:text-5xl font-bold leading-tight">
                 {t('landing.heroTitle')}{' '}
@@ -102,6 +103,7 @@ export default function LandingPage() {
           </div>
 
           <LandingWorkflowDiagram />
+          <LandingMarketplaceSection />
         </main>
 
         <footer className="mt-auto pt-8 text-sm text-slate-500 text-center lg:text-left">

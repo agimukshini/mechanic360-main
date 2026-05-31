@@ -19,7 +19,13 @@ from rest_framework.views import APIView
 from mechanic360.throttling import RegistrationAnonRateThrottle
 
 from .models import TenantOnboardingApplication, WorkshopTenant
-from .onboarding import approve_onboarding_application, reject_onboarding_application
+from .celery_tasks import send_onboarding_application_received_email_task
+from .kyc import platform_onboarding_contact_dict
+from .onboarding import (
+    approve_onboarding_application,
+    confirm_onboarding_verification_code,
+    reject_onboarding_application,
+)
 from .stats import (
     collect_dashboard_payload,
     collect_global_registry_payload,
@@ -28,6 +34,8 @@ from .stats import (
 )
 from .serializers import (
     TenantOnboardingApplicationSerializer,
+    TenantOnboardingApproveSerializer,
+    TenantOnboardingConfirmVerificationSerializer,
     TenantOnboardingRejectSerializer,
     TenantRegisterSerializer,
     WorkshopTenantAdminSerializer,
@@ -66,18 +74,34 @@ class TenantRegisterView(APIView):
         with public_schema():
             application = serializer.save()
 
+        send_onboarding_application_received_email_task.delay(str(application.id))
+        platform_contact = platform_onboarding_contact_dict()
         return Response(
             {
                 "id": str(application.id),
                 "workshop_name": application.workshop_name,
+                "business_registration_number": application.business_registration_number,
                 "status": application.status,
+                "verification_code": application.verification_code,
+                "platform_contact": platform_contact,
                 "message": (
                     "Your workshop application has been submitted. "
-                    "You will be able to sign in once a platform administrator approves it."
+                    "Send the verification code to the platform contact shown below, "
+                    "then wait for a platform administrator to call you and approve your account."
                 ),
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class PlatformOnboardingContactView(APIView):
+    """Public platform email/phone where applicants send their verification code."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        with public_schema():
+            return Response(platform_onboarding_contact_dict())
 
 
 class IsSuperAdmin(permissions.BasePermission):
@@ -98,6 +122,7 @@ class TenantOnboardingApplicationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TenantOnboardingApplication.objects.select_related(
         "tenant",
         "reviewed_by",
+        "verification_code_confirmed_by",
     ).order_by("-created_at")
     serializer_class = TenantOnboardingApplicationSerializer
     permission_classes = [IsSuperAdmin]
@@ -109,11 +134,40 @@ class TenantOnboardingApplicationViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(status=status_filter)
         return queryset
 
+    @action(detail=True, methods=["post"], url_path="confirm-verification-code")
+    def confirm_verification_code(self, request, pk=None):
+        application = self.get_object()
+        confirm_serializer = TenantOnboardingConfirmVerificationSerializer(data=request.data)
+        confirm_serializer.is_valid(raise_exception=True)
+        with public_schema():
+            confirm_onboarding_verification_code(
+                application,
+                request.user,
+                channel=confirm_serializer.validated_data["channel"],
+                note=confirm_serializer.validated_data.get("note", ""),
+            )
+        application.refresh_from_db()
+        return Response(
+            TenantOnboardingApplicationSerializer(application).data,
+            status=status.HTTP_200_OK,
+        )
+
     @action(detail=True, methods=["post"])
     def approve(self, request, pk=None):
         application = self.get_object()
+        approve_serializer = TenantOnboardingApproveSerializer(data=request.data)
+        approve_serializer.is_valid(raise_exception=True)
         with public_schema():
             tenant = approve_onboarding_application(application, request.user)
+            phone_note = approve_serializer.validated_data.get("verification_note", "").strip()
+            if phone_note:
+                application.refresh_from_db()
+                combined = application.verification_code_note.strip()
+                phone_line = f"Phone verification: {phone_note}"
+                application.verification_code_note = (
+                    f"{combined}\n{phone_line}".strip() if combined else phone_line
+                )
+                application.save(update_fields=["verification_code_note", "updated_at"])
         application.refresh_from_db()
         return Response(
             {

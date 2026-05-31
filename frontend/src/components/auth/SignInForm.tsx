@@ -130,9 +130,17 @@ export default function SignInForm({ variant = 'light' }: SignInFormProps) {
 
         {loginMode === 'password' ? (
           <div>
-            <label htmlFor="signin-password" className={`block mb-2 text-sm ${labelClass}`}>
-              {t('auth.passwordLabel')}
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="signin-password" className={`text-sm ${labelClass}`}>
+                {t('auth.passwordLabel')}
+              </label>
+              <Link
+                to="/forgot-password"
+                className={`text-xs font-medium ${dark ? 'text-blue-300 hover:text-blue-200' : 'text-workshop-blue hover:underline'}`}
+              >
+                {t('auth.forgotPassword')}
+              </Link>
+            </div>
             <div className="relative">
               <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${dark ? 'text-slate-500' : 'text-gray-400'}`} />
               <input

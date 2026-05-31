@@ -1,0 +1,21 @@
+Mekaniku360 — Ftesë për {{ workshop_name }} / Join {{ workshop_name }} as a mechanic
+
+Përshëndetje{% if recipient_name %} {{ recipient_name }}{% endif %},
+Hello{% if recipient_name %} {{ recipient_name }}{% endif %},
+
+{{ invited_by }} ju ftoi të bashkoheni me {{ workshop_name }} në Mekaniku360 si Mekanik.
+{{ invited_by }} invited you to join {{ workshop_name }} on Mechanic360 as a Mechanic.
+
+DETAJET E FTESËS / INVITATION DETAILS
+- Punëtoria / Workshop: {{ workshop_name }}
+- Roli / Role: Mekanik / Mechanic
+{% if prefilled_email %}- Email: {{ prefilled_email }}{% endif %}
+- Skadon / Expires: {{ expires_at|date:"d M Y, H:i" }} UTC
+
+Prano ftesën / Accept invitation:
+{{ invite_url }}
+
+Ky link përdoret vetëm një herë dhe skadon pas 24 orëve.
+This link can only be used once and expires in 24 hours.
+
+— Mekaniku360 / Mechanic360

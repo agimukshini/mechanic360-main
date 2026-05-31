@@ -32,6 +32,12 @@ class WorkshopTenant(TenantMixin, models.Model):
     # auto_create_schema is provided by TenantMixin (defaults to True)
 
     name = models.CharField(max_length=255)
+    business_registration_number = models.CharField(
+        max_length=9,
+        blank=True,
+        db_index=True,
+        help_text="ARBK Numri Unik Identifikues (NUI).",
+    )
     logo_url = models.URLField(blank=True)
     address = models.TextField(blank=True)
     contact_email = models.EmailField(blank=True)
@@ -98,9 +104,37 @@ class TenantOnboardingApplication(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     workshop_name = models.CharField(max_length=255)
+    business_registration_number = models.CharField(
+        max_length=9,
+        blank=True,
+        db_index=True,
+        help_text="ARBK Numri Unik Identifikues (NUI).",
+    )
     address = models.TextField(blank=True)
     contact_email = models.EmailField(blank=True)
     contact_phone = models.CharField(max_length=64, blank=True)
+
+    verification_code = models.CharField(max_length=8, blank=True, db_index=True)
+    verification_code_confirmed_at = models.DateTimeField(null=True, blank=True)
+    verification_code_confirmed_by = models.ForeignKey(
+        "accounts.User",
+        related_name="confirmed_onboarding_verification_codes",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    class VerificationChannel(models.TextChoices):
+        EMAIL = "email", "Email"
+        PHONE = "phone", "Phone"
+        EMAIL_LINK = "email_link", "Email link (one-click)"
+
+    verification_code_channel = models.CharField(
+        max_length=16,
+        choices=VerificationChannel.choices,
+        blank=True,
+    )
+    verification_code_note = models.TextField(blank=True)
 
     admin_username = models.CharField(max_length=150)
     admin_email = models.EmailField()
@@ -141,5 +175,38 @@ class TenantOnboardingApplication(models.Model):
     def __str__(self) -> str:
         return f"{self.workshop_name} ({self.get_status_display()})"
 
+
+class OnboardingVerificationToken(models.Model):
+    """
+    One-click email verification link for pending workshop onboarding applications.
+
+    Single use; records click IP and user agent for audit.
+    """
+
+    DEFAULT_TTL_DAYS = 7
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    application = models.ForeignKey(
+        TenantOnboardingApplication,
+        related_name="verification_tokens",
+        on_delete=models.CASCADE,
+    )
+    expires_at = models.DateTimeField()
+    clicked_at = models.DateTimeField(null=True, blank=True)
+    click_ip = models.CharField(max_length=64, blank=True, default="")
+    click_user_agent = models.CharField(max_length=512, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Onboarding verify {self.id} ({self.application.workshop_name})"
+
+    @property
+    def is_valid(self) -> bool:
+        from django.utils import timezone
+
+        return self.clicked_at is None and self.expires_at > timezone.now()
 
 

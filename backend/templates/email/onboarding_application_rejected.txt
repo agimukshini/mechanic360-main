@@ -1,0 +1,20 @@
+Mekaniku360 — Përditësim i aplikimit / Workshop application update
+
+Përshëndetje {{ recipient_name }},
+Hello {{ recipient_name }},
+
+Nuk mund ta aprovojmë aplikimin për {{ workshop_name }} në këtë moment.
+We are unable to approve the application for {{ workshop_name }} at this time.
+
+ARSYEJA / REASON:
+{{ rejection_reason }}
+
+PËRMBLEDHJE / APPLICATION SUMMARY
+- Punëtoria / Workshop: {{ workshop_name }}
+- NUI (ARBK): {{ business_registration_number }}
+- Telefon zyrtar / Official phone: {{ contact_phone }}
+
+Nëse mendoni se ky vendim është i gabuar, na kontaktoni dhe përfshini NUI-n tuaj.
+If you believe this was an error, contact us and include your business NUI.
+
+— Mekaniku360 / Mechanic360

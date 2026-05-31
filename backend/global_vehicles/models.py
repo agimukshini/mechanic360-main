@@ -758,7 +758,7 @@ class PlatformIssuerProfile(models.Model):
     trade_name = models.CharField(
         max_length=255,
         blank=True,
-        help_text="Optional trading name (e.g. Workshop360) shown on invoices.",
+        help_text="Optional trading name (e.g. Mechanic360) shown on invoices.",
     )
     address_line1 = models.CharField(max_length=255, blank=True)
     address_line2 = models.CharField(max_length=255, blank=True)

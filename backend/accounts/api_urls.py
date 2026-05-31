@@ -24,6 +24,11 @@ from .invite_views import (
     StaffInvitePreviewView,
     TenantStaffInviteListCreateView,
 )
+from .password_reset_views import (
+    PasswordForgotView,
+    PasswordResetConfirmView,
+    PasswordResetPreviewView,
+)
 from .pin_auth import ThrottledPinTokenObtainView
 from .views import (
     MeView,
@@ -50,6 +55,17 @@ urlpatterns = [
     path("token/pin/", ThrottledPinTokenObtainView.as_view(), name="token_obtain_pin"),
     path("token/refresh/", ThrottledTokenRefreshView.as_view(), name="token_refresh"),
     path("logout/", LogoutView.as_view(), name="auth_logout"),
+    path("password/forgot/", PasswordForgotView.as_view(), name="auth_password_forgot"),
+    path(
+        "password/reset/<uuid:token_id>/preview/",
+        PasswordResetPreviewView.as_view(),
+        name="auth_password_reset_preview",
+    ),
+    path(
+        "password/reset/<uuid:token_id>/",
+        PasswordResetConfirmView.as_view(),
+        name="auth_password_reset_confirm",
+    ),
 
     # Registration & profile
     path("register/", RegisterView.as_view(), name="auth_register"),

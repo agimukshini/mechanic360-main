@@ -46,7 +46,7 @@ class PlatformIssuerProfileTests(TestCase):
             reverse("admin-platform-issuer"),
             {
                 "company_name": "Mechanic360 Sh.p.k.",
-                "trade_name": "Workshop360",
+                "trade_name": "Mechanic360",
                 "vat_number": "K12345678A",
                 "vat_rate_percent": "20.00",
                 "address_line1": "Rruga e Dibrës 1",
@@ -74,7 +74,7 @@ class PlatformIssuerProfileTests(TestCase):
     def test_invoice_pdf_includes_issuer_and_vat(self):
         profile = PlatformIssuerProfile.load()
         profile.company_name = "Mechanic360 Sh.p.k."
-        profile.trade_name = "Workshop360"
+        profile.trade_name = "Mechanic360"
         profile.vat_number = "K12345678A"
         profile.vat_rate_percent = Decimal("20.00")
         profile.address_line1 = "Rruga e Dibrës 1"

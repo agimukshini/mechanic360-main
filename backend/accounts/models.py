@@ -97,5 +97,6 @@ class User(AbstractUser):
 
 from .login_audit_models import LoginAuditEvent  # noqa: E402, F401
 from .invite_models import StaffInviteToken  # noqa: E402, F401
+from .password_reset_models import PasswordResetToken  # noqa: E402, F401
 
 

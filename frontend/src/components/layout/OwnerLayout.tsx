@@ -21,7 +21,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <Car className="w-6 h-6 text-blue-400 shrink-0" />
-            <span className="font-bold text-lg truncate">Workshop360 — {t('ownerLayout.myVehicles')}</span>
+            <span className="font-bold text-lg truncate">{t('common.appName')} — {t('ownerLayout.myVehicles')}</span>
           </div>
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <NavLink

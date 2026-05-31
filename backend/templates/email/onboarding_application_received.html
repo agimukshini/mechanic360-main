@@ -1,0 +1,100 @@
+{% extends "email/base.html" %}
+{% block content %}
+<p style="margin:0 0 4px;font-size:16px;line-height:1.6;color:#1b263b;">
+  Përshëndetje {{ recipient_name }},
+</p>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  Hello {{ recipient_name }},
+</p>
+<p style="margin:0 0 8px;font-size:15px;line-height:1.65;color:#475569;">
+  Kemi pranuar aplikimin tuaj për punëtoriën <strong>{{ workshop_name }}</strong> në {{ site_name_sq }}.
+  Ju lutemi plotësoni verifikimin që ekipi ynë të shqyrtojë dhe aktivizojë llogarinë tuaj.
+</p>
+<p style="margin:0 0 20px;font-size:13px;line-height:1.55;color:#64748b;font-style:italic;">
+  We received your workshop application for {{ workshop_name }} on {{ site_name_en }}.
+  Please complete verification so our team can review and activate your account.
+</p>
+
+<div style="margin:0 0 24px;padding:20px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;">
+  {% include "email/_section_title.html" with sq="Të dhënat e biznesit të regjistruar" en="Registered business details" only %}
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size:14px;line-height:1.6;color:#334155;">
+    <tr><td style="padding:4px 0;width:42%;vertical-align:top;">{% include "email/_label.html" with sq="Punëtoria" en="Workshop" only %}</td><td style="padding:4px 0;"><strong>{{ workshop_name }}</strong></td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="NUI (ARBK)" en="Business registration number" only %}</td><td style="padding:4px 0;">{{ business_registration_number }}</td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Adresa" en="Address" only %}</td><td style="padding:4px 0;">{{ address }}</td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Email zyrtar" en="Official email" only %}</td><td style="padding:4px 0;">{{ contact_email }}</td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Telefon zyrtar" en="Official phone" only %}</td><td style="padding:4px 0;">{{ contact_phone }}</td></tr>
+  </table>
+</div>
+
+<div style="margin:0 0 24px;padding:20px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;">
+  {% include "email/_section_title.html" with sq="Llogaria e administratorit" en="Administrator account" only %}
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size:14px;line-height:1.6;color:#334155;">
+    <tr><td style="padding:4px 0;width:42%;vertical-align:top;">{% include "email/_label.html" with sq="Emri i përdoruesit" en="Username" only %}</td><td style="padding:4px 0;"><strong>{{ admin_username }}</strong></td></tr>
+    <tr><td style="padding:4px 0;vertical-align:top;">{% include "email/_label.html" with sq="Email" en="Email" only %}</td><td style="padding:4px 0;">{{ admin_email }}</td></tr>
+  </table>
+</div>
+
+<div style="margin:0 0 24px;padding:20px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;">
+  {% include "email/_section_title.html" with sq="Verifikim me një klik" en="One-click verification" only %}
+  <p style="margin:0 0 12px;font-size:14px;line-height:1.65;color:#334155;">
+    Klikoni butonin më poshtë për të konfirmuar email-in tuaj. Veprimi regjistrohet (koha, IP) për auditim.
+  </p>
+  <p style="margin:0 0 16px;font-size:12px;line-height:1.55;color:#64748b;font-style:italic;">
+    Click the button below to confirm your email. This action is logged (time, IP) for audit.
+  </p>
+  <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 8px;">
+    <tr>
+      <td style="border-radius:10px;background:#059669;">
+        <a href="{{ verify_url }}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">
+          Verifiko aplikimin tani
+        </a>
+      </td>
+    </tr>
+  </table>
+  <p style="margin:0 0 8px;font-size:12px;color:#94a3b8;font-style:italic;">Verify application now</p>
+  <p style="margin:0;font-size:12px;line-height:1.5;color:#64748b;word-break:break-all;">
+    {{ verify_url }}
+  </p>
+</div>
+
+<div style="margin:0 0 24px;padding:20px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd;">
+  {% include "email/_section_title.html" with sq="Opsionale: dërgo kodin manualisht" en="Optional: send code manually" only %}
+  <p style="margin:0 0 4px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#0369a1;">
+    Kodi juaj i verifikimit
+  </p>
+  <p style="margin:0 0 8px;font-size:11px;color:#64748b;font-style:italic;">Your verification code</p>
+  <p style="margin:0;font-size:28px;font-weight:700;letter-spacing:0.2em;color:#0077B6;font-family:ui-monospace,monospace;">
+    {{ verification_code }}
+  </p>
+  <p style="margin:12px 0 4px;font-size:13px;line-height:1.5;color:#475569;">
+    Dërgojeni këtë kod te kontakti zyrtar i platformës:
+    {% if platform_contact_name %}<strong>{{ platform_contact_name }}</strong>{% endif %}
+    {% if platform_contact_email %} · <a href="mailto:{{ platform_contact_email }}" style="color:#0077B6;text-decoration:none;">{{ platform_contact_email }}</a>{% endif %}
+    {% if platform_contact_phone %} · {{ platform_contact_phone }}{% endif %}
+  </p>
+  <p style="margin:0;font-size:12px;line-height:1.5;color:#64748b;font-style:italic;">
+    Send this code to our platform contact by email or SMS.
+  </p>
+</div>
+
+<p style="margin:0 0 4px;font-size:14px;line-height:1.65;color:#475569;"><strong>Hapat e ardhshëm</strong></p>
+<p style="margin:0 0 12px;font-size:12px;color:#94a3b8;font-style:italic;">Next steps</p>
+<ol style="margin:0 0 8px;padding-left:20px;font-size:14px;line-height:1.65;color:#475569;">
+  <li style="margin-bottom:8px;">Dërgojeni kodin e verifikimit në email-in ose telefonin zyrtar të platformës.</li>
+  <li style="margin-bottom:8px;">Prisni që administratori i platformës t'ju telefonojë në numrin zyrtar të biznesit.</li>
+  <li>Pas aprovimit, identifikohuni me emrin e përdoruesit dhe fjalëkalimin që zgjodhët gjatë regjistrimit.</li>
+</ol>
+<ol style="margin:0 0 24px;padding-left:20px;font-size:12px;line-height:1.55;color:#94a3b8;font-style:italic;">
+  <li style="margin-bottom:6px;">Send the verification code to our platform email or phone.</li>
+  <li style="margin-bottom:6px;">Wait for a platform administrator to call your official business phone.</li>
+  <li>After approval, sign in with the username and password you chose during registration.</li>
+</ol>
+
+<p style="margin:0 0 4px;font-size:13px;line-height:1.6;color:#64748b;">
+  Nëse nuk e keni dorëzuar këtë aplikim, na kontaktoni në
+  {% if issuer_email %}<a href="mailto:{{ issuer_email }}" style="color:#0077B6;text-decoration:none;">{{ issuer_email }}</a>{% else %}mbështetjen tonë{% endif %}.
+</p>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;font-style:italic;">
+  If you did not submit this application, please contact our support team.
+</p>
+{% endblock %}

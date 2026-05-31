@@ -1,18 +1,25 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
+import { CheckCircle2, Loader2, Phone, XCircle } from 'lucide-react'
 import { tenantsApi } from '@/api'
 import { AdminField, AdminMobileCard, AdminResponsiveTable } from '@/components/admin/AdminMobile'
 
 type OnboardingStatus = 'pending' | 'approved' | 'rejected'
+type VerificationChannel = 'email' | 'phone'
 
 interface OnboardingApplication {
   id: string
   workshop_name: string
+  business_registration_number: string
   address: string
   contact_email: string
   contact_phone: string
+  verification_code: string
+  verification_code_confirmed_at: string | null
+  verification_code_confirmed_by_username: string | null
+  verification_code_channel: VerificationChannel | ''
+  verification_code_note: string
   admin_username: string
   admin_email: string
   status: OnboardingStatus
@@ -42,6 +49,11 @@ export default function TenantOnboardingAdminPage() {
   const [statusFilter, setStatusFilter] = useState<OnboardingStatus | 'all'>('pending')
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
+  const [confirmChannel, setConfirmChannel] = useState<VerificationChannel>('email')
+  const [confirmNote, setConfirmNote] = useState('')
+  const [approvingId, setApprovingId] = useState<string | null>(null)
+  const [phoneVerificationNote, setPhoneVerificationNote] = useState('')
 
   const queryParams = useMemo(
     () => (statusFilter === 'all' ? undefined : { status: statusFilter }),
@@ -58,9 +70,24 @@ export default function TenantOnboardingAdminPage() {
     queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] })
   }
 
+  const confirmMutation = useMutation({
+    mutationFn: ({ id, channel, note }: { id: string; channel: VerificationChannel; note: string }) =>
+      tenantsApi.confirmOnboardingVerificationCode(id, { channel, note }),
+    onSuccess: () => {
+      setConfirmingId(null)
+      setConfirmNote('')
+      invalidateAdminQueries()
+    },
+  })
+
   const approveMutation = useMutation({
-    mutationFn: (id: string) => tenantsApi.approveOnboardingApplication(id),
-    onSuccess: invalidateAdminQueries,
+    mutationFn: ({ id, note }: { id: string; note: string }) =>
+      tenantsApi.approveOnboardingApplication(id, note),
+    onSuccess: () => {
+      setApprovingId(null)
+      setPhoneVerificationNote('')
+      invalidateAdminQueries()
+    },
   })
 
   const rejectMutation = useMutation({
@@ -81,6 +108,48 @@ export default function TenantOnboardingAdminPage() {
     return t('adminOnboarding.statusRejected')
   }
 
+  const renderBusinessDetails = (application: OnboardingApplication) => (
+    <div className="space-y-1 text-sm text-workshop-charcoal/70">
+      <div>
+        <span className="font-medium text-workshop-charcoal/80">{t('adminOnboarding.nuiLabel')}:</span>{' '}
+        {application.business_registration_number || '—'}
+      </div>
+      {application.address && <div>{application.address}</div>}
+      <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {application.contact_email && (
+          <a href={`mailto:${application.contact_email}`} className="text-workshop-blue hover:underline">
+            {application.contact_email}
+          </a>
+        )}
+        {application.contact_phone && (
+          <a href={`tel:${application.contact_phone}`} className="text-workshop-blue hover:underline inline-flex items-center gap-1">
+            <Phone className="w-3.5 h-3.5" />
+            {application.contact_phone}
+          </a>
+        )}
+      </div>
+      {application.status === 'pending' && (
+        <div className="mt-2 rounded-md bg-workshop-charcoal/5 px-3 py-2">
+          <div className="text-xs uppercase tracking-wide text-workshop-charcoal/50">
+            {t('adminOnboarding.verificationCodeLabel')}
+          </div>
+          <code className="text-sm font-semibold tracking-widest text-workshop-blue">
+            {application.verification_code}
+          </code>
+          {application.verification_code_confirmed_at ? (
+            <div className="mt-1 text-xs text-green-700">
+              {t('adminOnboarding.codeConfirmedAt', {
+                date: formatDate(application.verification_code_confirmed_at),
+              })}
+            </div>
+          ) : (
+            <div className="mt-1 text-xs text-amber-700">{t('adminOnboarding.codeNotConfirmed')}</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
   const renderPendingActions = (application: OnboardingApplication) => {
     if (application.status !== 'pending') {
       return (
@@ -93,23 +162,111 @@ export default function TenantOnboardingAdminPage() {
       )
     }
 
+    const codeConfirmed = Boolean(application.verification_code_confirmed_at)
+
     return (
-      <div className="flex flex-col gap-2 w-full">
-        <button
-          type="button"
-          onClick={() => approveMutation.mutate(application.id)}
-          disabled={approveMutation.isPending}
-          className="btn btn-primary w-full justify-center"
-        >
-          {approveMutation.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              {t('adminOnboarding.approve')}
-            </>
-          )}
-        </button>
+      <div className="flex flex-col gap-2 w-full max-w-sm ml-auto">
+        {!codeConfirmed && confirmingId !== application.id && (
+          <button
+            type="button"
+            onClick={() => {
+              setConfirmingId(application.id)
+              setConfirmChannel('email')
+              setConfirmNote('')
+            }}
+            className="btn btn-secondary w-full justify-center"
+          >
+            {t('adminOnboarding.confirmCodeReceived')}
+          </button>
+        )}
+
+        {confirmingId === application.id && (
+          <div className="w-full space-y-2 rounded-lg border border-workshop-charcoal/10 p-3">
+            <p className="text-xs text-workshop-charcoal/60">{t('adminOnboarding.confirmCodeHelp')}</p>
+            <select
+              value={confirmChannel}
+              onChange={(e) => setConfirmChannel(e.target.value as VerificationChannel)}
+              className="input w-full"
+            >
+              <option value="email">{t('adminOnboarding.channelEmail')}</option>
+              <option value="phone">{t('adminOnboarding.channelPhone')}</option>
+            </select>
+            <textarea
+              value={confirmNote}
+              onChange={(e) => setConfirmNote(e.target.value)}
+              className="input min-h-[70px] w-full"
+              placeholder={t('adminOnboarding.confirmCodeNotePlaceholder')}
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="btn btn-secondary flex-1"
+                onClick={() => setConfirmingId(null)}
+              >
+                {t('adminOnboarding.cancel')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary flex-1"
+                disabled={confirmMutation.isPending}
+                onClick={() =>
+                  confirmMutation.mutate({
+                    id: application.id,
+                    channel: confirmChannel,
+                    note: confirmNote,
+                  })
+                }
+              >
+                {t('adminOnboarding.confirmCodeSubmit')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {codeConfirmed && approvingId !== application.id && (
+          <button
+            type="button"
+            onClick={() => {
+              setApprovingId(application.id)
+              setPhoneVerificationNote('')
+            }}
+            className="btn btn-primary w-full justify-center"
+          >
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            {t('adminOnboarding.approve')}
+          </button>
+        )}
+
+        {approvingId === application.id && (
+          <div className="w-full space-y-2 rounded-lg border border-workshop-charcoal/10 p-3">
+            <p className="text-xs text-workshop-charcoal/60">{t('adminOnboarding.approveHelp')}</p>
+            <textarea
+              value={phoneVerificationNote}
+              onChange={(e) => setPhoneVerificationNote(e.target.value)}
+              className="input min-h-[70px] w-full"
+              placeholder={t('adminOnboarding.phoneVerificationPlaceholder')}
+            />
+            <div className="flex gap-2">
+              <button type="button" className="btn btn-secondary flex-1" onClick={() => setApprovingId(null)}>
+                {t('adminOnboarding.cancel')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary flex-1"
+                disabled={approveMutation.isPending}
+                onClick={() =>
+                  approveMutation.mutate({
+                    id: application.id,
+                    note: phoneVerificationNote,
+                  })
+                }
+              >
+                {t('adminOnboarding.confirmApprove')}
+              </button>
+            </div>
+          </div>
+        )}
+
         {rejectingId === application.id ? (
           <div className="w-full space-y-2">
             <textarea
@@ -162,9 +319,8 @@ export default function TenantOnboardingAdminPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-workshop-charcoal">{t('adminOnboarding.title')}</h2>
-        <p className="text-workshop-charcoal/60 mt-1">
-          {t('adminOnboarding.subtitle')}
-        </p>
+        <p className="text-workshop-charcoal/60 mt-1">{t('adminOnboarding.subtitle')}</p>
+        <p className="text-sm text-workshop-charcoal/60 mt-2">{t('adminOnboarding.reviewInstructions')}</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -190,9 +346,7 @@ export default function TenantOnboardingAdminPage() {
             <Loader2 className="w-8 h-8 animate-spin mx-auto text-workshop-blue" />
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-red-700">
-            {t('adminOnboarding.loadFailed')}
-          </div>
+          <div className="p-8 text-center text-red-700">{t('adminOnboarding.loadFailed')}</div>
         ) : applications.length === 0 ? (
           <div className="p-12 text-center text-workshop-charcoal/60">
             {statusFilter === 'all'
@@ -228,21 +382,8 @@ export default function TenantOnboardingAdminPage() {
                   {applications.map((application) => (
                     <tr key={application.id} className="align-top">
                       <td className="px-6 py-4">
-                        <div className="font-medium text-workshop-charcoal">
-                          {application.workshop_name}
-                        </div>
-                        {application.address && (
-                          <div className="text-sm text-workshop-charcoal/60 mt-1">
-                            {application.address}
-                          </div>
-                        )}
-                        {(application.contact_email || application.contact_phone) && (
-                          <div className="text-sm text-workshop-charcoal/60 mt-1">
-                            {[application.contact_email, application.contact_phone]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          </div>
-                        )}
+                        <div className="font-medium text-workshop-charcoal">{application.workshop_name}</div>
+                        {renderBusinessDetails(application)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-workshop-charcoal">{application.admin_username}</div>
@@ -299,22 +440,15 @@ export default function TenantOnboardingAdminPage() {
                   </span>
                 }
               >
-                {application.address && (
-                  <AdminField label={t('adminOnboarding.tableWorkshop')}>{application.address}</AdminField>
-                )}
-                {(application.contact_email || application.contact_phone) && (
-                  <AdminField label={t('adminTenants.tableContact')}>
-                    {[application.contact_email, application.contact_phone].filter(Boolean).join(' · ')}
-                  </AdminField>
-                )}
+                <AdminField label={t('adminOnboarding.tableWorkshop')}>
+                  {renderBusinessDetails(application)}
+                </AdminField>
                 <AdminField label={t('adminOnboarding.tableAdmin')}>
                   {application.admin_username}
                   <span className="block text-workshop-charcoal/60">{application.admin_email}</span>
                 </AdminField>
                 {application.status === 'rejected' && application.rejection_reason && (
-                  <AdminField label={t('adminOnboarding.tableStatus')}>
-                    {application.rejection_reason}
-                  </AdminField>
+                  <AdminField label={t('adminOnboarding.tableStatus')}>{application.rejection_reason}</AdminField>
                 )}
                 {application.status === 'approved' && application.tenant_schema_name && (
                   <AdminField label={t('adminOnboarding.schemaPrefix')}>

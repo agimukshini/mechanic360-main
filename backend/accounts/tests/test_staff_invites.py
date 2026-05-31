@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
@@ -41,21 +43,24 @@ class StaffInviteApiTests(APITestCase):
 
     def test_admin_creates_invite_link(self):
         self.client.force_authenticate(user=self.admin)
-        response = self.client.post(
-            self.invites_url,
-            {
-                "email": "new@inviteshop.com",
-                "first_name": "New",
-                "last_name": "Mechanic",
-                "role": User.Role.MECHANIC,
-            },
-            format="json",
-            HTTP_ORIGIN="https://app.example.com",
-        )
+        with patch("accounts.invite_views.send_staff_invite_email_task.delay") as mock_delay:
+            response = self.client.post(
+                self.invites_url,
+                {
+                    "email": "new@inviteshop.com",
+                    "first_name": "New",
+                    "last_name": "Mechanic",
+                    "role": User.Role.MECHANIC,
+                },
+                format="json",
+                HTTP_ORIGIN="https://app.example.com",
+            )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn("invite_url", response.data)
-        self.assertTrue(response.data["invite_url"].startswith("https://app.example.com/invite/staff/"))
+        self.assertTrue(response.data["email_queued"])
+        mock_delay.assert_called_once()
+        self.assertIn("/invite/staff/", response.data["invite_url"])
         invite = StaffInviteToken.objects.get()
         self.assertIsNone(invite.used_at)
         self.assertGreater(invite.expires_at, timezone.now())

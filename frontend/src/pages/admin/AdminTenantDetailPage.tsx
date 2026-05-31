@@ -16,6 +16,7 @@ import {
 interface TenantDetail {
   id: string
   name: string
+  business_registration_number?: string
   schema_name: string
   logo_url: string
   address: string
@@ -201,6 +202,10 @@ export default function AdminTenantDetailPage() {
             <div className="flex justify-between gap-4">
               <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.status')}</dt>
               <dd>{tenant.is_active ? t('adminTenantDetail.active') : t('adminTenantDetail.inactive')}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-workshop-charcoal/60">{t('adminTenantDetail.nui')}</dt>
+              <dd>{tenant.business_registration_number || '—'}</dd>
             </div>
             <div className="flex justify-between gap-4 min-w-0">
               <dt className="text-workshop-charcoal/60 shrink-0">{t('adminTenantDetail.email')}</dt>

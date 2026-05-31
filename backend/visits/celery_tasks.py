@@ -84,7 +84,7 @@ Reason: {reason}
 Please contact your workshop to schedule the service.
 
 Best regards,
-Workshop360
+Mechanic360
     """
 
     # Send email if owner has email

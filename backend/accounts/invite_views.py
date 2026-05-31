@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from mechanic360.permissions import IsTenantAdmin
 
+from .celery_tasks import send_staff_invite_email_task
 from .invite_models import StaffInviteToken
 from .invite_serializers import (
     StaffInviteAcceptSerializer,
@@ -55,6 +56,11 @@ class TenantStaffInviteListCreateView(APIView):
         data = StaffInviteTokenSerializer(invite, context={"request": request}).data
         data["invite_url"] = staff_invite_absolute_url(request, invite.id)
         data["limits"] = staff_invite_limits(request.user)
+        if invite.email:
+            send_staff_invite_email_task.delay(str(invite.id))
+            data["email_queued"] = True
+        else:
+            data["email_queued"] = False
         return Response(data, status=status.HTTP_201_CREATED)
 
 

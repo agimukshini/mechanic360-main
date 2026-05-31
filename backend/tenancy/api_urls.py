@@ -24,7 +24,12 @@ from global_vehicles.transfer_views import (
     AdminVehicleAuditViewSet,
 )
 
+from .verification_views import (
+    OnboardingVerificationConfirmView,
+    OnboardingVerificationPreviewView,
+)
 from .views import (
+    PlatformOnboardingContactView,
     SuperadminDashboardView,
     SuperadminGlobalRegistryView,
     TenantOnboardingApplicationViewSet,
@@ -55,6 +60,21 @@ router.register(r"invoices", AdminPlatformInvoiceViewSet, basename="admin-invoic
 
 urlpatterns = [
     path("register/", TenantRegisterView.as_view(), name="tenant_register"),
+    path(
+        "onboarding-contact/",
+        PlatformOnboardingContactView.as_view(),
+        name="tenant_onboarding_contact",
+    ),
+    path(
+        "verify-onboarding/<uuid:token_id>/preview/",
+        OnboardingVerificationPreviewView.as_view(),
+        name="tenant_onboarding_verify_preview",
+    ),
+    path(
+        "verify-onboarding/<uuid:token_id>/confirm/",
+        OnboardingVerificationConfirmView.as_view(),
+        name="tenant_onboarding_verify_confirm",
+    ),
     path("admin/dashboard/", SuperadminDashboardView.as_view(), name="admin-dashboard"),
     path("admin/global/", SuperadminGlobalRegistryView.as_view(), name="admin-global"),
     path(

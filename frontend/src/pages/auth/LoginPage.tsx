@@ -85,7 +85,7 @@ export default function LoginPage() {
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
               <Wrench className="w-6 h-6 text-yellow-400" />
             </div>
-            <span className="text-2xl font-bold text-white">Workshop360</span>
+            <span className="text-2xl font-bold text-white">{t('common.appName')}</span>
           </div>
 
           <div className="space-y-6">
@@ -119,7 +119,7 @@ export default function LoginPage() {
             to="/"
             className="inline-flex text-sm text-gray-500 hover:text-brand-primary mb-4 transition-colors"
           >
-            ← {t('common.back')} — Workshop360
+            ← {t('common.back')} — {t('common.appName')}
           </Link>
           {sessionChecked && isAuthenticated && (
             <div className="mb-4 p-4 rounded-xl bg-blue-50 border border-blue-100 text-sm text-gray-700">
