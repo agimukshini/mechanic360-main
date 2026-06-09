@@ -13,6 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from mechanic360.throttling import AuthAnonRateThrottle
 
+from .auth_utils import get_user_by_username_insensitive
 from .cookie_auth import set_auth_cookies
 from .login_audit import classify_pin_failure, is_inactive_tenant_message, record_login_attempt
 from .login_audit_models import LoginAuditEvent
@@ -31,10 +32,9 @@ class PinLoginSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         username = attrs["username"].strip()
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            raise AuthenticationFailed("Invalid username or PIN.", code="authorization") from None
+        user = get_user_by_username_insensitive(username)
+        if user is None:
+            raise AuthenticationFailed("Invalid username or PIN.", code="authorization")
 
         if not user.is_active:
             raise AuthenticationFailed("Invalid username or PIN.", code="authorization")
@@ -66,7 +66,7 @@ class ThrottledPinTokenObtainView(APIView):
         try:
             serializer.is_valid(raise_exception=True)
         except AuthenticationFailed as exc:
-            user = User.objects.filter(username=username).first()
+            user = get_user_by_username_insensitive(username)
             detail = exc.detail if hasattr(exc, "detail") else str(exc)
             if is_inactive_tenant_message(detail):
                 outcome = LoginAuditEvent.Outcome.FAILED_TENANT_INACTIVE

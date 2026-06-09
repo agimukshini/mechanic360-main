@@ -75,6 +75,40 @@ class LoginAuditTests(APITestCase):
         self.assertEqual(event.user_id, self.admin.id)
         self.assertEqual(event.tenant_id, self.tenant.id)
 
+    def test_password_login_is_case_insensitive_for_username(self):
+        response = self.client.post(
+            self.token_url,
+            {"username": "AUDIT_ADMIN", "password": "pass12345"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event = LoginAuditEvent.objects.latest("created_at")
+        self.assertEqual(event.outcome, LoginAuditEvent.Outcome.SUCCESS)
+        self.assertEqual(event.user_id, self.admin.id)
+
+    def test_password_login_remains_case_sensitive(self):
+        response = self.client.post(
+            self.token_url,
+            {"username": "audit_admin", "password": "Pass12345"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        event = LoginAuditEvent.objects.latest("created_at")
+        self.assertEqual(event.outcome, LoginAuditEvent.Outcome.FAILED_PASSWORD)
+
+    def test_pin_login_is_case_insensitive_for_username(self):
+        self.mechanic.set_quick_pin("5678")
+        self.mechanic.save()
+        response = self.client.post(
+            self.pin_url,
+            {"username": "AUDIT_MECH", "pin": "5678"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event = LoginAuditEvent.objects.latest("created_at")
+        self.assertEqual(event.outcome, LoginAuditEvent.Outcome.SUCCESS)
+        self.assertEqual(event.user_id, self.mechanic.id)
+
     def test_failed_password_login_creates_audit_event(self):
         response = self.client.post(
             self.token_url,

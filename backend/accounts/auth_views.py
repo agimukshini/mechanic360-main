@@ -17,6 +17,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from mechanic360.throttling import AuthAnonRateThrottle
 
+from .auth_utils import get_user_by_username_insensitive
 from .cookie_auth import clear_auth_cookies, set_auth_cookies
 from .jwt_serializers import WorkshopTokenObtainPairSerializer
 from .login_audit import (
@@ -45,7 +46,7 @@ def _log_password_login(
 ) -> None:
     if not username:
         return
-    user = User.objects.filter(username=username).first()
+    user = get_user_by_username_insensitive(username)
     if success:
         outcome = LoginAuditEvent.Outcome.SUCCESS
     elif is_inactive_tenant_message(detail):

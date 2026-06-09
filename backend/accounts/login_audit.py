@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from django.contrib.auth import get_user_model
 
+from .auth_utils import get_user_by_username_insensitive
 from .login_audit_models import LoginAuditEvent
 
 User = get_user_model()
@@ -30,9 +31,8 @@ def get_user_agent(request) -> str:
 
 
 def classify_password_failure(username: str) -> str:
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
+    user = get_user_by_username_insensitive(username)
+    if user is None:
         return LoginAuditEvent.Outcome.FAILED_UNKNOWN_USER
 
     if not user.is_active:
@@ -46,9 +46,8 @@ def classify_password_failure(username: str) -> str:
 
 
 def classify_pin_failure(username: str) -> str:
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
+    user = get_user_by_username_insensitive(username)
+    if user is None:
         return LoginAuditEvent.Outcome.FAILED_UNKNOWN_USER
 
     if not user.is_active:
