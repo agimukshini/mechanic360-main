@@ -61,7 +61,7 @@ class Command(BaseCommand):
                     "verify_expires_at": expires,
                     "platform_contact_name": issuer.get("company_name") or "Mechanic360 Platform",
                     "platform_contact_email": issuer.get("email") or "onboarding@mechanic360.com",
-                    "platform_contact_phone": issuer.get("phone") or "+383 38 000 000",
+                    "platform_contact_phone": issuer.get("phone") or "+38344378288",
                     "login_url": f"{frontend}/login",
                 },
             ),
