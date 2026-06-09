@@ -22,7 +22,7 @@ User = get_user_model()
 
 @override_settings(
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
-    FRONTEND_BASE_URL="https://mechanic360.managefleet.org",
+    FRONTEND_BASE_URL="https://mekaniku360.com",
 )
 class OnboardingEmailTests(TestCase):
     def setUp(self):
@@ -91,7 +91,7 @@ class OnboardingEmailTests(TestCase):
 
 @override_settings(
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
-    FRONTEND_BASE_URL="https://mechanic360.managefleet.org",
+    FRONTEND_BASE_URL="https://mekaniku360.com",
 )
 class StaffInviteEmailTests(TestCase):
     def setUp(self):

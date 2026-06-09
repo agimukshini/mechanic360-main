@@ -20,8 +20,6 @@ export default defineConfig({
       '127.0.0.1',
       'mekaniku360.com',
       'www.mekaniku360.com',
-      'mechanic360.managefleet.org',
-      '.managefleet.org',
     ],
     // Behind HTTPS reverse proxy: browser must use wss on public host:443, not localhost:5173
     hmr: hmrHost

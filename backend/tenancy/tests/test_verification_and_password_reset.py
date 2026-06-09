@@ -18,7 +18,7 @@ User = get_user_model()
 
 @override_settings(
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
-    FRONTEND_BASE_URL="https://mechanic360.managefleet.org",
+    FRONTEND_BASE_URL="https://mekaniku360.com",
 )
 class OnboardingVerificationLinkTests(TestCase):
     def setUp(self):
@@ -73,7 +73,7 @@ class OnboardingVerificationLinkTests(TestCase):
 
 @override_settings(
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
-    FRONTEND_BASE_URL="https://mechanic360.managefleet.org",
+    FRONTEND_BASE_URL="https://mekaniku360.com",
     CELERY_TASK_ALWAYS_EAGER=True,
 )
 class PasswordResetTests(TestCase):

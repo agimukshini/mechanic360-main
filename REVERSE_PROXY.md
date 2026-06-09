@@ -1,30 +1,30 @@
 # Reverse proxy — Mechanic360 / Workshop360
 
-| URL | Forward to (host 192.168.10.5) | Role |
-|-----|--------------------------------|------|
-| **mechanic360.managefleet.org** | `:5173` | Frontend (nginx static build) |
-| **backmechanic.managefleet.org** | `:8001` | Django API |
+Single public domain: **mekaniku360.com** (frontend + API + media).
+
+| Path | Forward to (Docker host) | Role |
+|------|--------------------------|------|
+| `https://mekaniku360.com/` | `:5173` | Frontend (nginx static build) |
+| `https://mekaniku360.com/api/` | `:5173` → `backend:8000` | Django API (proxied by frontend nginx) |
+| `https://mekaniku360.com/media/` | `:5173` → QNAP mount | Uploaded files (served by frontend nginx) |
 
 ## Docker ports
 
 ```
-mechanic360-frontend    0.0.0.0:5173->5173/tcp
+mechanic360-frontend    0.0.0.0:5173->80/tcp
 mechanic360-backend     0.0.0.0:8001->8000/tcp
-nginx-proxy-manager     0.0.0.0:80,443,81
 ```
 
-## Nginx Proxy Manager (http://192.168.10.5:81)
+## Nginx Proxy Manager / Cloudflare
 
-### mechanic360.managefleet.org
-- Forward: `192.168.10.5:5173`
+### mekaniku360.com (+ www)
+- Forward: app server `:5173`
 - Websockets: **Off** (production static build — no Vite dev/HMR)
-- SSL: Let's Encrypt, Force SSL
+- SSL: Let's Encrypt or Cloudflare, Force SSL
 
-### backmechanic.managefleet.org
-- Forward: `192.168.10.5:8001`
-- SSL: Let's Encrypt, Force SSL
+The frontend container nginx proxies `/api/` to the backend service; do **not** expose a separate API subdomain.
 
-## Deploy with domains
+## Deploy
 
 ```bash
 cd /opt/docker/mechanic360
@@ -35,6 +35,7 @@ docker compose -f docker-compose.yml -f docker-compose.qnap.yml -f docker-compos
 ## Verify
 
 ```bash
-curl -I https://mechanic360.managefleet.org
-curl -I https://backmechanic.managefleet.org/api/v1/auth/me/
+curl -I https://mekaniku360.com
+curl -I https://mekaniku360.com/api/v1/auth/me/
+curl -I https://mekaniku360.com/media/vehicle_photos/
 ```
