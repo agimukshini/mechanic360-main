@@ -7,6 +7,7 @@ from typing import Any
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from .kyc import (
     assert_nui_available,
@@ -15,11 +16,7 @@ from .kyc import (
     validate_nui_format,
 )
 from .models import TenantOnboardingApplication, WorkshopTenant
-from .onboarding import (
-    _assert_email_available,
-    _assert_username_available,
-    hash_admin_password,
-)
+from .onboarding import hash_admin_password, validate_onboarding_uniqueness
 
 User = get_user_model()
 
@@ -68,11 +65,35 @@ class TenantRegisterSerializer(serializers.Serializer):
         return cleaned
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        errors: dict[str, list[str]] = {}
+
         if attrs.get("website"):
-            raise serializers.ValidationError("Registration could not be completed.")
-        _assert_username_available(attrs["admin_username"])
-        _assert_email_available(attrs["admin_email"])
-        assert_nui_available(attrs["business_registration_number"])
+            errors["non_field_errors"] = ["Registration could not be completed."]
+
+        for field, messages in validate_onboarding_uniqueness(attrs).items():
+            errors.setdefault(field, []).extend(messages)
+
+        nui = attrs.get("business_registration_number")
+        if nui and "business_registration_number" not in errors:
+            try:
+                assert_nui_available(nui)
+            except ValidationError as exc:
+                detail = exc.detail
+                if isinstance(detail, dict):
+                    for field, message in detail.items():
+                        if isinstance(message, list):
+                            errors.setdefault(field, []).extend(message)
+                        else:
+                            errors.setdefault(field, []).append(str(message))
+                elif isinstance(detail, list):
+                    errors.setdefault("business_registration_number", []).extend(
+                        [str(message) for message in detail],
+                    )
+                else:
+                    errors.setdefault("business_registration_number", []).append(str(detail))
+
+        if errors:
+            raise serializers.ValidationError(errors)
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> TenantOnboardingApplication:

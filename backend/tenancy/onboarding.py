@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework.exceptions import ValidationError
@@ -14,7 +14,7 @@ from .celery_tasks import (
     send_onboarding_application_approved_email_task,
     send_onboarding_application_rejected_email_task,
 )
-from .kyc import assert_nui_available
+from .kyc import assert_nui_available, normalize_phone
 from .models import TenantOnboardingApplication, WorkshopTenant
 
 User = get_user_model()
@@ -30,32 +30,132 @@ def _unique_schema_name(workshop_name: str) -> str:
     return schema_name
 
 
-def _assert_username_available(username: str, *, exclude_application_id=None) -> None:
-    if User.objects.filter(username=username).exists():
-        raise ValidationError({"admin_username": "This username is already taken."})
-
+def _pending_applications(*, exclude_application_id=None):
     pending = TenantOnboardingApplication.objects.filter(
-        admin_username=username,
         status=TenantOnboardingApplication.Status.PENDING,
     )
     if exclude_application_id:
         pending = pending.exclude(id=exclude_application_id)
-    if pending.exists():
-        raise ValidationError({"admin_username": "This username is already reserved by a pending application."})
+    return pending
+
+
+def _append_error(errors: dict, field: str, message: str) -> None:
+    errors.setdefault(field, []).append(message)
+
+
+def _email_in_use(email: str, *, exclude_application_id=None) -> bool:
+    cleaned = email.strip()
+    if not cleaned:
+        return False
+    if User.objects.filter(email__iexact=cleaned).exists():
+        return True
+    if WorkshopTenant.objects.filter(contact_email__iexact=cleaned).exclude(contact_email="").exists():
+        return True
+    return _pending_applications(exclude_application_id=exclude_application_id).filter(
+        models.Q(contact_email__iexact=cleaned) | models.Q(admin_email__iexact=cleaned),
+    ).exists()
+
+
+def _phone_in_use(phone: str, *, exclude_application_id=None) -> bool:
+    normalized = normalize_phone(phone)
+    if len(normalized) < 8:
+        return False
+    for tenant in WorkshopTenant.objects.exclude(contact_phone="").only("contact_phone"):
+        if normalize_phone(tenant.contact_phone) == normalized:
+            return True
+    for application in _pending_applications(exclude_application_id=exclude_application_id).exclude(
+        contact_phone="",
+    ).only("contact_phone"):
+        if normalize_phone(application.contact_phone) == normalized:
+            return True
+    return False
+
+
+def validate_onboarding_uniqueness(
+    attrs: dict,
+    *,
+    exclude_application_id=None,
+) -> dict[str, list[str]]:
+    """Return field-keyed validation messages for duplicate onboarding values."""
+    errors: dict[str, list[str]] = {}
+
+    username = (attrs.get("admin_username") or "").strip()
+    if username:
+        if User.objects.filter(username__iexact=username).exists():
+            _append_error(
+                errors,
+                "admin_username",
+                "This username is already taken. Choose a different admin username.",
+            )
+        elif _pending_applications(exclude_application_id=exclude_application_id).filter(
+            admin_username__iexact=username,
+        ).exists():
+            _append_error(
+                errors,
+                "admin_username",
+                "This username is reserved by another pending application. Choose a different admin username.",
+            )
+
+    admin_email = (attrs.get("admin_email") or "").strip()
+    if admin_email:
+        if User.objects.filter(email__iexact=admin_email).exists():
+            _append_error(
+                errors,
+                "admin_email",
+                "This admin email is already registered. Sign in or use a different email.",
+            )
+        elif _pending_applications(exclude_application_id=exclude_application_id).filter(
+            admin_email__iexact=admin_email,
+        ).exists():
+            _append_error(
+                errors,
+                "admin_email",
+                "This admin email is reserved by another pending application. Use a different email.",
+            )
+        elif WorkshopTenant.objects.filter(contact_email__iexact=admin_email).exclude(
+            contact_email="",
+        ).exists():
+            _append_error(
+                errors,
+                "admin_email",
+                "This email is already used as a business contact email. Use a different admin email.",
+            )
+
+    contact_email = (attrs.get("contact_email") or "").strip()
+    if contact_email and _email_in_use(contact_email, exclude_application_id=exclude_application_id):
+        _append_error(
+            errors,
+            "contact_email",
+            "This business email is already registered on the platform. Use your official ARBK email or contact support.",
+        )
+
+    contact_phone = (attrs.get("contact_phone") or "").strip()
+    if contact_phone and _phone_in_use(contact_phone, exclude_application_id=exclude_application_id):
+        _append_error(
+            errors,
+            "contact_phone",
+            "This business phone number is already registered on the platform. Enter your official ARBK phone number.",
+        )
+
+    return errors
+
+
+def _assert_username_available(username: str, *, exclude_application_id=None) -> None:
+    errors = validate_onboarding_uniqueness(
+        {"admin_username": username},
+        exclude_application_id=exclude_application_id,
+    )
+    if errors:
+        raise ValidationError(errors)
 
 
 def _assert_email_available(email: str, *, exclude_application_id=None) -> None:
-    if User.objects.filter(email=email).exists():
-        raise ValidationError({"admin_email": "An account with this email already exists."})
-
-    pending = TenantOnboardingApplication.objects.filter(
-        admin_email=email,
-        status=TenantOnboardingApplication.Status.PENDING,
+    errors = validate_onboarding_uniqueness(
+        {"admin_email": email},
+        exclude_application_id=exclude_application_id,
     )
-    if exclude_application_id:
-        pending = pending.exclude(id=exclude_application_id)
-    if pending.exists():
-        raise ValidationError({"admin_email": "This email is already reserved by a pending application."})
+    if errors:
+        raise ValidationError(errors)
 
 
 @transaction.atomic

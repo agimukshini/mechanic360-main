@@ -209,6 +209,81 @@ class TenantOnboardingTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("admin_username", response.data)
 
+    def test_pending_username_blocks_case_insensitive_duplicate(self):
+        self._submit_registration()
+        duplicate_payload = {
+            **self.payload,
+            "admin_username": "ALPHA_ADMIN",
+            "admin_email": "other@example.com",
+            "business_registration_number": "811234568",
+        }
+        response = self._submit_registration(duplicate_payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("admin_username", response.data)
+
+    def test_pending_admin_email_blocks_duplicate_registration(self):
+        self._submit_registration()
+        duplicate_payload = {
+            **self.payload,
+            "admin_username": "other_admin",
+            "admin_email": "alpha@example.com",
+            "business_registration_number": "811234568",
+        }
+        response = self._submit_registration(duplicate_payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("admin_email", response.data)
+
+    def test_pending_contact_email_blocks_duplicate_registration(self):
+        self._submit_registration()
+        duplicate_payload = {
+            **self.payload,
+            "admin_username": "other_admin",
+            "admin_email": "other@example.com",
+            "contact_email": "info@alphagarage.com",
+            "business_registration_number": "811234568",
+        }
+        response = self._submit_registration(duplicate_payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("contact_email", response.data)
+
+    def test_pending_contact_phone_blocks_duplicate_registration(self):
+        self._submit_registration()
+        duplicate_payload = {
+            **self.payload,
+            "admin_username": "other_admin",
+            "admin_email": "other@example.com",
+            "contact_phone": "+38344123456",
+            "business_registration_number": "811234568",
+        }
+        response = self._submit_registration(duplicate_payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("contact_phone", response.data)
+
+    def test_registered_nui_blocks_duplicate_registration(self):
+        self._submit_registration()
+        application = TenantOnboardingApplication.objects.get()
+        self.client.force_authenticate(user=self.superuser)
+        self._confirm_verification(application.id)
+        approve_url = reverse(
+            "admin-onboarding-applications-approve",
+            kwargs={"pk": application.id},
+        )
+        self.client.post(approve_url, format="json")
+
+        duplicate_payload = {
+            **self.payload,
+            "admin_username": "other_admin",
+            "admin_email": "other@example.com",
+        }
+        response = self._submit_registration(duplicate_payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("business_registration_number", response.data)
+
     def test_approved_user_can_login_after_approval(self):
         self._submit_registration()
         application = TenantOnboardingApplication.objects.get()

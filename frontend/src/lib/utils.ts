@@ -121,3 +121,27 @@ export function getApiErrorMessage(error: unknown, fallback = 'Something went wr
 
   return fallback
 }
+
+/** Map DRF validation errors to field names and first message per field. */
+export function getApiFieldErrors(error: unknown): Record<string, string> {
+  if (!error || typeof error !== 'object') return {}
+
+  const axiosError = error as AxiosError<unknown>
+  const data = axiosError.response?.data
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return {}
+
+  const obj = data as Record<string, unknown>
+  const fieldErrors: Record<string, string> = {}
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === 'detail' || key === 'error' || key === 'message') continue
+    if (Array.isArray(value)) {
+      const message = value.find((v): v is string => typeof v === 'string')
+      if (message) fieldErrors[key] = message
+    } else if (typeof value === 'string') {
+      fieldErrors[key] = value
+    }
+  }
+
+  return fieldErrors
+}

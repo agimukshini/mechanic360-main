@@ -21,10 +21,13 @@ def normalize_nui(value: str) -> str:
 def validate_nui_format(nui: str) -> str:
     normalized = normalize_nui(nui)
     if not NUI_PATTERN.match(normalized):
-        raise ValidationError(
-            {"business_registration_number": "Enter a valid 9-digit ARBK business number (NUI)."}
-        )
+        raise ValidationError("Enter a valid 9-digit ARBK business number (NUI).")
     return normalized
+
+
+def normalize_phone(value: str) -> str:
+    """Digits-only phone for uniqueness checks."""
+    return re.sub(r"\D", "", (value or "").strip())
 
 
 def generate_verification_code() -> str:

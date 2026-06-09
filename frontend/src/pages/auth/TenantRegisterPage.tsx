@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { tenantsApi } from '@/api'
+import { getApiErrorMessage, getApiFieldErrors } from '@/lib/utils'
 import { Cog, Copy, Loader2, Phone } from 'lucide-react'
 
 interface PlatformContact {
@@ -31,7 +32,41 @@ export default function TenantRegisterPage() {
   const [platformContact, setPlatformContact] = useState<PlatformContact | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState<RegistrationSuccess | null>(null)
+
+  const fieldLabels: Record<string, string> = {
+    business_registration_number: t('tenantRegister.businessNumber'),
+    workshop_name: t('tenantRegister.workshopName'),
+    address: t('tenantRegister.workshopAddress'),
+    contact_email: t('tenantRegister.contactEmail'),
+    contact_phone: t('tenantRegister.contactPhone'),
+    admin_username: t('tenantRegister.adminUsername'),
+    admin_email: t('tenantRegister.adminEmail'),
+    admin_password: t('tenantRegister.adminPassword'),
+    non_field_errors: t('tenantRegister.errorTitle'),
+  }
+
+  const formatFieldErrorSummary = (errors: Record<string, string>) =>
+    Object.entries(errors)
+      .map(([field, message]) => {
+        const label = fieldLabels[field] ?? field
+        return `${label}: ${message}`
+      })
+      .join('\n')
+
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
+  }
+
+  const fieldError = (field: string) => fieldErrors[field]
+  const inputClass = (field: string) =>
+    fieldErrors[field] ? 'input border-red-500 focus:border-red-500' : 'input'
 
   useEffect(() => {
     tenantsApi
@@ -44,6 +79,7 @@ export default function TenantRegisterPage() {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+    setFieldErrors({})
 
     try {
       const response = await tenantsApi.register(formData)
@@ -51,24 +87,14 @@ export default function TenantRegisterPage() {
         verification_code: response.data.verification_code,
         platform_contact: response.data.platform_contact,
       })
-    } catch (err: any) {
-      const responseData = err.response?.data
-      let errorMsg = t('tenantRegister.registrationFailedDefault')
-
-      if (responseData) {
-        if (typeof responseData === 'string') {
-          errorMsg = responseData
-        } else if (typeof responseData === 'object') {
-          const errors = Object.entries(responseData)
-            .map(([, messages]) => {
-              const msg = Array.isArray(messages) ? messages.join(', ') : String(messages)
-              return `${msg}`
-            })
-            .join('\n')
-          errorMsg = errors || JSON.stringify(responseData)
-        }
+    } catch (err: unknown) {
+      const parsedFieldErrors = getApiFieldErrors(err)
+      if (Object.keys(parsedFieldErrors).length > 0) {
+        setFieldErrors(parsedFieldErrors)
+        setError(formatFieldErrorSummary(parsedFieldErrors))
+      } else {
+        setError(getApiErrorMessage(err, t('tenantRegister.registrationFailedDefault')))
       }
-      setError(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -192,13 +218,17 @@ export default function TenantRegisterPage() {
                       type="text"
                       inputMode="numeric"
                       value={formData.business_registration_number}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        clearFieldError('business_registration_number')
                         setFormData({ ...formData, business_registration_number: e.target.value })
-                      }
-                      className="input"
+                      }}
+                      className={inputClass('business_registration_number')}
                       placeholder={t('tenantRegister.businessNumberPlaceholder')}
                       required
                     />
+                    {fieldError('business_registration_number') && (
+                      <p className="text-sm text-red-600 mt-1">{fieldError('business_registration_number')}</p>
+                    )}
                     <p className="text-xs text-workshop-charcoal/40 mt-1">{t('tenantRegister.businessNumberHint')}</p>
                   </div>
 
@@ -209,11 +239,17 @@ export default function TenantRegisterPage() {
                     <input
                       type="text"
                       value={formData.workshop_name}
-                      onChange={(e) => setFormData({ ...formData, workshop_name: e.target.value })}
-                      className="input"
+                      onChange={(e) => {
+                        clearFieldError('workshop_name')
+                        setFormData({ ...formData, workshop_name: e.target.value })
+                      }}
+                      className={inputClass('workshop_name')}
                       placeholder={t('tenantRegister.workshopNamePlaceholder')}
                       required
                     />
+                    {fieldError('workshop_name') && (
+                      <p className="text-sm text-red-600 mt-1">{fieldError('workshop_name')}</p>
+                    )}
                   </div>
 
                   <div>
@@ -223,11 +259,17 @@ export default function TenantRegisterPage() {
                     <input
                       type="text"
                       value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="input"
+                      onChange={(e) => {
+                        clearFieldError('address')
+                        setFormData({ ...formData, address: e.target.value })
+                      }}
+                      className={inputClass('address')}
                       placeholder={t('tenantRegister.workshopAddressPlaceholder')}
                       required
                     />
+                    {fieldError('address') && (
+                      <p className="text-sm text-red-600 mt-1">{fieldError('address')}</p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -238,11 +280,17 @@ export default function TenantRegisterPage() {
                       <input
                         type="email"
                         value={formData.contact_email}
-                        onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
-                        className="input"
+                        onChange={(e) => {
+                          clearFieldError('contact_email')
+                          setFormData({ ...formData, contact_email: e.target.value })
+                        }}
+                        className={inputClass('contact_email')}
                         placeholder={t('tenantRegister.contactEmailPlaceholder')}
                         required
                       />
+                      {fieldError('contact_email') && (
+                        <p className="text-sm text-red-600 mt-1">{fieldError('contact_email')}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-workshop-charcoal mb-1">
@@ -251,11 +299,17 @@ export default function TenantRegisterPage() {
                       <input
                         type="text"
                         value={formData.contact_phone}
-                        onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
-                        className="input"
+                        onChange={(e) => {
+                          clearFieldError('contact_phone')
+                          setFormData({ ...formData, contact_phone: e.target.value })
+                        }}
+                        className={inputClass('contact_phone')}
                         placeholder={t('tenantRegister.contactPhonePlaceholder')}
                         required
                       />
+                      {fieldError('contact_phone') && (
+                        <p className="text-sm text-red-600 mt-1">{fieldError('contact_phone')}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -270,11 +324,17 @@ export default function TenantRegisterPage() {
                     <input
                       type="text"
                       value={formData.admin_username}
-                      onChange={(e) => setFormData({ ...formData, admin_username: e.target.value })}
-                      className="input"
+                      onChange={(e) => {
+                        clearFieldError('admin_username')
+                        setFormData({ ...formData, admin_username: e.target.value })
+                      }}
+                      className={inputClass('admin_username')}
                       placeholder={t('tenantRegister.adminUsernamePlaceholder')}
                       required
                     />
+                    {fieldError('admin_username') && (
+                      <p className="text-sm text-red-600 mt-1">{fieldError('admin_username')}</p>
+                    )}
                   </div>
 
                   <div>
@@ -284,11 +344,17 @@ export default function TenantRegisterPage() {
                     <input
                       type="email"
                       value={formData.admin_email}
-                      onChange={(e) => setFormData({ ...formData, admin_email: e.target.value })}
-                      className="input"
+                      onChange={(e) => {
+                        clearFieldError('admin_email')
+                        setFormData({ ...formData, admin_email: e.target.value })
+                      }}
+                      className={inputClass('admin_email')}
                       placeholder={t('tenantRegister.adminEmailPlaceholder')}
                       required
                     />
+                    {fieldError('admin_email') && (
+                      <p className="text-sm text-red-600 mt-1">{fieldError('admin_email')}</p>
+                    )}
                   </div>
 
                   <div>
@@ -298,12 +364,18 @@ export default function TenantRegisterPage() {
                     <input
                       type="password"
                       value={formData.admin_password}
-                      onChange={(e) => setFormData({ ...formData, admin_password: e.target.value })}
-                      className="input"
+                      onChange={(e) => {
+                        clearFieldError('admin_password')
+                        setFormData({ ...formData, admin_password: e.target.value })
+                      }}
+                      className={inputClass('admin_password')}
                       placeholder={t('tenantRegister.adminPasswordPlaceholder')}
                       minLength={8}
                       required
                     />
+                    {fieldError('admin_password') && (
+                      <p className="text-sm text-red-600 mt-1">{fieldError('admin_password')}</p>
+                    )}
                     <p className="text-xs text-workshop-charcoal/40 mt-1">{t('tenantRegister.passwordHint')}</p>
                   </div>
                 </div>
